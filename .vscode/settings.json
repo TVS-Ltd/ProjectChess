@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "*.css": "css",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "tuple": "cpp",
+        "future": "cpp"
     }
 }

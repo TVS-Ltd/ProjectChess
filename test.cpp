@@ -15,6 +15,7 @@
 #define TEST_AI false
 #define PLAY true
 #define nsecs std::chrono::high_resolution_clock::now().time_since_epoch().count()
+#define OpeningBookFile "OpeningBook.txt"
 
 
 //Terminal colors
@@ -2283,9 +2284,9 @@ class AI
 {
 public:
     AI() = default;
-    AI(const string& opening_book_path)
+    AI(const string& openingBookPath)
     {
-        this->openingBook = {opening_book_path};
+        this->openingBook = {openingBookPath};
     }  
 
     Move bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t maxMs)
@@ -2578,136 +2579,288 @@ public:
         cout << "Welcome to the chess engine!" << endl;
 
         sideChoose();
-        
-        while (true) 
+
+        if (playerSide == Pieces::White) 
         {
-            cout << position << endl;
-
-
-            moves = LegalMoveGen::generate(this->position, playerSide);
-
-            this->playerMove = getMove();
-
-            bool moveFound = false;
-
-            for (uint8_t i = 0; i < moves.size(); i++)
+            while (true) 
             {
-                if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
+
+                cout << position << endl;
+
+
+                moves = LegalMoveGen::generate(this->position, playerSide);
+
+                this->playerMove = getMove();
+
+                bool moveFound = false;
+
+                for (uint8_t i = 0; i < moves.size(); i++)
                 {
-                    move = moves[i];
-                    moveFound = true;
-
-                    break;
-                } else
-                if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
-                {
-                    //Choose promotion piece
-                    cout << "\nChoose promotion piece: " << endl;
-                    cout << "1. Knight" << endl;
-                    cout << "2. Bishop" << endl;
-                    cout << "3. Rook" << endl;
-                    cout << "4. Queen" << endl;
-
-                    int promotionPiece = 0;
-                    cin >> promotionPiece;
-
-                    switch (promotionPiece)
+                    if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
                     {
-                        case 1:
-                            move = moves[i];
-                            move.Flag = Move::Flag::PromoteToKnight;
-                            moveFound = true;
-                        break;
+                        move = moves[i];
+                        moveFound = true;
 
-                        case 2:
-                            move = moves[i];
-                            move.Flag = Move::Flag::PromoteToBishop;
-                            moveFound = true;
                         break;
+                    } else
+                    if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
+                    {
+                        //Choose promotion piece
+                        cout << "\nChoose promotion piece: " << endl;
+                        cout << "1. Knight" << endl;
+                        cout << "2. Bishop" << endl;
+                        cout << "3. Rook" << endl;
+                        cout << "4. Queen" << endl;
 
-                        case 3:
-                            move = moves[i];
-                            move.Flag = Move::Flag::PromoteToRook;
-                            moveFound = true;
-                        break;
+                        int promotionPiece = 0;
+                        cin >> promotionPiece;
 
-                        case 4:
-                            move = moves[i];
-                            move.Flag = Move::Flag::PromoteToQueen;
-                            moveFound = true;
-                        break;
+                        switch (promotionPiece)
+                        {
+                            case 1:
+                                move = moves[i];
+                                move.Flag = Move::Flag::PromoteToKnight;
+                                moveFound = true;
+                            break;
 
-                        default:
-                            cout << RED << "\n[ERROR] Illegal move!" << END << endl;
-                            continue;
+                            case 2:
+                                move = moves[i];
+                                move.Flag = Move::Flag::PromoteToBishop;
+                                moveFound = true;
+                            break;
+
+                            case 3:
+                                move = moves[i];
+                                move.Flag = Move::Flag::PromoteToRook;
+                                moveFound = true;
+                            break;
+
+                            case 4:
+                                move = moves[i];
+                                move.Flag = Move::Flag::PromoteToQueen;
+                                moveFound = true;
+                            break;
+
+                            default:
+                                cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                                continue;
+                            break;
+                        }
+
                         break;
                     }
 
-                    break;
                 }
-                
-            }
 
-            if (!moveFound)
-            {
-                cout << RED << "\n[ERROR] Illegal move!" << END << endl;
-                continue;
-            }
-            
-            this->position.move(move);
-
-            if (move.DefenderType != 255)
-            {
-                cout << "\n";
-
-                switch (move.DefenderType)
+                if (!moveFound)
                 {
-                    case 0:
-                        cout << YELLOW << "Pawn has been captured!" << END << endl;
-                    break;
+                    cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                    continue;
+                }
 
-                    case 1:
-                        cout << YELLOW << "Knight has been captured!" << END << endl;
-                    break;
+                this->position.move(move);
 
-                    case 2:
-                        cout << YELLOW << "Bishop has been captured!" << END << endl;
-                    break;
+                if (move.DefenderType != 255)
+                {
+                    cout << "\n";
 
-                    case 3:
-                        cout << YELLOW << "Rook has been captured!" << END << endl;
-                    break;
+                    switch (move.DefenderType)
+                    {
+                        case 0:
+                            cout << YELLOW << "Pawn has been captured!" << END << endl;
+                        break;
 
-                    case 4:
-                        cout << YELLOW << "Queen has been captured!" << END << endl;
-                    break;
+                        case 1:
+                            cout << YELLOW << "Knight has been captured!" << END << endl;
+                        break;
 
-                    default:
-                        cout << RED << "[ERROR] Unknown piece type!" << END << endl;
+                        case 2:
+                            cout << YELLOW << "Bishop has been captured!" << END << endl;
+                        break;
+
+                        case 3:
+                            cout << YELLOW << "Rook has been captured!" << END << endl;
+                        break;
+
+                        case 4:
+                            cout << YELLOW << "Queen has been captured!" << END << endl;
+                        break;
+
+                        default:
+                            cout << RED << "[ERROR] Unknown piece type!" << END << endl;
+                        break;
+                    }
+                }
+
+
+                cout << "\nMove has been made!" << endl;
+
+                cout << position << endl;
+
+                //Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+                    break;
+                }
+
+                //AI move
+                move = ai.bestMove(position, aiSide, 0, 10000);
+                position.move(move);
+
+                //Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
                     break;
                 }
             }
-            
-
-            cout << "\nMove has been made!" << endl;
-
+        } else 
+        {
             cout << position << endl;
-            
-            //AI move
-            move = ai.bestMove(position, aiSide, 0, 10000);
-            position.move(move);
 
-            //Check if game is finished
-            if (this->gameFinished())
+            while (true) 
             {
+
+                //AI move
+                move = ai.bestMove(position, aiSide, 0, 10000);
+                position.move(move);
+
                 cout << position << endl;
-                break;
+                
+                //Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+                    break;
+                }
+
+                //Player move
+                bool moveFound = false;
+
+                do
+                {
+                    moves = LegalMoveGen::generate(this->position, playerSide);
+    
+                    this->playerMove = getMove();
+    
+                    for (uint8_t i = 0; i < moves.size(); i++)
+                    {
+                        if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
+                        {
+                            move = moves[i];
+                            moveFound = true;
+
+                            break;
+                        } else
+                        if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
+                        {
+                            //Choose promotion piece
+                            cout << "\nChoose promotion piece: " << endl;
+                            cout << "1. Knight" << endl;
+                            cout << "2. Bishop" << endl;
+                            cout << "3. Rook" << endl;
+                            cout << "4. Queen" << endl;
+
+                            int promotionPiece = 0;
+                            cin >> promotionPiece;
+
+                            switch (promotionPiece)
+                            {
+                                case 1:
+                                    move = moves[i];
+                                    move.Flag = Move::Flag::PromoteToKnight;
+                                    moveFound = true;
+                                break;
+
+                                case 2:
+                                    move = moves[i];
+                                    move.Flag = Move::Flag::PromoteToBishop;
+                                    moveFound = true;
+                                break;
+
+                                case 3:
+                                    move = moves[i];
+                                    move.Flag = Move::Flag::PromoteToRook;
+                                    moveFound = true;
+                                break;
+
+                                case 4:
+                                    move = moves[i];
+                                    move.Flag = Move::Flag::PromoteToQueen;
+                                    moveFound = true;
+                                break;
+
+                                default:
+                                    cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                                    continue;
+                                break;
+                            }
+
+                            break;
+                        }
+
+                    }
+
+                    if (!moveFound)
+                    {
+                        cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                        continue;
+                    }
+
+                    this->position.move(move);
+
+                    if (move.DefenderType != 255)
+                    {
+                        cout << "\n";
+
+                        switch (move.DefenderType)
+                        {
+                            case 0:
+                                cout << YELLOW << "Pawn has been captured!" << END << endl;
+                            break;
+
+                            case 1:
+                                cout << YELLOW << "Knight has been captured!" << END << endl;
+                            break;
+
+                            case 2:
+                                cout << YELLOW << "Bishop has been captured!" << END << endl;
+                            break;
+
+                            case 3:
+                                cout << YELLOW << "Rook has been captured!" << END << endl;
+                            break;
+
+                            case 4:
+                                cout << YELLOW << "Queen has been captured!" << END << endl;
+                            break;
+
+                            default:
+                                cout << RED << "[ERROR] Unknown piece type!" << END << endl;
+                            break;
+                        }
+                    }
+
+                    cout << "\nMove has been made!" << endl;
+
+                    cout << position << endl;
+                } while (!moveFound);
+                
+                
+    
+                //Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+                    break;
+                }
             }
         }
     }
 
 private:
-    AI ai;
+    AI ai = {OpeningBookFile};
     Move move;
     MoveList moves;
     Position position;
@@ -2720,15 +2873,17 @@ private:
         bool blackHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::Black).size() == 0);
         bool blackInCheck = PsLegalMoveMaskGen::inDanger(this->position.pieces, bsf(this->position.pieces.pieceBitboards[Pieces::Black][Pieces::King]), Pieces::Black);
 
-        if (playerSide == Pieces::White)
+        if (playerSide == Pieces::White && blackHaventGotMoves && blackInCheck)
         {
             cout << GREEN << endl;
+            cout << "White win!" << END << endl;
         } else
+        if (blackHaventGotMoves && blackInCheck)
         {
             cout << RED << endl;
+            cout << "White win!" << END << endl;
         }
 
-        cout << "White win!" << END << endl;
         return (blackHaventGotMoves && blackInCheck);
     }
 
@@ -2737,16 +2892,17 @@ private:
         bool whiteHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::White).size() == 0);
         bool whiteInCheck = PsLegalMoveMaskGen::inDanger(this->position.pieces, bsf(this->position.pieces.pieceBitboards[Pieces::White][Pieces::King]), Pieces::White);
 
-        if (playerSide == Pieces::Black)
+        if (playerSide == Pieces::Black && whiteHaventGotMoves && whiteInCheck)
         {
             cout << GREEN << endl;
+            cout << "Black win!" << END << endl;
         } else
+        if (whiteHaventGotMoves && whiteInCheck)
         {
             cout << RED << endl;
+            cout << "Black win!" << END << endl;
         }
         
-        cout << "Black win!" << END << endl;
-
         return (whiteHaventGotMoves && whiteInCheck);
     }
 

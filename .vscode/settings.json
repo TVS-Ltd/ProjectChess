@@ -3,6 +3,8 @@
         "*.css": "css",
         "iosfwd": "cpp",
         "tuple": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "iostream": "cpp",
+        "ostream": "cpp"
     }
 }

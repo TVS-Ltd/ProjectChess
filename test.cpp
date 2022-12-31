@@ -12,9 +12,17 @@
 #include <set>
 
 #define TEST_LEGAL_MOVE_GENERATION false
-#define TEST_AI true
-#define SHOW_UI false
+#define TEST_AI false
+#define PLAY true
 #define nsecs std::chrono::high_resolution_clock::now().time_since_epoch().count()
+
+
+//Terminal colors
+const char* END = "\033[0m";
+const char* RED = "\033[91m";
+const char* GREEN = "\033[92m";
+const char* YELLOW = "\033[93m";
+
 
 using namespace std;
 
@@ -218,7 +226,7 @@ public:
     array<array<Bitboard, 6>, 2> pieceBitboards{};
     array<Bitboard, 2> sideBitboards{};
     array<Bitboard, 2> inversionSideBitboards{};
-    Bitboard _all;
+    Bitboard all;
     Bitboard empty;
 
     static constexpr uint8_t Pawn = 0;
@@ -233,33 +241,93 @@ public:
 
     friend ostream& operator <<(ostream& ostream, Pieces pieces)
     {
-        for (int8_t y = 7; y >= 0; y = y - 1) 
+        ostream << " ";
+
+        for (uint8_t i = 0; i < 8; i++)
         {
-            for (uint8_t x = 0; x < 8; x = x + 1) 
+            ostream << " -----";
+        }
+
+        ostream << "\n8";
+
+        for (int8_t y = 7; y >= 0; y--) 
+        {
+            for (uint8_t x = 0; x < 8; x++) 
             {
                 ostream << "|  ";
 
-                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Pawn], y * 8 + x)) ostream << "♙";
-                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Knight], y * 8 + x)) ostream << "♘";
-                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Bishop], y * 8 + x)) ostream << "♗";
-                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Rook], y * 8 + x)) ostream << "♖";
-                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Queen], y * 8 + x)) ostream << "♕";
-                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::King], y * 8 + x)) ostream << "♔";
+                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Pawn], y * 8 + x))
+                {
+                    ostream << "♟";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Knight], y * 8 + x))
+                {
+                    ostream << "♞";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Bishop], y * 8 + x))
+                {
+                    ostream << "♝";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Rook], y * 8 + x))
+                {
+                    ostream << "♜";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Queen], y * 8 + x))
+                {
+                    ostream << "♛";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::King], y * 8 + x))
+                {
+                    ostream << "♚";
+                } else
 
-                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn], y * 8 + x)) ostream << "♟";
-                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Knight], y * 8 + x)) ostream << "♞";
-                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Bishop], y * 8 + x)) ostream << "♝";
-                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Rook], y * 8 + x)) ostream << "♜";
-                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Queen], y * 8 + x)) ostream << "♛";
-                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::King], y * 8 + x)) ostream << "♚";
+                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn], y * 8 + x))
+                {
+                    ostream << "♙";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Knight], y * 8 + x))
+                {
+                    ostream << "♘";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Bishop], y * 8 + x))
+                {
+                    ostream << "♗";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Rook], y * 8 + x))
+                {
+                    ostream << "♖";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Queen], y * 8 + x))
+                {
+                    ostream << "♕";
+                } else
+                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::King], y * 8 + x))
+                {
+                    ostream << "♔";
+                } else
 
-                else ostream << " ";
+                ostream << " ";
 
                 ostream << "  ";
             }
 
-            ostream << "|\n";
+            ostream << "|\n  " ;
+
+            for (uint8_t i = 0; i < 8; i++)
+            {
+                ostream << "----- ";
+            }
+
+            ostream << "\n";
+
+            if (y != 0)
+            {
+                ostream << (int)y;
+            }
+            
         }
+
+        ostream << "    a     b     c     d     e     f     g     h  \n";
 
         return ostream;
     }
@@ -299,8 +367,8 @@ public:
         this->inversionSideBitboards[White] = ~this->sideBitboards[White];
         this->inversionSideBitboards[Black] = ~this->sideBitboards[Black];
 
-        this->_all = this->sideBitboards[White] | this->sideBitboards[Black];
-        this->empty = ~this->_all;
+        this->all = this->sideBitboards[White] | this->sideBitboards[Black];
+        this->empty = ~this->all;
     }
 
     static uint8_t inverse(uint8_t side) 
@@ -1124,7 +1192,7 @@ public:
 private:
     static Bitboard calculateRay(Pieces pieces, uint8_t p, uint8_t side, bool onlyCaptures, uint8_t direction, bool bsr)
     {
-        Bitboard blockers = SlidersMasks::Masks[p][direction] & pieces._all;
+        Bitboard blockers = SlidersMasks::Masks[p][direction] & pieces.all;
 
         if (blockers == 0) {
             if (onlyCaptures) return 0;
@@ -2033,7 +2101,7 @@ private:
     {
         int32_t endgame = 0;
 
-        if (countOnes(pieces._all) > StaticEvaluator::Endgame::MaximumPiecesForEndgame) return endgame;
+        if (countOnes(pieces.all) > StaticEvaluator::Endgame::MaximumPiecesForEndgame) return endgame;
 
         uint8_t attacker_side;
         uint8_t defender_side;
@@ -2220,7 +2288,7 @@ public:
         this->openingBook = {opening_book_path};
     }  
 
-    Move bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t max_ms)
+    Move bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t maxMs)
     {
         cout << endl;
 
@@ -2261,7 +2329,7 @@ public:
 
             while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready) 
             {
-                if ((nsecs - timeStart) / (int32_t)1e+6 >= max_ms) 
+                if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs) 
                 {
                     updateBestMove = false;
                     break;
@@ -2500,6 +2568,294 @@ private:
 };
 
 
+class Game
+{
+public:
+    void start()
+    {
+        this->position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
+
+        cout << "Welcome to the chess engine!" << endl;
+
+        sideChoose();
+        
+        while (true) 
+        {
+            cout << position << endl;
+
+
+            moves = LegalMoveGen::generate(this->position, playerSide);
+
+            this->playerMove = getMove();
+
+            bool moveFound = false;
+
+            for (uint8_t i = 0; i < moves.size(); i++)
+            {
+                if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
+                {
+                    move = moves[i];
+                    moveFound = true;
+
+                    break;
+                } else
+                if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
+                {
+                    //Choose promotion piece
+                    cout << "\nChoose promotion piece: " << endl;
+                    cout << "1. Knight" << endl;
+                    cout << "2. Bishop" << endl;
+                    cout << "3. Rook" << endl;
+                    cout << "4. Queen" << endl;
+
+                    int promotionPiece = 0;
+                    cin >> promotionPiece;
+
+                    switch (promotionPiece)
+                    {
+                        case 1:
+                            move = moves[i];
+                            move.Flag = Move::Flag::PromoteToKnight;
+                            moveFound = true;
+                        break;
+
+                        case 2:
+                            move = moves[i];
+                            move.Flag = Move::Flag::PromoteToBishop;
+                            moveFound = true;
+                        break;
+
+                        case 3:
+                            move = moves[i];
+                            move.Flag = Move::Flag::PromoteToRook;
+                            moveFound = true;
+                        break;
+
+                        case 4:
+                            move = moves[i];
+                            move.Flag = Move::Flag::PromoteToQueen;
+                            moveFound = true;
+                        break;
+
+                        default:
+                            cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                            continue;
+                        break;
+                    }
+
+                    break;
+                }
+                
+            }
+
+            if (!moveFound)
+            {
+                cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                continue;
+            }
+            
+            this->position.move(move);
+
+            if (move.DefenderType != 255)
+            {
+                cout << "\n";
+
+                switch (move.DefenderType)
+                {
+                    case 0:
+                        cout << YELLOW << "Pawn has been captured!" << END << endl;
+                    break;
+
+                    case 1:
+                        cout << YELLOW << "Knight has been captured!" << END << endl;
+                    break;
+
+                    case 2:
+                        cout << YELLOW << "Bishop has been captured!" << END << endl;
+                    break;
+
+                    case 3:
+                        cout << YELLOW << "Rook has been captured!" << END << endl;
+                    break;
+
+                    case 4:
+                        cout << YELLOW << "Queen has been captured!" << END << endl;
+                    break;
+
+                    default:
+                        cout << RED << "[ERROR] Unknown piece type!" << END << endl;
+                    break;
+                }
+            }
+            
+
+            cout << "\nMove has been made!" << endl;
+
+            cout << position << endl;
+            
+            //AI move
+            move = ai.bestMove(position, aiSide, 0, 10000);
+            position.move(move);
+
+            //Check if game is finished
+            if (this->gameFinished())
+            {
+                cout << position << endl;
+                break;
+            }
+        }
+    }
+
+private:
+    AI ai;
+    Move move;
+    MoveList moves;
+    Position position;
+    uint8_t playerSide;
+    uint8_t aiSide;
+    Move playerMove;
+
+    bool whiteVictory() 
+    {
+        bool blackHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::Black).size() == 0);
+        bool blackInCheck = PsLegalMoveMaskGen::inDanger(this->position.pieces, bsf(this->position.pieces.pieceBitboards[Pieces::Black][Pieces::King]), Pieces::Black);
+
+        if (playerSide == Pieces::White)
+        {
+            cout << GREEN << endl;
+        } else
+        {
+            cout << RED << endl;
+        }
+
+        cout << "White win!" << END << endl;
+        return (blackHaventGotMoves && blackInCheck);
+    }
+
+    bool blackVictory() 
+    {
+        bool whiteHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::White).size() == 0);
+        bool whiteInCheck = PsLegalMoveMaskGen::inDanger(this->position.pieces, bsf(this->position.pieces.pieceBitboards[Pieces::White][Pieces::King]), Pieces::White);
+
+        if (playerSide == Pieces::Black)
+        {
+            cout << GREEN << endl;
+        } else
+        {
+            cout << RED << endl;
+        }
+        
+        cout << "Black win!" << END << endl;
+
+        return (whiteHaventGotMoves && whiteInCheck);
+    }
+
+    bool draw() 
+    {
+        bool whiteHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::White).size() == 0);
+        bool whiteInCheck = PsLegalMoveMaskGen::inDanger(this->position.pieces, bsf(this->position.pieces.pieceBitboards[Pieces::White][Pieces::King]), Pieces::White);
+
+        bool blackHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::Black).size() == 0);
+        bool blackInCheck = PsLegalMoveMaskGen::inDanger(this->position.pieces, bsf(this->position.pieces.pieceBitboards[Pieces::Black][Pieces::King]), Pieces::Black);
+
+        bool fiftyMovesRule = (this->position.fiftyMovesCtr >= 50);
+        bool threeMovesRule = (this->position.repetitionHistory.getRepetionNumber(this->position.hash) >= 3);
+
+        bool whiteMove = this->isWhiteMove();
+        bool blackMove = !whiteMove;
+
+        if (whiteHaventGotMoves && !whiteInCheck && whiteMove)
+        {
+            cout << YELLOW << "[DRAW] White haven't got moves." << END << endl;
+            return true;
+        }
+
+        if (blackHaventGotMoves && !blackInCheck && blackMove)
+        {
+            cout << YELLOW << "[DRAW] Black haven't got moves." << END << endl;
+            return true;
+        }
+
+        if (fiftyMovesRule)
+        {
+            cout << YELLOW << "[DRAW] Fifty moves rule." << END << endl;
+            return true;
+        }
+
+        if (threeMovesRule)
+        {
+            cout << YELLOW << "[DRAW] Three moves rule." << END << endl;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool gameFinished() 
+    {
+        return (this->whiteVictory() || this->blackVictory() || this->draw());
+    }
+
+    bool isWhiteMove() const 
+    {
+        return (this->position.MoveCtr - floor(this->position.MoveCtr) < 1e-7);
+    }
+
+    bool isBlackMove() 
+    {
+        return !isWhiteMove();
+    }
+
+    Move getMove() 
+    {
+        Move PlayerMove;
+        string from, to;
+
+        cout << "\nEnter move (Example: e2 e4): ";
+        cin >> from >> to;
+
+        PlayerMove.From = (from[0] - 'a') + (from[1] - '1') * 8;
+        PlayerMove.To = (to[0] - 'a') + (to[1] - '1') * 8;
+        
+        return PlayerMove;
+    }
+
+    void sideChoose()
+    {
+        cout << "Choose your side:" << endl;
+        cout << "1. White" << endl;
+        cout << "2. Black" << endl;
+
+        int choice;
+
+        do
+        {
+            cin >> choice;
+
+            if (cin.fail() || choice < 1 || choice > 2)
+            {
+                cin.clear();
+                cin.ignore(1000, '\n');
+
+                cout << RED << "[ERROR] Invalid input. Please try again." << END << endl;
+            }
+        } while (cin.fail() || choice < 1 || choice > 2);
+        
+        if (choice == 1)
+        {
+            cout << "You are playing as white." << endl;
+            playerSide = Pieces::White;
+            aiSide = Pieces::Black;
+        } else
+        {
+            cout << "You are playing as black." << endl;
+            playerSide = Pieces::Black;
+            aiSide = Pieces::White;
+        }
+        
+    }
+};
+
 int main()
 {
     #if TEST_LEGAL_MOVE_GENERATION
@@ -2514,7 +2870,7 @@ int main()
     #endif
 
 
-    #if SHOW_UI
+    #if PLAY
         Game game;
         game.start();
     #endif

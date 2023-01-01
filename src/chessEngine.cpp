@@ -11,22 +11,34 @@
 #include <unistd.h>
 #include <set>
 
-#define TEST_LEGAL_MOVE_GENERATION false
-#define TEST_AI false
 #define PLAY true
+#define DEBUG false
+#define TEST_PROMOTION false
 #define nsecs std::chrono::high_resolution_clock::now().time_since_epoch().count()
-#define OpeningBookFile "OpeningBook.txt"
+#define OpeningBookFile "/usr/bin/OpeningBook.txt"
 
 
-//Terminal colors
+//——————————————————Terminal colors——————————————————
 const char* END = "\033[0m";
+
+//Foreground colors
 const char* RED = "\033[91m";
 const char* GREEN = "\033[92m";
 const char* YELLOW = "\033[93m";
+const char* WHITE = "\033[97m";
+const char* BLACK = "\033[90m";
+
+//Background colors
+const char* REDBG = "\033[101m";
+const char* GREENBG = "\033[102m";
+const char* YELLOWBG = "\033[103m";
+const char* WHITEBG = "\033[107m";
+const char* BLACKBG = "\033[100m";
 
 
 using namespace std;
 
+//——————————————————  Bitboards  ——————————————————
 typedef uint64_t Bitboard;
 
 //Set a bit in a bitboard to 1
@@ -158,6 +170,8 @@ namespace BitboardColumns
     static constexpr array<Bitboard, 8> InversionColumns = calculateInversionColumns();
 }
 
+
+//——————————————————  Pieces  ——————————————————
 class Pieces 
 {
 public:
@@ -328,7 +342,7 @@ public:
             
         }
 
-        ostream << "    a     b     c     d     e     f     g     h  \n";
+        ostream << "    a     b     c     d     e     f     g     h  \n\n";
 
         return ostream;
     }
@@ -378,6 +392,7 @@ public:
     }
 };
 
+//—————————————————— ZobristHash ——————————————————
 namespace ZobristHashConsteval 
 {
     namespace randomKeyGenerator 
@@ -473,7 +488,7 @@ public:
                 continue;
             }
 
-            for (uint8_t type = 0; type < 6; type = type + 1) 
+            for (uint8_t type = 0; type < 6; type++) 
             {
                 if (getBit(pieces.pieceBitboards[side][type], square)) 
                 {
@@ -527,6 +542,7 @@ public:
     uint64_t hash;
 };
 
+//—————————————————— Moves ——————————————————
 class RepetitionHistory 
 {
 public:
@@ -613,6 +629,7 @@ public:
     };
 };
 
+//—————————————————— Position ——————————————————
 class Position 
 {
 public:
@@ -658,15 +675,17 @@ public:
     {
         ostream << position.pieces;
 
-        ostream << "En passant: " << (uint32_t)position.EnPassant << "\n";
-        ostream << "White long castling: " << position.WhiteLongCastling << "\n";
-        ostream << "White short castling: " << position.WhiteShortCastling << "\n";
-        ostream << "Black long castling: " << position.BlackLongCastling << "\n";
-        ostream << "Black short castling: " << position.BlackShortCastling << "\n";
-        ostream << "Move counter: " << position.MoveCtr << "\n";
-        ostream << "Zobrist hash: " << hex << "0x" << position.hash.hash << "\n" << dec;
-        ostream << "Fifty moves counter: " << position.fiftyMovesCtr << "\n";
-        ostream << "Threefold repetition counter: " << (uint32_t)position.repetitionHistory.getRepetionNumber(position.hash) << "\n";
+        #if DEBUG
+            ostream << "En passant: " << (uint32_t)position.EnPassant << "\n";
+            ostream << "White long castling: " << position.WhiteLongCastling << "\n";
+            ostream << "White short castling: " << position.WhiteShortCastling << "\n";
+            ostream << "Black long castling: " << position.BlackLongCastling << "\n";
+            ostream << "Black short castling: " << position.BlackShortCastling << "\n";
+            ostream << "Move counter: " << position.MoveCtr << "\n";
+            ostream << "Zobrist hash: " << hex << "0x" << position.hash.hash << "\n" << dec;
+            ostream << "Fifty moves counter: " << position.fiftyMovesCtr << "\n";
+            ostream << "Threefold repetition counter: " << (uint32_t)position.repetitionHistory.getRepetionNumber(position.hash) << "\n";
+        #endif
 
         return ostream;
     }
@@ -867,6 +886,7 @@ private:
     };
 };
 
+//—————————————————— Movement masks ——————————————————
 namespace KingMasks 
 {
     static consteval uint8_t absSubtract(uint8_t left, uint8_t right) 
@@ -985,48 +1005,48 @@ namespace SlidersMasks
         int8_t x = p % 8;
         int8_t y = p / 8;
 
-        for (; ;) 
+        for (;;) 
         {
             switch (direction) 
             {
                 case SlidersMasks::Direction::North: 
-                    y = y + 1; 
+                    y++; 
                 break;
 
                 case SlidersMasks::Direction::South: 
-                    y = y - 1; 
+                    y--; 
                 break;
 
                 case SlidersMasks::Direction::West: 
-                    x = x - 1; 
+                    x--; 
                 break;
 
                 case SlidersMasks::Direction::East: 
-                    x = x + 1; 
+                    x++; 
                 break;
 
                 case SlidersMasks::Direction::NorthWest:
-                    y = y + 1;  
-                    x = x - 1; 
+                    y++;  
+                    x--; 
                 break;
 
                 case SlidersMasks::Direction::NorthEast: 
-                    y = y + 1; 
-                    x = x + 1; 
+                    y++; 
+                    x++; 
                 break;
 
                 case SlidersMasks::Direction::SouthWest: 
-                    y = y - 1; 
-                    x = x - 1; 
+                    y--; 
+                    x--; 
                 break;
 
                 case SlidersMasks::Direction::SouthEast: 
-                    y = y - 1; 
-                    x = x + 1; 
+                    y--; 
+                    x++; 
                 break;
             }
 
-            if (x > 7 or x < 0 or y > 7 or y < 0)
+            if (x > 7 || x < 0 || y > 7 || y < 0)
             {
                 break;
             }
@@ -1057,6 +1077,7 @@ namespace SlidersMasks
     static constexpr std::array<std::array<Bitboard, 8>, 64> Masks = SlidersMasks::calculateMasks();
 };
 
+//—————————————————— Legality Check ——————————————————
 class PsLegalMoveMaskGen 
 {
 public:
@@ -1542,69 +1563,9 @@ private:
     }
 };
 
-class LegalMoveGenTester 
-{
-public:
-    static void test()
-    {
-        Position position = {(std::string)LegalMoveGenTester::Fen, LegalMoveGenTester::EnPassant, LegalMoveGenTester::WLCastling, LegalMoveGenTester::WSCastling, LegalMoveGenTester::BLCastling, LegalMoveGenTester::BSCastling, 1};
-
-        uint64_t correct;
-        uint64_t got;
-
-        uint64_t timeStart;
-        float speed;
-
-        for (uint32_t i = 0; i < 6; i = i + 1) 
-        {
-            timeStart = nsecs;
-
-            correct = LegalMoveGenTester::Nodes[i];
-            got = LegalMoveGenTester::getNodesNumber(position, Pieces::White, i);
-
-            speed = (float)got / ((float)(nsecs - timeStart) / (float)1e+9) / (float)1e+6;
-
-            if (correct == got) std::cout << "Depth " << setw(4) << i << ". Correct: " << setw(18) << correct << ". Got: " << setw(18) << got << ". Speed: " << setw(10) << speed << " MNPS. OK." << endl;
-            else std::cout  << "Depth " << std::setw(4) << i << ". Correct: " << setw(18) << correct << ". Got: " << setw(18) << got << ". Speed: " << setw(10) << speed << " MNPS. Error." << endl;
-        }
-    }
-private:
-    static uint64_t getNodesNumber(const Position& position, uint8_t side, uint32_t depth)
-    {
-        if (depth == 0) return 1;
-
-        uint64_t ctr = 0;
-
-        Position copy = position;
-
-        MoveList moves = LegalMoveGen::generate(copy, side);
-        Move move;
-
-        for (uint8_t i = 0; i < moves.size(); i = i + 1) 
-        {
-            move = moves[i];
-
-            copy = position;
-            copy.move(move);
-            ctr = ctr + LegalMoveGenTester::getNodesNumber(copy, Pieces::inverse(side), depth - 1);
-        }
-
-        return ctr;
-    }
-
-    static constexpr string_view Fen = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R";
-    static constexpr uint8_t EnPassant = 255;
-    static constexpr bool WLCastling = true;
-    static constexpr bool WSCastling = true;
-    static constexpr bool BLCastling = false;
-    static constexpr bool BSCastling = false;
-
-    static constexpr array<uint64_t, 6> Nodes = {1, 44, 1486, 62379, 2103487, 89941194};
-};
 
 
-
-//AI
+//—————————————————— AI ——————————————————
 
 static atomic<bool> stopSearch;
 
@@ -1628,31 +1589,31 @@ public:
         }
 
         string game;
-        stringstream game_thread;
+        stringstream gameThread;
 
-        string string_move;
+        string stringMove;
         uint8_t from;
         uint8_t to;
 
         MoveList possibleMoves;
-        bool move_found;
+        bool MoveFound;
 
         Position buff;
 
         while (getline(file, game)) 
         {
-            game_thread = std::stringstream(game);
+            gameThread = std::stringstream(game);
             this->moves.resize(this->moves.size() + 1);
 
             buff = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
 
-            while (game_thread >> string_move and game_thread.good()) 
+            while (gameThread >> stringMove and gameThread.good()) 
             {
-                from = (string_move[1] - '1') * 8 + string_move[0] - 'a';
-                to = (string_move[3] - '1') * 8 + string_move[2] - 'a';
+                from = (stringMove[1] - '1') * 8 + stringMove[0] - 'a';
+                to = (stringMove[3] - '1') * 8 + stringMove[2] - 'a';
 
                 possibleMoves = LegalMoveGen::generate(buff, buff.MoveCtr - std::floor(buff.MoveCtr) > 1e-7);
-                move_found = false;
+                MoveFound = false;
 
                 for (uint8_t i = 0; i < possibleMoves.size(); i = i + 1) 
                 {
@@ -1661,13 +1622,13 @@ public:
                         this->moves.back().push_back(possibleMoves[i]);
 
                         buff.move(possibleMoves[i]);
-                        move_found = true;
+                        MoveFound = true;
 
                         break;
                     }
                 }
 
-                if (!move_found) 
+                if (!MoveFound) 
                 {
                     cout << "Error in the opening book." << std::endl;
                     exit(255);
@@ -1854,22 +1815,22 @@ public:
 
         int32_t material = StaticEvaluator::material(pieces);
         int32_t mobility = StaticEvaluator::mobility(pieces);
-        int32_t double_pawn = StaticEvaluator::pawnStructureDoublePawn(pieces);
-        int32_t connected_pawn = StaticEvaluator::pawnStructureConnectedPawn(pieces);
-        int32_t pawn_promotion = StaticEvaluator::pawnStructurePawnPromotion(pieces);
-        int32_t crashed_castling = StaticEvaluator::kingSafetyCrashedCastling(whiteLongCastling, whiteShortCastling, blackLongCastling, blackShortCastling, whiteCastlingHappened, blackCastlingHappened);
-        int32_t pawn_shield = StaticEvaluator::kingSafetyPawnShield(pieces, whiteCastlingHappened, blackCastlingHappened);
-        int32_t two_bishops = StaticEvaluator::twoBishops(pieces);
+        int32_t doublePawn = StaticEvaluator::pawnStructureDoublePawn(pieces);
+        int32_t connectedPawn = StaticEvaluator::pawnStructureConnectedPawn(pieces);
+        int32_t pawnPromotion = StaticEvaluator::pawnStructurePawnPromotion(pieces);
+        int32_t crashedCastling = StaticEvaluator::kingSafetyCrashedCastling(whiteLongCastling, whiteShortCastling, blackLongCastling, blackShortCastling, whiteCastlingHappened, blackCastlingHappened);
+        int32_t pawnShield = StaticEvaluator::kingSafetyPawnShield(pieces, whiteCastlingHappened, blackCastlingHappened);
+        int32_t twoBishops = StaticEvaluator::twoBishops(pieces);
         int32_t endgame = StaticEvaluator::endgame(pieces, material >= 0);
 
         evaluation = evaluation + material;
         evaluation = evaluation + mobility;
-        evaluation = evaluation + double_pawn;
-        evaluation = evaluation + connected_pawn;
-        evaluation = evaluation + pawn_promotion;
-        evaluation = evaluation + crashed_castling;
-        evaluation = evaluation + pawn_shield;
-        evaluation = evaluation + two_bishops;
+        evaluation = evaluation + doublePawn;
+        evaluation = evaluation + connectedPawn;
+        evaluation = evaluation + pawnPromotion;
+        evaluation = evaluation + crashedCastling;
+        evaluation = evaluation + pawnShield;
+        evaluation = evaluation + twoBishops;
         evaluation = evaluation + endgame;
 
         if (showDebugInfo) 
@@ -1877,12 +1838,12 @@ public:
             cout << "Details of static evaluation of current position." << endl;
             cout << "Material: " << (float)material / 100.0f << " pawns." << endl;
             cout << "Mobility: " << (float)mobility / 100.0f << " pawns." << endl;
-            cout << "Double pawn: " << (float)double_pawn / 100.0f << " pawns." << endl;
-            cout << "Connected pawn: " << (float)connected_pawn / 100.0f << " pawns." << endl;
-            cout << "Pawn promotion: " << (float)pawn_promotion / 100.0f << " pawns." << endl;
-            cout << "Crashed castling: " << (float)crashed_castling / 100.0f << " pawns." << endl;
-            cout << "Pawn shield: " << (float)pawn_shield / 100.0f << " pawns." << endl;
-            cout << "Two bishops: " << (float)two_bishops / 100.0f << " pawns." << endl;
+            cout << "Double pawn: " << (float)doublePawn / 100.0f << " pawns." << endl;
+            cout << "Connected pawn: " << (float)connectedPawn / 100.0f << " pawns." << endl;
+            cout << "Pawn promotion: " << (float)pawnPromotion / 100.0f << " pawns." << endl;
+            cout << "Crashed castling: " << (float)crashedCastling / 100.0f << " pawns." << endl;
+            cout << "Pawn shield: " << (float)pawnShield / 100.0f << " pawns." << endl;
+            cout << "Two bishops: " << (float)twoBishops / 100.0f << " pawns." << endl;
             cout << "Endgame: " << (float)endgame / 100.0f << " pawns." << endl;
             cout << "Sum: " << (float)evaluation / 100.0f << " pawns." << endl;
         }
@@ -1981,29 +1942,29 @@ private:
     }
     static int32_t pawnStructureDoublePawn(Pieces pieces)
     {
-        int32_t double_pawn = 0;
+        int32_t doublePawn = 0;
 
         int32_t double_pawn_ctr = 0;
 
-        uint8_t white_pawns;
-        uint8_t black_pawns;
+        uint8_t whitePawns;
+        uint8_t blackPawns;
 
         for (uint8_t x = 0; x < 8; x = x + 1) 
         {
-            white_pawns = countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Pawn] & BitboardColumns::Columns[x]);
-            black_pawns = countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn] & BitboardColumns::Columns[x]);
+            whitePawns = countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Pawn] & BitboardColumns::Columns[x]);
+            blackPawns = countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn] & BitboardColumns::Columns[x]);
 
-            double_pawn_ctr = double_pawn_ctr + std::max(0, white_pawns - 1);
-            double_pawn_ctr = double_pawn_ctr - std::max(0, black_pawns - 1);
+            double_pawn_ctr = double_pawn_ctr + std::max(0, whitePawns - 1);
+            double_pawn_ctr = double_pawn_ctr - std::max(0, blackPawns - 1);
         }
 
-        double_pawn = double_pawn + StaticEvaluator::PawnStructure::DoublePawn * double_pawn_ctr;
+        doublePawn = doublePawn + StaticEvaluator::PawnStructure::DoublePawn * double_pawn_ctr;
 
-        return double_pawn;
+        return doublePawn;
     }
     static int32_t pawnStructureConnectedPawn(Pieces pieces)
     {
-        int32_t connected_pawn = 0;
+        int32_t connectedPawn = 0;
     
         int32_t connected_pawn_ctr = 0;
     
@@ -2013,90 +1974,90 @@ private:
         connected_pawn_ctr = connected_pawn_ctr + countOnes(white_captures & pieces.pieceBitboards[Pieces::White][Pieces::Pawn]);
         connected_pawn_ctr = connected_pawn_ctr - countOnes(black_captures & pieces.pieceBitboards[Pieces::Black][Pieces::Pawn]);
     
-        connected_pawn = connected_pawn + StaticEvaluator::PawnStructure::ConnectedPawn * connected_pawn_ctr;
+        connectedPawn = connectedPawn + StaticEvaluator::PawnStructure::ConnectedPawn * connected_pawn_ctr;
     
-        return connected_pawn;
+        return connectedPawn;
     }
     static int32_t pawnStructurePawnPromotion(Pieces pieces)
     {
-        int32_t pawn_promotion = 0;
+        int32_t pawnPromotion = 0;
 
-        Bitboard white_pawns = pieces.pieceBitboards[Pieces::White][Pieces::Pawn];
-        Bitboard black_pawns = pieces.pieceBitboards[Pieces::Black][Pieces::Pawn];
+        Bitboard whitePawns = pieces.pieceBitboards[Pieces::White][Pieces::Pawn];
+        Bitboard blackPawns = pieces.pieceBitboards[Pieces::Black][Pieces::Pawn];
 
         uint8_t index;
 
-        while (white_pawns) 
+        while (whitePawns) 
         {
-            index = bsf(white_pawns);
-            setZero(white_pawns, index);
+            index = bsf(whitePawns);
+            setZero(whitePawns, index);
 
-            if (PassedPawnMasks::WhitePassedPawnMasks[index] & pieces.pieceBitboards[Pieces::Black][Pieces::Pawn]) pawn_promotion = pawn_promotion + StaticEvaluator::PawnStructure::DefaultPawnPromotion[index / 8];
-            else pawn_promotion = pawn_promotion + StaticEvaluator::PawnStructure::PassedPawnPromotion[index / 8];
+            if (PassedPawnMasks::WhitePassedPawnMasks[index] & pieces.pieceBitboards[Pieces::Black][Pieces::Pawn]) pawnPromotion = pawnPromotion + StaticEvaluator::PawnStructure::DefaultPawnPromotion[index / 8];
+            else pawnPromotion = pawnPromotion + StaticEvaluator::PawnStructure::PassedPawnPromotion[index / 8];
         }
 
-        while (black_pawns) 
+        while (blackPawns) 
         {
-            index = bsf(black_pawns);
-            setZero(black_pawns, index);
+            index = bsf(blackPawns);
+            setZero(blackPawns, index);
 
-            if (PassedPawnMasks::BlackPassedPawnMasks[index] & pieces.pieceBitboards[Pieces::White][Pieces::Pawn]) pawn_promotion = pawn_promotion - StaticEvaluator::PawnStructure::DefaultPawnPromotion[7 - index / 8];
-            else pawn_promotion = pawn_promotion - StaticEvaluator::PawnStructure::PassedPawnPromotion[7 - index / 8];
+            if (PassedPawnMasks::BlackPassedPawnMasks[index] & pieces.pieceBitboards[Pieces::White][Pieces::Pawn]) pawnPromotion = pawnPromotion - StaticEvaluator::PawnStructure::DefaultPawnPromotion[7 - index / 8];
+            else pawnPromotion = pawnPromotion - StaticEvaluator::PawnStructure::PassedPawnPromotion[7 - index / 8];
         }
 
-        return pawn_promotion;
+        return pawnPromotion;
     }
     static int32_t kingSafetyCrashedCastling(bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, bool whiteCastlingHappened, bool blackCastlingHappened)
     {
-        int32_t crashed_castling = 0;
+        int32_t crashedCastling = 0;
 
         if (!whiteCastlingHappened) 
         {
-            if (!whiteLongCastling) crashed_castling = crashed_castling + StaticEvaluator::KingSafety::CrashedCastling;
-            if (!whiteShortCastling) crashed_castling = crashed_castling + StaticEvaluator::KingSafety::CrashedCastling;
+            if (!whiteLongCastling) crashedCastling = crashedCastling + StaticEvaluator::KingSafety::CrashedCastling;
+            if (!whiteShortCastling) crashedCastling = crashedCastling + StaticEvaluator::KingSafety::CrashedCastling;
         }
 
         if (!blackCastlingHappened) 
         {
-            if (!blackLongCastling) crashed_castling = crashed_castling - StaticEvaluator::KingSafety::CrashedCastling;
-            if (!blackShortCastling) crashed_castling = crashed_castling - StaticEvaluator::KingSafety::CrashedCastling;
+            if (!blackLongCastling) crashedCastling = crashedCastling - StaticEvaluator::KingSafety::CrashedCastling;
+            if (!blackShortCastling) crashedCastling = crashedCastling - StaticEvaluator::KingSafety::CrashedCastling;
         }
 
-        return crashed_castling;
+        return crashedCastling;
     }
     static int32_t kingSafetyPawnShield(Pieces pieces, bool whiteCastlingHappened, bool blackCastlingHappened)
     {
-        int32_t pawn_shield = 0;
+        int32_t pawnShield = 0;
 
-        int32_t pawn_shield_ctr = 0;
+        int32_t pawnShieldCtr = 0;
 
         if (whiteCastlingHappened) 
         {
-            Bitboard white_pawns = pieces.pieceBitboards[Pieces::White][Pieces::Pawn];
-            Bitboard white_pawn_shield = PawnShieldMasks::WhitePawnShieldMasks[bsf(pieces.pieceBitboards[Pieces::White][Pieces::King])];
-            pawn_shield_ctr = pawn_shield_ctr + countOnes(white_pawns & white_pawn_shield);
+            Bitboard whitePawns = pieces.pieceBitboards[Pieces::White][Pieces::Pawn];
+            Bitboard whitePawnShield = PawnShieldMasks::WhitePawnShieldMasks[bsf(pieces.pieceBitboards[Pieces::White][Pieces::King])];
+            pawnShieldCtr = pawnShieldCtr + countOnes(whitePawns & whitePawnShield);
         }
 
         if (blackCastlingHappened) 
         {
-            Bitboard black_pawns = pieces.pieceBitboards[Pieces::Black][Pieces::Pawn];
-            Bitboard black_pawn_shield = PawnShieldMasks::BlackPawnShieldMasks[bsf(pieces.pieceBitboards[Pieces::Black][Pieces::King])];
-            pawn_shield_ctr = pawn_shield_ctr - countOnes(black_pawns & black_pawn_shield);
+            Bitboard blackPawns = pieces.pieceBitboards[Pieces::Black][Pieces::Pawn];
+            Bitboard blackPawnShield = PawnShieldMasks::BlackPawnShieldMasks[bsf(pieces.pieceBitboards[Pieces::Black][Pieces::King])];
+            pawnShieldCtr = pawnShieldCtr - countOnes(blackPawns & blackPawnShield);
         }
 
-        pawn_shield = pawn_shield + StaticEvaluator::KingSafety::PawnShield * pawn_shield_ctr;
+        pawnShield = pawnShield + StaticEvaluator::KingSafety::PawnShield * pawnShieldCtr;
 
-        return pawn_shield;
+        return pawnShield;
     }
 
     static int32_t twoBishops(Pieces pieces)
     {
-        int32_t two_bishops = 0;
+        int32_t twoBishops = 0;
     
-        if (countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Bishop]) >= 2) two_bishops = two_bishops + StaticEvaluator::TwoBishops;
-        if (countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Bishop]) >= 2) two_bishops = two_bishops - StaticEvaluator::TwoBishops;
+        if (countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Bishop]) >= 2) twoBishops = twoBishops + StaticEvaluator::TwoBishops;
+        if (countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Bishop]) >= 2) twoBishops = twoBishops - StaticEvaluator::TwoBishops;
     
-        return two_bishops;
+        return twoBishops;
     }
     static int32_t endgame(Pieces pieces, bool whiteLeading)
     {
@@ -2180,11 +2141,11 @@ class MoveSorter
 public:
     static MoveList sort(Pieces pieces, MoveList moves)
     {
-        for (uint8_t i = 0; i < moves.size() - 1; i = i + 1) 
+        for (uint8_t i = 0; i < moves.size() - 1; i++) 
         {
-            for (uint8_t j = 0; j < moves.size() - i - 1; j = j + 1) 
+            for (uint8_t j = 0; j < moves.size() - i - 1; j++) 
             {
-                if (MoveSorter::evaluateMove(pieces, moves[j]) < MoveSorter::evaluateMove(pieces, moves[j + 1])) std::swap(moves[j], moves[j + 1]);
+                if (MoveSorter::evaluateMove(pieces, moves[j]) < MoveSorter::evaluateMove(pieces, moves[j + 1])) swap(moves[j], moves[j + 1]);
             }
         }
 
@@ -2203,10 +2164,21 @@ private:
             {
                 switch (move.AttackerType) 
                 {
-                    case Pieces::Knight: evaluation = evaluation - StaticEvaluator::Material::Knight; break;
-                    case Pieces::Bishop: evaluation = evaluation - StaticEvaluator::Material::Bishop; break;
-                    case Pieces::Rook: evaluation = evaluation - StaticEvaluator::Material::Rook; break;
-                    case Pieces::Queen: evaluation = evaluation - StaticEvaluator::Material::Queen; break;
+                    case Pieces::Knight: 
+                        evaluation = evaluation - StaticEvaluator::Material::Knight; 
+                    break;
+
+                    case Pieces::Bishop: 
+                        evaluation = evaluation - StaticEvaluator::Material::Bishop; 
+                    break;
+
+                    case Pieces::Rook: 
+                        evaluation = evaluation - StaticEvaluator::Material::Rook; 
+                    break;
+
+                    case Pieces::Queen: 
+                        evaluation = evaluation - StaticEvaluator::Material::Queen; 
+                    break;
                 }
             }
         }
@@ -2215,20 +2187,48 @@ private:
         {
             switch (move.DefenderType) 
             {
-                case Pieces::Pawn: evaluation = evaluation + 1000 * StaticEvaluator::Material::Pawn; break;
-                case Pieces::Knight: evaluation = evaluation + 1000 * StaticEvaluator::Material::Knight; break;
-                case Pieces::Bishop: evaluation = evaluation + 1000 * StaticEvaluator::Material::Bishop; break;
-                case Pieces::Rook: evaluation = evaluation + 1000 * StaticEvaluator::Material::Rook; break;
-                case Pieces::Queen: evaluation = evaluation + 1000 * StaticEvaluator::Material::Queen; break;
+                case Pieces::Pawn:
+                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Pawn; 
+                break;
+
+                case Pieces::Knight: 
+                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Knight; 
+                break;
+
+                case Pieces::Bishop: 
+                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Bishop; 
+                break;
+
+                case Pieces::Rook: 
+                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Rook; 
+                break;
+
+                case Pieces::Queen: 
+                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Queen; 
+                break;
             }
             
             switch (move.DefenderType)
             {
-                case Pieces::Pawn: evaluation = evaluation - StaticEvaluator::Material::Pawn; break;
-                case Pieces::Knight: evaluation = evaluation - StaticEvaluator::Material::Knight; break;
-                case Pieces::Bishop: evaluation = evaluation - StaticEvaluator::Material::Bishop; break;
-                case Pieces::Rook: evaluation = evaluation - StaticEvaluator::Material::Rook; break;
-                case Pieces::Queen: evaluation = evaluation - StaticEvaluator::Material::Queen; break;
+                case Pieces::Pawn:
+                    evaluation = evaluation - StaticEvaluator::Material::Pawn; 
+                break;
+
+                case Pieces::Knight: 
+                    evaluation = evaluation - StaticEvaluator::Material::Knight; 
+                break;
+
+                case Pieces::Bishop: 
+                    evaluation = evaluation - StaticEvaluator::Material::Bishop; 
+                break;
+
+                case Pieces::Rook: 
+                    evaluation = evaluation - StaticEvaluator::Material::Rook; 
+                break;
+
+                case Pieces::Queen: 
+                    evaluation = evaluation - StaticEvaluator::Material::Queen; 
+                break;
             }
         }
     
@@ -2264,8 +2264,8 @@ public:
 
     void addEntry(Entry entry)
     {
-        auto hash_copy = this->Set.find(entry);
-        if (hash_copy == this->Set.end() or hash_copy->Depth < entry.Depth) this->Set.insert(entry);
+        auto hashCopy = this->Set.find(entry);
+        if (hashCopy == this->Set.end() or hashCopy->Depth < entry.Depth) this->Set.insert(entry);
     }
 
     uint8_t tryToFindBestMoveIndex(ZobristHash hash)
@@ -2293,14 +2293,25 @@ public:
     {
         cout << endl;
 
-        StaticEvaluator::evaluate(position.pieces, position.WhiteLongCastling, position.WhiteShortCastling, position.BlackLongCastling, position.BlackShortCastling, position.whiteCastlingHappened, position.blackCastlingHappened, true);
+        cout << "Thinking..." << endl;
+
+        bool debug = false;
+
+        #if DEBUG
+            debug = true;
+        #endif
+
+        StaticEvaluator::evaluate(position.pieces, position.WhiteLongCastling, position.WhiteShortCastling, position.BlackLongCastling, position.BlackShortCastling, position.whiteCastlingHappened, position.blackCastlingHappened, debug);
 
         int64_t timeStart = nsecs;
         stopSearch = false;
-        TranspositionTable tt;
+        TranspositionTable TransposTable;
 
         tuple<Move, int32_t> openingBookResult = this->openingBook.tryToFindMove(position);
-        cout << "Number of available moves in the opening book: " << get<1>(openingBookResult) << "." << std::endl;
+
+        #if DEBUG
+            cout << YELLOWBG << "Number of available moves in the opening book: " << get<1>(openingBookResult) << "." << END << endl;
+        #endif
 
         if (get<1>(openingBookResult)) 
         {
@@ -2309,7 +2320,7 @@ public:
             return get<0>(openingBookResult);
         }
 
-        cout << "Search started." << endl;
+        cout << YELLOW << "Search started." << END << endl;
 
         int32_t bestMoveEvaluation;
         Move bestMove;
@@ -2324,7 +2335,7 @@ public:
             maxDepth = 0;
             cutOffs = 0;
 
-            bestMoveThread = async(AI::BestMove, position, side, i, ref(tt));
+            bestMoveThread = async(AI::BestMove, position, side, i, ref(TransposTable));
 
             updateBestMove = true;
 
@@ -2339,20 +2350,22 @@ public:
                 usleep(20000);
             }
 
-            if (updateBestMove or i == 1) tie(bestMoveEvaluation, bestMove) = bestMoveThread.get();
+            if (updateBestMove || i == 1) tie(bestMoveEvaluation, bestMove) = bestMoveThread.get();
             else {
                 stopSearch = true;
                 break;
             }
+            
+            #if DEBUG
+                cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
+            #endif
 
-            cout << "Base depth: " << setw(4) << i << ". Maximal depth: " << setw(4) << maxDepth << ". Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns. Evaluated (this iteration): " << std::setw(10) << evaluated << ". TT cutoffs (this iteration): " << std::setw(10) << cutOffs << ". Time (full search): " << std::setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << std::endl;
-
-            if (bestMoveEvaluation > AI::Infinity::Positive - 2000 or bestMoveEvaluation < AI::Infinity::Negative + 2000) break;
+            if (bestMoveEvaluation > AI::Infinity::Positive - 2000 || bestMoveEvaluation < AI::Infinity::Negative + 2000) break;
         }
 
         usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
 
-        cout << "Search finished." << endl;
+        cout << GREEN << "Search finished." << END << endl;
 
         return bestMove;
     }
@@ -2360,14 +2373,14 @@ public:
 private:
     OpeningBook openingBook;
 
-    static tuple<int32_t, Move> BestMove(const Position& position, uint8_t side, int32_t depth, TranspositionTable &tt)
+    static tuple<int32_t, Move> BestMove(const Position& position, uint8_t side, int32_t depth, TranspositionTable &TransposTable)
     {
-        if (side == Pieces::White) return AI::alphaBetaMax(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, tt);
+        if (side == Pieces::White) return AI::alphaBetaMax(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
 
-        return AI::alphaBetaMin(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, tt);
+        return AI::alphaBetaMin(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
     }
 
-    static tuple<int32_t, Move> alphaBetaMin(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable &tt)
+    static tuple<int32_t, Move> alphaBetaMin(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable &TransposTable)
     {
         if (stopSearch) return make_tuple(0, Move());
         if (currentDepth > maxDepth) maxDepth = currentDepth;
@@ -2395,7 +2408,7 @@ private:
 
         Position copy;
 
-        uint8_t tt_result = tt.tryToFindBestMoveIndex(position.hash);
+        uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
 
         for (uint8_t i = 0; i < moves.size(); i = i + 1) 
         {
@@ -2412,11 +2425,11 @@ private:
 
             copy = position;
             copy.move(move);
-            evaluation = get<0>(AI::alphaBetaMax(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, tt));
+            evaluation = get<0>(AI::alphaBetaMax(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
 
             if (evaluation <= alpha) 
             {
-                if (tt_result >= moves.size() or i != 0) tt.addEntry({position.hash, depth_left, bestMoveIndex});
+                if (tt_result >= moves.size() or i != 0) TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
                 else cutOffs = cutOffs + 1;
                 return make_tuple(alpha, bestMove);
             }
@@ -2429,10 +2442,10 @@ private:
             }
         }
 
-        tt.addEntry({position.hash, depth_left, bestMoveIndex});
+        TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
         return std::make_tuple(beta, bestMove);
     }
-    static tuple<int32_t, Move> alphaBetaMax(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable &tt)
+    static tuple<int32_t, Move> alphaBetaMax(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable &TransposTable)
     {
         if (stopSearch) return std::make_tuple(0, Move());
         if (currentDepth > maxDepth) maxDepth = currentDepth;
@@ -2459,7 +2472,7 @@ private:
 
         Position copy;
 
-        uint8_t tt_result = tt.tryToFindBestMoveIndex(position.hash);
+        uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
 
         for (uint8_t i = 0; i < moves.size(); i = i + 1) 
         {
@@ -2476,11 +2489,11 @@ private:
 
             copy = position;
             copy.move(move);
-            evaluation = get<0>(AI::alphaBetaMin(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, tt));
+            evaluation = get<0>(AI::alphaBetaMin(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
 
             if (evaluation >= beta) 
             {
-                if (tt_result >= moves.size() or i != 0) tt.addEntry({position.hash, depth_left, bestMoveIndex});
+                if (tt_result >= moves.size() or i != 0) TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
                 else cutOffs = cutOffs + 1;
                 return make_tuple(beta, bestMove);
             }
@@ -2493,20 +2506,34 @@ private:
             }
         }
 
-        tt.addEntry({position.hash, depth_left, bestMoveIndex});
+        TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
         return make_tuple(alpha, bestMove);
     }
 
     static int32_t alphaBetaMinOnlyCaptures(const Position& position, int32_t alpha, int32_t beta, int32_t currentDepth)
     {
-        if (stopSearch) return 0;
-        if (currentDepth > maxDepth) maxDepth = currentDepth;
+        if (stopSearch)
+        {
+            return 0;
+        }
+
+        if (currentDepth > maxDepth)
+        {
+            maxDepth = currentDepth;
+        }
 
         int32_t evaluation = StaticEvaluator::evaluate(position.pieces, position.WhiteLongCastling, position.WhiteShortCastling, position.BlackLongCastling, position.BlackShortCastling, position.whiteCastlingHappened, position.blackCastlingHappened);
-        evaluated = evaluated + 1;
+        evaluated++;
 
-        if (evaluation <= alpha) return alpha;
-        if (evaluation < beta) beta = evaluation;
+        if (evaluation <= alpha)
+        {
+            return alpha;
+        } 
+
+        if (evaluation < beta)
+        {
+            beta = evaluation;
+        }
 
         MoveList moves = LegalMoveGen::generate(position, Pieces::Black, true);
         moves = MoveSorter::sort(position.pieces, moves);
@@ -2514,7 +2541,7 @@ private:
 
         Position copy;
 
-        for (uint8_t i = 0; i < moves.size(); i = i + 1) 
+        for (uint8_t i = 0; i < moves.size(); i++) 
         {
             move = moves[i];
 
@@ -2522,8 +2549,15 @@ private:
             copy.move(move);
             evaluation = AI::alphaBetaMaxOnlyCaptures(copy, alpha, beta, currentDepth + 1);
 
-            if (evaluation <= alpha) return alpha;
-            if (evaluation < beta) beta = evaluation;
+            if (evaluation <= alpha)
+            {
+                return alpha;
+            }
+
+            if (evaluation < beta)
+            {
+                beta = evaluation;
+            }
         }
 
         return beta;
@@ -2531,14 +2565,28 @@ private:
 
     static int32_t alphaBetaMaxOnlyCaptures(const Position& position, int32_t alpha, int32_t beta, int32_t currentDepth)
     {
-        if (stopSearch) return 0;
-        if (currentDepth > maxDepth) maxDepth = currentDepth;
+        if (stopSearch)
+        {
+            return 0;
+        }
+
+        if (currentDepth > maxDepth)
+        {
+            maxDepth = currentDepth;
+        }
 
         int32_t evaluation = StaticEvaluator::evaluate(position.pieces, position.WhiteLongCastling, position.WhiteShortCastling, position.BlackLongCastling, position.BlackShortCastling, position.whiteCastlingHappened, position.blackCastlingHappened);
-        evaluated = evaluated + 1;
+        evaluated++;
 
-        if (evaluation >= beta) return beta;
-        if (evaluation > alpha) alpha = evaluation;
+        if (evaluation >= beta)
+        {
+            return beta;
+        }
+
+        if (evaluation > alpha)
+        {
+            alpha = evaluation;
+        }
 
         MoveList moves = LegalMoveGen::generate(position, Pieces::White, true);
         moves = MoveSorter::sort(position.pieces, moves);
@@ -2546,16 +2594,24 @@ private:
 
         Position copy;
 
-        for (uint8_t i = 0; i < moves.size(); i = i + 1) 
+        for (uint8_t i = 0; i < moves.size(); i++) 
         {
             move = moves[i];
 
             copy = position;
             copy.move(move);
+
             evaluation = AI::alphaBetaMinOnlyCaptures(copy, alpha, beta, currentDepth + 1);
 
-            if (evaluation >= beta) return beta;
-            if (evaluation > alpha) alpha = evaluation;
+            if (evaluation >= beta)
+            {
+                return beta;
+            }
+
+            if (evaluation > alpha)
+            {
+                alpha = evaluation;
+            }
         }
 
         return alpha;
@@ -2569,6 +2625,8 @@ private:
 };
 
 
+
+//—————————————————— Game ——————————————————
 class Game
 {
 public:
@@ -2576,287 +2634,13 @@ public:
     {
         this->position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
 
+        #if TEST_PROMOTION
+            this->position = {"rnbqkbnr/11111111/8/8/8/8/K111111p/11111111", 255, true, true, true, true, 1};
+        #endif
+
         cout << "Welcome to the chess engine!" << endl;
 
-        sideChoose();
-
-        if (playerSide == Pieces::White) 
-        {
-            while (true) 
-            {
-
-                cout << position << endl;
-
-
-                moves = LegalMoveGen::generate(this->position, playerSide);
-
-                this->playerMove = getMove();
-
-                bool moveFound = false;
-
-                for (uint8_t i = 0; i < moves.size(); i++)
-                {
-                    if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
-                    {
-                        move = moves[i];
-                        moveFound = true;
-
-                        break;
-                    } else
-                    if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
-                    {
-                        //Choose promotion piece
-                        cout << "\nChoose promotion piece: " << endl;
-                        cout << "1. Knight" << endl;
-                        cout << "2. Bishop" << endl;
-                        cout << "3. Rook" << endl;
-                        cout << "4. Queen" << endl;
-
-                        int promotionPiece = 0;
-                        cin >> promotionPiece;
-
-                        switch (promotionPiece)
-                        {
-                            case 1:
-                                move = moves[i];
-                                move.Flag = Move::Flag::PromoteToKnight;
-                                moveFound = true;
-                            break;
-
-                            case 2:
-                                move = moves[i];
-                                move.Flag = Move::Flag::PromoteToBishop;
-                                moveFound = true;
-                            break;
-
-                            case 3:
-                                move = moves[i];
-                                move.Flag = Move::Flag::PromoteToRook;
-                                moveFound = true;
-                            break;
-
-                            case 4:
-                                move = moves[i];
-                                move.Flag = Move::Flag::PromoteToQueen;
-                                moveFound = true;
-                            break;
-
-                            default:
-                                cout << RED << "\n[ERROR] Illegal move!" << END << endl;
-                                continue;
-                            break;
-                        }
-
-                        break;
-                    }
-
-                }
-
-                if (!moveFound)
-                {
-                    cout << RED << "\n[ERROR] Illegal move!" << END << endl;
-                    continue;
-                }
-
-                this->position.move(move);
-
-                if (move.DefenderType != 255)
-                {
-                    cout << "\n";
-
-                    switch (move.DefenderType)
-                    {
-                        case 0:
-                            cout << YELLOW << "Pawn has been captured!" << END << endl;
-                        break;
-
-                        case 1:
-                            cout << YELLOW << "Knight has been captured!" << END << endl;
-                        break;
-
-                        case 2:
-                            cout << YELLOW << "Bishop has been captured!" << END << endl;
-                        break;
-
-                        case 3:
-                            cout << YELLOW << "Rook has been captured!" << END << endl;
-                        break;
-
-                        case 4:
-                            cout << YELLOW << "Queen has been captured!" << END << endl;
-                        break;
-
-                        default:
-                            cout << RED << "[ERROR] Unknown piece type!" << END << endl;
-                        break;
-                    }
-                }
-
-
-                cout << "\nMove has been made!" << endl;
-
-                cout << position << endl;
-
-                //Check if game is finished
-                if (this->gameFinished())
-                {
-                    cout << position << endl;
-                    break;
-                }
-
-                //AI move
-                move = ai.bestMove(position, aiSide, 0, 10000);
-                position.move(move);
-
-                //Check if game is finished
-                if (this->gameFinished())
-                {
-                    cout << position << endl;
-                    break;
-                }
-            }
-        } else 
-        {
-            cout << position << endl;
-
-            while (true) 
-            {
-
-                //AI move
-                move = ai.bestMove(position, aiSide, 0, 10000);
-                position.move(move);
-
-                cout << position << endl;
-                
-                //Check if game is finished
-                if (this->gameFinished())
-                {
-                    cout << position << endl;
-                    break;
-                }
-
-                //Player move
-                bool moveFound = false;
-
-                do
-                {
-                    moves = LegalMoveGen::generate(this->position, playerSide);
-    
-                    this->playerMove = getMove();
-    
-                    for (uint8_t i = 0; i < moves.size(); i++)
-                    {
-                        if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
-                        {
-                            move = moves[i];
-                            moveFound = true;
-
-                            break;
-                        } else
-                        if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
-                        {
-                            //Choose promotion piece
-                            cout << "\nChoose promotion piece: " << endl;
-                            cout << "1. Knight" << endl;
-                            cout << "2. Bishop" << endl;
-                            cout << "3. Rook" << endl;
-                            cout << "4. Queen" << endl;
-
-                            int promotionPiece = 0;
-                            cin >> promotionPiece;
-
-                            switch (promotionPiece)
-                            {
-                                case 1:
-                                    move = moves[i];
-                                    move.Flag = Move::Flag::PromoteToKnight;
-                                    moveFound = true;
-                                break;
-
-                                case 2:
-                                    move = moves[i];
-                                    move.Flag = Move::Flag::PromoteToBishop;
-                                    moveFound = true;
-                                break;
-
-                                case 3:
-                                    move = moves[i];
-                                    move.Flag = Move::Flag::PromoteToRook;
-                                    moveFound = true;
-                                break;
-
-                                case 4:
-                                    move = moves[i];
-                                    move.Flag = Move::Flag::PromoteToQueen;
-                                    moveFound = true;
-                                break;
-
-                                default:
-                                    cout << RED << "\n[ERROR] Illegal move!" << END << endl;
-                                    continue;
-                                break;
-                            }
-
-                            break;
-                        }
-
-                    }
-
-                    if (!moveFound)
-                    {
-                        cout << RED << "\n[ERROR] Illegal move!" << END << endl;
-                        continue;
-                    }
-
-                    this->position.move(move);
-
-                    if (move.DefenderType != 255)
-                    {
-                        cout << "\n";
-
-                        switch (move.DefenderType)
-                        {
-                            case 0:
-                                cout << YELLOW << "Pawn has been captured!" << END << endl;
-                            break;
-
-                            case 1:
-                                cout << YELLOW << "Knight has been captured!" << END << endl;
-                            break;
-
-                            case 2:
-                                cout << YELLOW << "Bishop has been captured!" << END << endl;
-                            break;
-
-                            case 3:
-                                cout << YELLOW << "Rook has been captured!" << END << endl;
-                            break;
-
-                            case 4:
-                                cout << YELLOW << "Queen has been captured!" << END << endl;
-                            break;
-
-                            default:
-                                cout << RED << "[ERROR] Unknown piece type!" << END << endl;
-                            break;
-                        }
-                    }
-
-                    cout << "\nMove has been made!" << endl;
-
-                    cout << position << endl;
-                } while (!moveFound);
-                
-                
-    
-                //Check if game is finished
-                if (this->gameFinished())
-                {
-                    cout << position << endl;
-                    break;
-                }
-            }
-        }
+        chooseGameMode();
     }
 
 private:
@@ -2999,36 +2783,337 @@ private:
         
         if (choice == 1)
         {
-            cout << "You are playing as white." << endl;
+            cout << WHITE << "You are playing as white." << END << endl;
             playerSide = Pieces::White;
             aiSide = Pieces::Black;
         } else
         {
-            cout << "You are playing as black." << endl;
+            cout << BLACK << WHITEBG << "You are playing as black." << END << endl;
             playerSide = Pieces::Black;
             aiSide = Pieces::White;
         }
         
     }
+
+    bool movePlayer(uint8_t side) //Returns true if player move is valid
+    {
+        this->moves = LegalMoveGen::generate(this->position, side);
+
+        this->playerMove = getMove();
+        bool moveFound = false;
+        
+        for (uint8_t i = 0; i < moves.size(); i++)
+        {
+            if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
+            {
+                move = moves[i];
+                moveFound = true;
+
+                break;
+            } else
+            if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
+            {
+                //Choose promotion piece
+                cout << "\nChoose promotion piece: " << endl;
+                cout << "1. Knight" << endl;
+                cout << "2. Bishop" << endl;
+                cout << "3. Rook" << endl;
+                cout << "4. Queen" << endl;
+
+                int promotionPiece = 0;
+                cin >> promotionPiece;
+
+                switch (promotionPiece)
+                {
+                    case 1:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToKnight;
+                        moveFound = true;
+                    break;
+
+                    case 2:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToBishop;
+                        moveFound = true;
+                    break;
+
+                    case 3:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToRook;
+                        moveFound = true;
+                    break;
+
+                    case 4:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToQueen;
+                        moveFound = true;
+                    break;
+
+                    default:
+                        cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                        continue;
+                    break;
+                }
+
+                break;
+            }
+        }
+
+        if (!moveFound)
+        {
+            cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+            return false;
+        }
+
+        this->position.move(move);
+
+        if (move.DefenderType != 255)
+        {
+            cout << "\n";
+
+            switch (move.DefenderType)
+            {
+                case 0:
+                    cout << YELLOW << "Pawn has been captured!" << END << endl;
+                break;
+
+                case 1:
+                    cout << YELLOW << "Knight has been captured!" << END << endl;
+                break;
+
+                case 2:
+                    cout << YELLOW << "Bishop has been captured!" << END << endl;
+                break;
+
+                case 3:
+                    cout << YELLOW << "Rook has been captured!" << END << endl;
+                break;
+
+                case 4:
+                    cout << YELLOW << "Queen has been captured!" << END << endl;
+                break;
+
+                default:
+                    cout << RED << "[ERROR] Unknown piece type!" << END << endl;
+                break;
+            }
+        }
+
+        cout << "\nMove has been made!" << endl;
+        cout << position << endl;
+
+        return true;
+    }
+
+    void PvE()
+    {
+        sideChoose();
+
+        if (playerSide == Pieces::White) 
+        {
+            while (true) 
+            {
+
+                cout << position << endl;
+
+                if(!movePlayer(playerSide))
+                {
+                    continue;
+                }
+                
+
+                //Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+                    break;
+                }
+
+                //AI move
+                move = ai.bestMove(position, aiSide, 0, 10000);
+                position.move(move);
+
+                //Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+                    break;
+                }
+            }
+        } else 
+        {
+            cout << position << endl;
+
+            while (true) 
+            {
+
+                //AI move
+                move = ai.bestMove(position, aiSide, 0, 10000);
+                position.move(move);
+
+                cout << position << endl;
+                
+                //Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+                    break;
+                }
+
+                //Player move
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
+                
+                
+    
+                //Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+                    break;
+                }
+            }
+        }
+    }
+
+    void PvP()
+    {
+        sideChoose();
+
+        cout << position << endl;
+
+        while (true) 
+        {
+            
+            //Player 1 move
+            cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+            while (!movePlayer(playerSide))
+            {
+                continue;
+            }
+            
+
+            //Check if game is finished
+            if (this->gameFinished())
+            {
+                cout << position << endl;
+                break;
+            }
+
+            //Player 2 move
+            cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+            while (!movePlayer(aiSide))
+            {
+                continue;
+            }
+            
+
+            //Check if game is finished
+            if (this->gameFinished())
+            {
+                cout << position << endl;
+                break;
+            }
+        }
+    }
+
+    void EvE()
+    {
+        playerSide = Pieces::White;
+        aiSide = Pieces::Black;
+
+        while (true) 
+        {
+            cout << position << endl;
+
+            //AI 1 move
+            move = ai.bestMove(position, playerSide, 0, 10000);
+            position.move(move);
+
+            //Check if game is finished
+            if (this->gameFinished())
+            {
+                cout << position << endl;
+                break;
+            }
+
+            cout << position << endl;
+
+            //AI 2 move
+            move = ai.bestMove(position, aiSide, 0, 10000);
+            position.move(move);
+
+            //Check if game is finished
+            if (this->gameFinished())
+            {
+                cout << position << endl;
+                break;
+            }
+        }
+    }
+
+    void chooseGameMode()
+    {
+        //Choose game mode
+        cout << "Choose game mode: " << endl;
+        cout << "1. Player vs Player" << endl;
+        cout << "2. Player vs AI" << endl;
+        cout << "3. AI vs AI" << endl;
+
+        int gameMode = 0;
+        cin >> gameMode;
+
+        switch (gameMode)
+        {
+            case 1:
+                PvP();
+            break;
+
+            case 2:
+                PvE();
+            break;
+
+            case 3:
+                EvE();
+            break;
+
+            default:
+                cout << RED << "\n[ERROR] Illegal game mode!\n" << END << endl;
+                this->chooseGameMode();
+            break;
+        }
+    }
 };
+
+void start()
+{
+    Game game;
+    game.start();
+}
 
 int main()
 {
-    #if TEST_LEGAL_MOVE_GENERATION
-        LegalMoveGenTester::test();
-    #endif
-
-
-    #if TEST_AI
-        Position position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
-        AI ai;
-        ai.bestMove(position, Pieces::White, 0, 60000);
-    #endif
-
-
     #if PLAY
-        Game game;
-        game.start();
+        while (true)
+        {
+            start();
+
+            cout << "Do you want to play again ?" << endl;
+            cout << "Enter N to exit or any other key to continue." << endl;
+
+            char answer;
+            cin >> answer;
+
+            if (answer == 'N' || answer == 'n')
+            {
+                break;
+            }
+
+        }
     #endif
 
     return 0;

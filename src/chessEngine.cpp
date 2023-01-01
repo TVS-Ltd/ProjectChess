@@ -14,8 +14,15 @@
 #define PLAY true
 #define DEBUG false
 #define TEST_PROMOTION false
+#define TEST_CASTLING false
+#define TEST_EN_PASSANT false
 #define nsecs std::chrono::high_resolution_clock::now().time_since_epoch().count()
+
+//ONLY FOR LINUX
 #define OpeningBookFile "/usr/bin/OpeningBook.txt"
+
+//FOR WINDOWS
+//#define OpeningBookFile "./OpeningBook.txt"
 
 
 //——————————————————Terminal colors——————————————————
@@ -1566,7 +1573,6 @@ private:
 
 
 //—————————————————— AI ——————————————————
-
 static atomic<bool> stopSearch;
 
 
@@ -2636,6 +2642,14 @@ public:
 
         #if TEST_PROMOTION
             this->position = {"rnbqkbnr/11111111/8/8/8/8/K111111p/11111111", 255, true, true, true, true, 1};
+        #endif
+
+        #if TEST_CASTLING
+            this->position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK11R", 255, true, true, true, true, 1};
+        #endif
+
+        #if TEST_EN_PASSANT
+            this->position = {"rnbqkbnr/pppppppp/8/1111P111/8/8/PPPP1PPP/RNBQKBNR", 255, true, true, true, true, 1};
         #endif
 
         cout << "Welcome to the chess engine!" << endl;

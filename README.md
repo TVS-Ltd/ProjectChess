@@ -17,5 +17,6 @@
 - Player vs Player
 - AI vs AI
 
->[SOURCE CODE](https://github.com/TVS-Ltd/ProjectChess/src)
->[INSTALLATION PACKAGE FOR DEBIAN/UBUNTU/LINUX MINT]()
+>[SOURCE CODE](https://github.com/TVS-Ltd/ProjectChess/tree/master/src)
+
+>[INSTALLATION PACKAGE FOR DEBIAN/UBUNTU/LINUX MINT](https://github.com/TVS-Ltd/ProjectChess/blob/master/chessEngine.deb)

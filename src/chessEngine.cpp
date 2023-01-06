@@ -11,18 +11,21 @@
 #include <unistd.h>
 #include <set>
 
-#define PLAY true
-#define DEBUG false
+#define DEBUG true
 #define TEST_PROMOTION false
 #define TEST_CASTLING false
 #define TEST_EN_PASSANT false
+#define YESNO_MENU true
+#define LINUX true
 #define nsecs std::chrono::high_resolution_clock::now().time_since_epoch().count()
 
-//ONLY FOR LINUX
-#define OpeningBookFile "/usr/bin/OpeningBook.txt"
-
-//FOR WINDOWS
-//#define OpeningBookFile "./OpeningBook.txt"
+#if LINUX
+    //ONLY FOR LINUX
+    #define OpeningBookFile "/usr/bin/OpeningBook.txt"
+#else
+    //FOR WINDOWS
+    #define OpeningBookFile "./OpeningBook.txt"
+#endif
 
 
 //——————————————————Terminal colors——————————————————
@@ -41,7 +44,6 @@ const char* GREENBG = "\033[102m";
 const char* YELLOWBG = "\033[103m";
 const char* WHITEBG = "\033[107m";
 const char* BLACKBG = "\033[100m";
-
 
 using namespace std;
 
@@ -108,9 +110,9 @@ namespace BitboardRows
     {
         array<Bitboard, 8> rows{};
 
-        for (uint8_t y = 0; y < 8; y = y + 1) 
+        for (uint8_t y = 0; y < 8; y++) 
         {
-            for (uint8_t x = 0; x < 8; x = x + 1)
+            for (uint8_t x = 0; x < 8; x++)
             {
                 setOne(rows[y], y * 8 + x);
             }
@@ -127,7 +129,7 @@ namespace BitboardRows
     {
         array<Bitboard, 8> inversionRows{};
 
-        for (uint8_t i = 0; i < 8; i = i + 1)
+        for (uint8_t i = 0; i < 8; i++)
         {
             inversionRows[i] = ~Rows[i];
         }
@@ -136,7 +138,7 @@ namespace BitboardRows
     }
 
 
-    static constexpr std::array<Bitboard, 8> InversionRows = BitboardRows::calculateInversionRows();
+    static constexpr array<Bitboard, 8> InversionRows = BitboardRows::calculateInversionRows();
 }
 
 //Bitboard columns
@@ -146,9 +148,9 @@ namespace BitboardColumns
     {
         array<Bitboard, 8> columns{};
 
-        for (uint8_t x = 0; x < 8; x = x + 1) 
+        for (uint8_t x = 0; x < 8; x++) 
         {
-            for (uint8_t y = 0; y < 8; y = y + 1)
+            for (uint8_t y = 0; y < 8; y++)
             {
                 setOne(columns[x], y * 8 + x);
             }
@@ -165,7 +167,7 @@ namespace BitboardColumns
     {
         array<Bitboard, 8> inversionColumns{};
 
-        for (uint8_t i = 0; i < 8; i = i + 1)
+        for (uint8_t i = 0; i < 8; i++)
         {
             inversionColumns[i] = ~Columns[i];
         }
@@ -195,7 +197,7 @@ public:
             if (buff == '/') 
             {
                 x = 0;
-                y = y - 1;
+                y--;
             } else 
             if (isdigit(buff)) 
             {
@@ -238,7 +240,7 @@ public:
                     break;
                 }
 
-                x = x + 1;
+                x++;
             }
         }
 
@@ -356,9 +358,9 @@ public:
 
     friend bool operator ==(Pieces left, Pieces right)
     {
-        for (uint8_t i = 0; i < 2; i = i + 1) 
+        for (uint8_t i = 0; i < 2; i++) 
         {
-            for (uint8_t j = 0; j < 6; j = j + 1) 
+            for (uint8_t j = 0; j < 6; j++) 
             {
                 if (left.pieceBitboards[i][j] != right.pieceBitboards[i][j])
                 {
@@ -372,19 +374,9 @@ public:
 
     void updateBitboards() 
     {
-        this->sideBitboards[White] = this->pieceBitboards[White][Pawn] |
-                                               this->pieceBitboards[White][Knight] |
-                                               this->pieceBitboards[White][Bishop] |
-                                               this->pieceBitboards[White][Rook] |
-                                               this->pieceBitboards[White][Queen] |
-                                               this->pieceBitboards[White][King];
+        this->sideBitboards[White] = this->pieceBitboards[White][Pawn] | this->pieceBitboards[White][Knight] | this->pieceBitboards[White][Bishop] | this->pieceBitboards[White][Rook] | this->pieceBitboards[White][Queen] | this->pieceBitboards[White][King];
 
-        this->sideBitboards[Black] = this->pieceBitboards[Black][Pawn] |
-                                               this->pieceBitboards[Black][Knight] |
-                                               this->pieceBitboards[Black][Bishop] |
-                                               this->pieceBitboards[Black][Rook] |
-                                               this->pieceBitboards[Black][Queen] |
-                                               this->pieceBitboards[Black][King];
+        this->sideBitboards[Black] = this->pieceBitboards[Black][Pawn] | this->pieceBitboards[Black][Knight] | this->pieceBitboards[Black][Bishop] | this->pieceBitboards[Black][Rook] | this->pieceBitboards[Black][Queen] | this->pieceBitboards[Black][King];
 
         this->inversionSideBitboards[White] = ~this->sideBitboards[White];
         this->inversionSideBitboards[Black] = ~this->sideBitboards[Black];
@@ -421,11 +413,11 @@ namespace ZobristHashConsteval
 
         uint64_t previous = ZobristHashConsteval::randomKeyGenerator::Seed;
 
-        for (uint8_t square = 0; square < 64; square = square + 1) 
+        for (uint8_t square = 0; square < 64; square++) 
         {
-            for (uint8_t side = 0; side < 2; side = side + 1)
+            for (uint8_t side = 0; side < 2; side++)
             {
-                for (uint8_t type = 0; type < 6; type = type + 1) 
+                for (uint8_t type = 0; type < 6; type++) 
                 {
                     previous = ZobristHashConsteval::nextRandom(previous);
                     constants[square][side][type] = previous;
@@ -481,7 +473,7 @@ public:
 
         uint8_t side;
 
-        for (uint8_t square = 0; square < 64; square = square + 1) 
+        for (uint8_t square = 0; square < 64; square++) 
         {
             if (getBit(pieces.sideBitboards[Pieces::White], square))
             {
@@ -573,7 +565,7 @@ public:
         {
             if (hash == hash1)
             {
-                ctr = ctr + 1;
+                ctr++;
             }
         }
 
@@ -603,7 +595,7 @@ public:
 
     friend bool operator ==(Move left, Move right)
     {
-        return (left.From == right.From and left.To == right.To and left.AttackerType == right.AttackerType and left.AttackerSide == right.AttackerSide and left.DefenderType == right.DefenderType and left.DefenderSide == right.DefenderSide and left.Flag == right.Flag);
+        return (left.From == right.From && left.To == right.To && left.AttackerType == right.AttackerType && left.AttackerSide == right.AttackerSide && left.DefenderType == right.DefenderType && left.DefenderSide == right.DefenderSide && left.Flag == right.Flag);
     }
 
     uint8_t From;
@@ -913,20 +905,19 @@ namespace KingMasks
         uint8_t dx;
         uint8_t dy;
 
-        for (uint8_t x0 = 0; x0 < 8; x0 = x0 + 1) 
+        for (uint8_t x0 = 0; x0 < 8; x0++) 
         {
-            for (uint8_t y0 = 0; y0 < 8; y0 = y0 + 1) 
+            for (uint8_t y0 = 0; y0 < 8; y0++) 
             {
-
-                for (uint8_t x1 = 0; x1 < 8; x1 = x1 + 1) 
+                for (uint8_t x1 = 0; x1 < 8; x1++) 
                 {
-                    for (uint8_t y1 = 0; y1 < 8; y1 = y1 + 1) 
+                    for (uint8_t y1 = 0; y1 < 8; y1++) 
                     {
 
                         dx = KingMasks::absSubtract(x0, x1);
                         dy = KingMasks::absSubtract(y0, y1);
 
-                        if (dx <= 1 and dy <= 1)
+                        if (dx <= 1 && dy <= 1)
                         {
                             setOne(masks[y0 * 8 + x0], y1 * 8 + x1);
                         } 
@@ -960,20 +951,19 @@ namespace KnightMasks
         uint8_t dx;
         uint8_t dy;
 
-        for (uint8_t x0 = 0; x0 < 8; x0 = x0 + 1) 
+        for (uint8_t x0 = 0; x0 < 8; x0++) 
         {
-            for (uint8_t y0 = 0; y0 < 8; y0 = y0 + 1) 
+            for (uint8_t y0 = 0; y0 < 8; y0++) 
             {
-
-                for (uint8_t x1 = 0; x1 < 8; x1 = x1 + 1) 
+                for (uint8_t x1 = 0; x1 < 8; x1++) 
                 {
-                    for (uint8_t y1 = 0; y1 < 8; y1 = y1 + 1) 
+                    for (uint8_t y1 = 0; y1 < 8; y1++) 
                     {
 
                         dx = KnightMasks::absSubtract(x0, x1);
                         dy = KnightMasks::absSubtract(y0, y1);
 
-                        if ((dx == 2 and dy == 1) or (dx == 1 and dy == 2))
+                        if ((dx == 2 and dy == 1) || (dx == 1 and dy == 2))
                         {
                             setOne(masks[y0 * 8 + x0], y1 * 8 + x1);
                         } 
@@ -1069,9 +1059,9 @@ namespace SlidersMasks
     {
         array<array<Bitboard, 8>, 64> masks{};
 
-        for (uint8_t i = 0; i < 64; i = i + 1) 
+        for (uint8_t i = 0; i < 64; i++) 
         {
-            for (uint8_t j = 0; j < 8; j = j + 1)
+            for (uint8_t j = 0; j < 8; j++)
             {
                 masks[i][j] = SlidersMasks::calculateMask(i, j);
             }
@@ -1201,20 +1191,35 @@ public:
 
     static bool inDanger(Pieces pieces, uint8_t p, uint8_t side)
     {
-        Bitboard opposite_pawns_left_captures = PsLegalMoveMaskGen::generatePawnLeftCapturesMask(pieces, Pieces::inverse(side), true);
-        Bitboard opposite_pawns_right_captures = PsLegalMoveMaskGen::generatePawnRightCapturesMask(pieces, Pieces::inverse(side), true);
-        Bitboard opposite_pawns_captures = opposite_pawns_left_captures | opposite_pawns_right_captures;
+        Bitboard oppositePawnsLeftCaptures = PsLegalMoveMaskGen::generatePawnLeftCapturesMask(pieces, Pieces::inverse(side), true);
+        Bitboard oppositePawnsRightCaptures = PsLegalMoveMaskGen::generatePawnRightCapturesMask(pieces, Pieces::inverse(side), true);
+        Bitboard oppositePawnsCaptures = oppositePawnsLeftCaptures | oppositePawnsRightCaptures;
 
-        if (getBit(opposite_pawns_captures, p))
+        if (getBit(oppositePawnsCaptures, p))
         {
             return true;
         }
 
-        if (PsLegalMoveMaskGen::generateKnightMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::Knight]) return true;
-        if (PsLegalMoveMaskGen::generateBishopMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::Bishop]) return true;
-        if (PsLegalMoveMaskGen::generateRookMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::Rook]) return true;
-        if (PsLegalMoveMaskGen::generateQueenMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::Queen]) return true;
-        if (PsLegalMoveMaskGen::generateKingMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::King]) return true;
+        if (PsLegalMoveMaskGen::generateKnightMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::Knight])
+        {
+            return true;
+        }
+        if (PsLegalMoveMaskGen::generateBishopMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::Bishop])
+        {
+            return true;
+        }
+        if (PsLegalMoveMaskGen::generateRookMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::Rook])
+        {
+            return true;
+        }
+        if (PsLegalMoveMaskGen::generateQueenMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::Queen])
+        {
+            return true;
+        }
+        if (PsLegalMoveMaskGen::generateKingMask(pieces, p, side, true) & pieces.pieceBitboards[Pieces::inverse(side)][Pieces::King])
+        {
+            return true;
+        }
 
         return false;
     }
@@ -1223,8 +1228,13 @@ private:
     {
         Bitboard blockers = SlidersMasks::Masks[p][direction] & pieces.all;
 
-        if (blockers == 0) {
-            if (onlyCaptures) return 0;
+        if (blockers == 0) 
+        {
+            if (onlyCaptures)
+            {
+                return 0;
+            }
+
             return SlidersMasks::Masks[p][direction];
         }
 
@@ -1235,11 +1245,21 @@ private:
 
         Bitboard moves;
 
-        if (onlyCaptures) moves = 0;
-        else moves = SlidersMasks::Masks[p][direction] ^ SlidersMasks::Masks[blockingSquare][direction];
+        if (onlyCaptures)
+        {
+            moves = 0;
+        } else
+        {
+            moves = SlidersMasks::Masks[p][direction] ^ SlidersMasks::Masks[blockingSquare][direction];
+        } 
 
-        if (getBit(pieces.sideBitboards[side], blockingSquare)) setZero(moves, blockingSquare);
-        else setOne(moves, blockingSquare);
+        if (getBit(pieces.sideBitboards[side], blockingSquare))
+        {
+            setZero(moves, blockingSquare);
+        } else
+        {
+            setOne(moves, blockingSquare);
+        }
 
         return moves;
     }
@@ -1281,7 +1301,7 @@ public:
 class LegalMoveGen 
 {
 public:
-    static MoveList generate(Position position, uint8_t side, bool only_captures = false)
+    static MoveList generate(Position position, uint8_t side, bool onlyCaptures = false)
     {
 
         MoveList moves;
@@ -1305,7 +1325,8 @@ public:
         LegalMoveGen::pawnMaskToMoves(position.pieces, pawnLeftCaptureMask, side, pawnLeftCapture, true,Move::Flag::Default, moves);
         LegalMoveGen::pawnMaskToMoves(position.pieces, pawnRightCapturesMask, side, pawnRightCapture, true,Move::Flag::Default, moves);
 
-        if (!only_captures) {
+        if (!onlyCaptures) 
+        {
             Bitboard pawnDafaultMask = PsLegalMoveMaskGen::generatePawnDafaultMask(position.pieces, side);
             Bitboard pawnLongMask = PsLegalMoveMaskGen::generatePawnLongMask(position.pieces, side);
 
@@ -1338,7 +1359,7 @@ public:
         {
             attackerPos = bsf(allKnights);
             setZero(allKnights, attackerPos);
-            mask = PsLegalMoveMaskGen::generateKnightMask(position.pieces, attackerPos, side, only_captures);
+            mask = PsLegalMoveMaskGen::generateKnightMask(position.pieces, attackerPos, side, onlyCaptures);
             LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Knight, side, moves);
         }
 
@@ -1346,7 +1367,7 @@ public:
         {
             attackerPos = bsf(allBishops);
             setZero(allBishops, attackerPos);
-            mask = PsLegalMoveMaskGen::generateBishopMask(position.pieces, attackerPos, side, only_captures);
+            mask = PsLegalMoveMaskGen::generateBishopMask(position.pieces, attackerPos, side, onlyCaptures);
             LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Bishop, side, moves);
         }
 
@@ -1354,7 +1375,7 @@ public:
         {
             attackerPos = bsf(allRooks);
             setZero(allRooks, attackerPos);
-            mask = PsLegalMoveMaskGen::generateRookMask(position.pieces, attackerPos, side, only_captures);
+            mask = PsLegalMoveMaskGen::generateRookMask(position.pieces, attackerPos, side, onlyCaptures);
             LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Rook, side, moves);
         }
 
@@ -1362,17 +1383,17 @@ public:
         {
             attackerPos = bsf(allQueens);
             setZero(allQueens, attackerPos);
-            mask = PsLegalMoveMaskGen::generateQueenMask(position.pieces, attackerPos, side, only_captures);
+            mask = PsLegalMoveMaskGen::generateQueenMask(position.pieces, attackerPos, side, onlyCaptures);
             LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Queen, side, moves);
         }
 
         attackerPos = bsf(position.pieces.pieceBitboards[side][Pieces::King]);
-        mask = PsLegalMoveMaskGen::generateKingMask(position.pieces, attackerPos, side, only_captures);
+        mask = PsLegalMoveMaskGen::generateKingMask(position.pieces, attackerPos, side, onlyCaptures);
         LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::King, side, moves);
 
         LegalMoveGen::addEnPassantCaptures(position.pieces, side, position.EnPassant, moves);
 
-        if (!only_captures) 
+        if (!onlyCaptures) 
         {
             if (side == Pieces::White)
             {
@@ -1393,13 +1414,14 @@ private:
 
         Move move;
 
-        while (mask) {
+        while (mask) 
+        {
             defenderPos = bsf(mask);
             setZero(mask, defenderPos);
 
             defenderType = 255;
 
-            for (uint8_t i = 0; i < 6; i = i + 1) 
+            for (uint8_t i = 0; i < 6; i++) 
             {
                 if (getBit(pieces.pieceBitboards[Pieces::inverse(attackerSide)][i], defenderPos)) 
                 {
@@ -1416,6 +1438,7 @@ private:
             }
         }
     }
+
     static void pawnMaskToMoves(Pieces pieces, Bitboard mask, uint8_t attackerSide, int8_t attackerIndex, bool lookForDefender, uint8_t flag, MoveList &moves)
     {
         uint8_t defenderPos;
@@ -1432,7 +1455,7 @@ private:
             {
                 defenderType = 255;
 
-                for (uint8_t i = 0; i < 6; i = i + 1) 
+                for (uint8_t i = 0; i < 6; i++) 
                 {
                     if (getBit(pieces.pieceBitboards[Pieces::inverse(attackerSide)][i], defenderPos)) 
                     {
@@ -1543,29 +1566,29 @@ private:
     static void addCastlingMoves(Pieces pieces, uint8_t side, bool longCastling, bool shortCastling, MoveList &moves)
     {
         uint8_t index;
-        uint8_t long_castling_flag;
-        uint8_t short_castling_flag;
+        uint8_t longCastlingFlag;
+        uint8_t shortCastlingFlag;
 
         if (side == Pieces::White) 
         {
             index = 0;
-            long_castling_flag = Move::Flag::WhiteLongCastling;
-            short_castling_flag = Move::Flag::WhiteShortCastling;
+            longCastlingFlag = Move::Flag::WhiteLongCastling;
+            shortCastlingFlag = Move::Flag::WhiteShortCastling;
         } else 
         {
             index = 56;
-            long_castling_flag = Move::Flag::BlackLongCastling;
-            short_castling_flag = Move::Flag::BlackShortCastling;
+            longCastlingFlag = Move::Flag::BlackLongCastling;
+            shortCastlingFlag = Move::Flag::BlackShortCastling;
         }
 
-        if (longCastling and getBit(pieces.pieceBitboards[side][Pieces::Rook], 0 + index) and getBit(pieces.empty, 1 + index) and getBit(pieces.empty, 2 + index) and getBit(pieces.empty, 3 + index)) 
+        if (longCastling && getBit(pieces.pieceBitboards[side][Pieces::Rook], 0 + index) && getBit(pieces.empty, 1 + index) && getBit(pieces.empty, 2 + index) && getBit(pieces.empty, 3 + index)) 
         {
-            if (!PsLegalMoveMaskGen::inDanger(pieces, bsf(pieces.pieceBitboards[side][Pieces::King]), side) and !PsLegalMoveMaskGen::inDanger(pieces, 2 + index, side) and !PsLegalMoveMaskGen::inDanger(pieces, 3 + index, side)) moves.push_back({(uint8_t)(4 + index), (uint8_t)(2 + index), Pieces::King, side, 255, 255, long_castling_flag});
+            if (!PsLegalMoveMaskGen::inDanger(pieces, bsf(pieces.pieceBitboards[side][Pieces::King]), side) && !PsLegalMoveMaskGen::inDanger(pieces, 2 + index, side) && !PsLegalMoveMaskGen::inDanger(pieces, 3 + index, side)) moves.push_back({(uint8_t)(4 + index), (uint8_t)(2 + index), Pieces::King, side, 255, 255, longCastlingFlag});
         }
 
-        if (shortCastling and getBit(pieces.pieceBitboards[side][Pieces::Rook], 7 + index) and getBit(pieces.empty, 5 + index) and getBit(pieces.empty, 6 + index)) 
+        if (shortCastling && getBit(pieces.pieceBitboards[side][Pieces::Rook], 7 + index) && getBit(pieces.empty, 5 + index) && getBit(pieces.empty, 6 + index)) 
         {
-            if (!PsLegalMoveMaskGen::inDanger(pieces, bsf(pieces.pieceBitboards[side][Pieces::King]), side) and !PsLegalMoveMaskGen::inDanger(pieces, 5 + index, side) and !PsLegalMoveMaskGen::inDanger(pieces, 6 + index, side)) moves.push_back({(uint8_t)(4 + index), (uint8_t)(6 + index), Pieces::King, side, 255, 255, short_castling_flag});
+            if (!PsLegalMoveMaskGen::inDanger(pieces, bsf(pieces.pieceBitboards[side][Pieces::King]), side) && !PsLegalMoveMaskGen::inDanger(pieces, 5 + index, side) && !PsLegalMoveMaskGen::inDanger(pieces, 6 + index, side)) moves.push_back({(uint8_t)(4 + index), (uint8_t)(6 + index), Pieces::King, side, 255, 255, shortCastlingFlag});
         }
     }
 };
@@ -1608,22 +1631,22 @@ public:
 
         while (getline(file, game)) 
         {
-            gameThread = std::stringstream(game);
+            gameThread = stringstream(game);
             this->moves.resize(this->moves.size() + 1);
 
             buff = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
 
-            while (gameThread >> stringMove and gameThread.good()) 
+            while (gameThread >> stringMove && gameThread.good()) 
             {
                 from = (stringMove[1] - '1') * 8 + stringMove[0] - 'a';
                 to = (stringMove[3] - '1') * 8 + stringMove[2] - 'a';
 
-                possibleMoves = LegalMoveGen::generate(buff, buff.MoveCtr - std::floor(buff.MoveCtr) > 1e-7);
+                possibleMoves = LegalMoveGen::generate(buff, buff.MoveCtr - floor(buff.MoveCtr) > 1e-7);
                 MoveFound = false;
 
                 for (uint8_t i = 0; i < possibleMoves.size(); i = i + 1) 
                 {
-                    if (possibleMoves[i].From == from and possibleMoves[i].To == to) 
+                    if (possibleMoves[i].From == from && possibleMoves[i].To == to) 
                     {
                         this->moves.back().push_back(possibleMoves[i]);
 
@@ -1636,7 +1659,7 @@ public:
 
                 if (!MoveFound) 
                 {
-                    cout << "Error in the opening book." << std::endl;
+                    cout << "Error in the opening book." << endl;
                     exit(255);
                 }
             }
@@ -1652,7 +1675,7 @@ public:
         vector<Move> possibleMoves;
         bool moveExist;
 
-        for (int32_t game = 0; game < this->moves.size(); game = game + 1) 
+        for (int32_t game = 0; game < this->moves.size(); game++) 
         {
             buff = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
 
@@ -1673,13 +1696,14 @@ public:
                 continue;
             }
 
-            for (int32_t move = 0; move < this->moves[game].size() - 1; move = move + 1) 
+            for (int32_t move = 0; move < this->moves[game].size() - 1; move++) 
             {
                 buff.move(this->moves[game][move]);
 
                 if (buff.pieces == position.pieces) 
                 {
                     moveExist = false;
+
                     for (auto addedMove : possibleMoves) 
                     {
                         if (addedMove == this->moves[game][move + 1]) 
@@ -2271,14 +2295,22 @@ public:
     void addEntry(Entry entry)
     {
         auto hashCopy = this->Set.find(entry);
-        if (hashCopy == this->Set.end() or hashCopy->Depth < entry.Depth) this->Set.insert(entry);
+
+        if (hashCopy == this->Set.end() || hashCopy->Depth < entry.Depth)
+        {
+            this->Set.insert(entry);
+        } 
     }
 
     uint8_t tryToFindBestMoveIndex(ZobristHash hash)
     {
         auto entry = this->Set.find({hash, 0, 0});
 
-        if (entry == this->Set.end()) return 255;
+        if (entry == this->Set.end())
+        {
+            return 255;
+        }
+
         return entry->BestMoveIndex;
     }
 
@@ -3111,11 +3143,22 @@ void start()
 
 int main()
 {
-    #if PLAY
-        while (true)
-        {
-            start();
+    while (true)
+    {
+        start();
 
+        #if LINUX && YESNO_MENU
+            system("printf \"\033[100m\"");
+            int statusCode = system("dialog --title \"Chess\" --colors --yesno \"\\Zb\\Z1Do you want to play again ?\" 0 0 --erase-on-exit");
+            system("printf \"\033[0m\"");
+
+            if (statusCode == 256)
+            {
+                break;
+            }
+
+            system("clear");
+        #else
             cout << "Do you want to play again ?" << endl;
             cout << "Enter N to exit or any other key to continue." << endl;
 
@@ -3126,9 +3169,8 @@ int main()
             {
                 break;
             }
-
-        }
-    #endif
+        #endif
+    }
 
     return 0;
 }

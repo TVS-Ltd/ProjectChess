@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 320 512"
+   version="1.1"
+   id="svg4489"
+   sodipodi:docname="WhitePawn.svg"
+   inkscape:version="1.2.2 (1:1.2.2+202212051552+b0a8486541)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs4493" />
+  <sodipodi:namedview
+     id="namedview4491"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="1.7128906"
+     inkscape:cx="159.96351"
+     inkscape:cy="257.16762"
+     inkscape:window-width="1920"
+     inkscape:window-height="1048"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4489" />
+  <path
+     d="M 296,463.1 H 23.1 c -13.25,0 -23.1,10.75 -23.1,24 0,13.25 10.75,24 23.1,24 h 272 c 13.25,0 23.1,-10.75 23.1,-23.1 0,-12.35 -8.9,-24.9 -22.2,-24.9 z M 55.1,287.1 H 80 v 29.5 c 0,40.25 -3.5,115.94017 -23.38,149.19017 h 53.5 C 125.1,428.79017 128,354.6 128,317.5 V 288 h 64 v 29.5 c 0,37.13 2.875,114.37047 17.88,151.37047 h 53.5 C 243.5,435.57047 240,357.7 240,317.5 v -30.4 l 24,-1e-4 c 13.3,1e-4 24,-9.7999 24,-23.9999 0,-13.25 -10.75,-24 -23.1,-24 H 241 c 23.75,-21.88 38.1,-53.12 38.1,-87.1 0,-9.393 -1.106,-19.05 -3.451,-28.86 C 272.3,105.4 244.9,32 159.1,32 93.75,32 40,85.75 40,151.1 c 0,34.88 15.12,66.12 39,88 H 55.1 c -12.35,0 -23.1,11.6 -23.1,24 0,14.2 10.75,24 23.1,24 z M 160,79.1 c 39.75,0 72,32.25 72,72 0,39.75 -32.2,72 -72,72 -39.8,0 -72,-31.4 -72,-72 0,-40.6 32.2,-72 72,-72 z"
+     id="path4487"
+     sodipodi:nodetypes="sssssssscsccsccsccsccsscscsscssssssss" />
+</svg>

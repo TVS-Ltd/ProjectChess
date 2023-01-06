@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 384 512"
+   version="1.1"
+   id="svg4"
+   sodipodi:docname="WhiteKnight.svg"
+   inkscape:version="1.2.2 (1:1.2.2+202212051552+b0a8486541)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8" />
+  <sodipodi:namedview
+     id="namedview6"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="1.7128906"
+     inkscape:cx="192.07298"
+     inkscape:cy="256.58381"
+     inkscape:window-width="1920"
+     inkscape:window-height="1048"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
+  <path
+     d="m 44,320.6 14.5,6.5 c -17.01,20.24 -26.44,45.91 -26.44,72.35 0,0.25 0.06,66.91217 0.06,66.91217 h 48 L 80.12,400 c 0,-24.75 14,-47.5 36.13,-58.63 L 154.38,318 c 13.25,-6.625 21.75,-20.25 21.75,-35.13 v -58.75 l -15.37,9 c -5.16,2.68 -8.86,7.28 -10.26,12.78 L 143,271 c -2.25,7.625 -8,13.88 -15.38,16.75 L 117.1,292 c -3.1,1.3 -6.4,1.9 -9.7,1.9 -3.626,0 -7.263,-0.7514 -10.66,-2.254 L 63.5,276.9 C 54.12,272.6 48,263.2 48,252.9 V 140.5 c 0,-5.125 2.125,-10.12 5.75,-13.88 L 61.125,119.245 49.5,96 C 48.5,94.12 48,92 48,89.88 48,84.38 52.38,80 57.88,80 h 105 c 86.75,0 156.1,70.38 156.1,157.1 l 0,232.06594 h 48.06 L 366.9775,237.1 C 367.9,124 276,32 162.9,32 H 57.88 C 25.88,32 0,57.88 0,89.88 0,98.38 1.75,106.76 5.125,114.5 1.75,122.8 0,131.6 0,140.5 v 112.4 c 0,29.3 17.25,55.9 44,67.7 z M 80.12,164 c 0,11 8.875,20 20,20 11,0 20,-9 20,-20 0,-11 -9,-20 -20,-20 -11.12,0 -20,9 -20,20 z M 360,464 H 23.1 C 10.75,464 0,474.7 0,487.1 0,499.5 10.75,512 23.1,512 H 360 c 13.3,0 24,-10.7 24,-24 0,-13.3 -10.7,-24 -24,-24 z"
+     id="path2"
+     sodipodi:nodetypes="ccsccsccsccccccsccsscccsssscccssscsscssssssssssss"
+     style="fill:#000000;fill-opacity:1" />
+</svg>

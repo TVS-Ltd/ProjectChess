@@ -11,87 +11,89 @@
 #include <unistd.h>
 #include <set>
 
-#define DEBUG true
+#define DEBUG false
 #define TEST_PROMOTION false
 #define TEST_CASTLING false
 #define TEST_EN_PASSANT false
-#define YESNO_MENU true
+#define TEST_THREEE_POS_RULE false
+#define YESNO_MENU false
+#define LOG_TO_FILE false
 #define LINUX true
 #define nsecs std::chrono::high_resolution_clock::now().time_since_epoch().count()
 
 #if LINUX
-    //ONLY FOR LINUX
+    // ONLY FOR LINUX
     #define OpeningBookFile "/usr/bin/OpeningBook.txt"
 #else
-    //FOR WINDOWS
+    // FOR WINDOWS
     #define OpeningBookFile "./OpeningBook.txt"
 #endif
 
+#define logFile "log.txt"
 
-//——————————————————Terminal colors——————————————————
-const char* END = "\033[0m";
+// ——————————————————Terminal colors——————————————————
+const char *END = "\033[0m";
 
-//Foreground colors
-const char* RED = "\033[91m";
-const char* GREEN = "\033[92m";
-const char* YELLOW = "\033[93m";
-const char* WHITE = "\033[97m";
-const char* BLACK = "\033[90m";
+// Foreground colors
+const char *RED = "\033[91m";
+const char *GREEN = "\033[92m";
+const char *YELLOW = "\033[93m";
+const char *WHITE = "\033[97m";
+const char *BLACK = "\033[90m";
 
-//Background colors
-const char* REDBG = "\033[101m";
-const char* GREENBG = "\033[102m";
-const char* YELLOWBG = "\033[103m";
-const char* WHITEBG = "\033[107m";
-const char* BLACKBG = "\033[100m";
+// Background colors
+const char *REDBG = "\033[101m";
+const char *GREENBG = "\033[102m";
+const char *YELLOWBG = "\033[103m";
+const char *WHITEBG = "\033[107m";
+const char *BLACKBG = "\033[100m";
 
 using namespace std;
 
-//——————————————————  Bitboards  ——————————————————
+// ——————————————————  Bitboards  ——————————————————
 typedef uint64_t Bitboard;
 
-//Set a bit in a bitboard to 1
+// Set a bit in a bitboard to 1
 static constexpr void setOne(Bitboard &bitBoard, uint8_t square)
 {
     bitBoard = bitBoard | (1ull << square);
 }
 
-//Set a bit in a bitboard to 0
+// Set a bit in a bitboard to 0
 static constexpr void setZero(Bitboard &bitBoard, uint8_t square)
 {
     bitBoard = bitBoard & (~(1ull << square));
 }
 
-//Get the value of a bit in a bitboard
+// Get the value of a bit in a bitboard
 static constexpr bool getBit(Bitboard bitBoard, uint8_t square)
 {
     return (bitBoard & (1ull << square));
 }
 
-//Count the number of 1s in a bitboard
+// Count the number of 1s in a bitboard
 static constexpr uint8_t countOnes(Bitboard bitBoard)
 {
     return popcount(bitBoard);
 }
 
-//https://www.chessprogramming.org/BitScan
+// https://www.chessprogramming.org/BitScan
 static constexpr array<uint8_t, 64> BitScanTable = {
-    0, 47,  1, 56, 48, 27,  2, 60,
-    57, 49, 41, 37, 28, 16,  3, 61,
+    0, 47, 1, 56, 48, 27, 2, 60,
+    57, 49, 41, 37, 28, 16, 3, 61,
     54, 58, 35, 52, 50, 42, 21, 44,
-    38, 32, 29, 23, 17, 11,  4, 62,
+    38, 32, 29, 23, 17, 11, 4, 62,
     46, 55, 26, 59, 40, 36, 15, 53,
     34, 51, 20, 43, 31, 22, 10, 45,
-    25, 39, 14, 33, 19, 30,  9, 24,
-    13, 18,  8, 12,  7,  6,  5, 63
-};
+    25, 39, 14, 33, 19, 30, 9, 24,
+    13, 18, 8, 12, 7, 6, 5, 63};
 
-static constexpr uint8_t bsf(Bitboard bitBoard) 
+static constexpr uint8_t bsf(Bitboard bitBoard)
 {
     return BitScanTable[((bitBoard ^ (bitBoard - 1)) * 0x03f79d71b4cb0a89) >> 58];
 }
 
-static constexpr uint8_t bsrFunc(Bitboard bitBoard) 
+static constexpr uint8_t bsrFunc(Bitboard bitBoard)
 {
     bitBoard = bitBoard | (bitBoard >> 1);
     bitBoard = bitBoard | (bitBoard >> 2);
@@ -103,14 +105,14 @@ static constexpr uint8_t bsrFunc(Bitboard bitBoard)
     return BitScanTable[(bitBoard * 0x03f79d71b4cb0a89) >> 58];
 }
 
-//Bitboard rows
-namespace BitboardRows 
+// Bitboard rows
+namespace BitboardRows
 {
-    static consteval array<Bitboard, 8> calculateRows() 
+    static consteval array<Bitboard, 8> calculateRows()
     {
         array<Bitboard, 8> rows{};
 
-        for (uint8_t y = 0; y < 8; y++) 
+        for (uint8_t y = 0; y < 8; y++)
         {
             for (uint8_t x = 0; x < 8; x++)
             {
@@ -121,11 +123,9 @@ namespace BitboardRows
         return rows;
     }
 
-
     static constexpr array<Bitboard, 8> Rows = calculateRows();
 
-
-    static consteval array<Bitboard, 8> calculateInversionRows() 
+    static consteval array<Bitboard, 8> calculateInversionRows()
     {
         array<Bitboard, 8> inversionRows{};
 
@@ -137,18 +137,17 @@ namespace BitboardRows
         return inversionRows;
     }
 
-
     static constexpr array<Bitboard, 8> InversionRows = BitboardRows::calculateInversionRows();
 }
 
-//Bitboard columns
-namespace BitboardColumns 
+// Bitboard columns
+namespace BitboardColumns
 {
-    static consteval array<Bitboard, 8> calculateColumns() 
+    static consteval array<Bitboard, 8> calculateColumns()
     {
         array<Bitboard, 8> columns{};
 
-        for (uint8_t x = 0; x < 8; x++) 
+        for (uint8_t x = 0; x < 8; x++)
         {
             for (uint8_t y = 0; y < 8; y++)
             {
@@ -159,11 +158,9 @@ namespace BitboardColumns
         return columns;
     }
 
-
     static constexpr array<Bitboard, 8> Columns = calculateColumns();
 
-
-    static consteval array<Bitboard, 8> calculateInversionColumns() 
+    static consteval array<Bitboard, 8> calculateInversionColumns()
     {
         array<Bitboard, 8> inversionColumns{};
 
@@ -175,68 +172,68 @@ namespace BitboardColumns
         return inversionColumns;
     }
 
-
     static constexpr array<Bitboard, 8> InversionColumns = calculateInversionColumns();
 }
 
-
-//——————————————————  Pieces  ——————————————————
-class Pieces 
+// ——————————————————  Pieces  ——————————————————
+class Pieces
 {
 public:
     Pieces() = default;
-    Pieces(const string& shortFen)
+    Pieces(const string &shortFen)
     {
         uint8_t x = 0;
         uint8_t y = 7;
 
         uint8_t side;
 
-        for (auto buff : shortFen) 
+        for (auto buff : shortFen)
         {
-            if (buff == '/') 
+            if (buff == '/')
             {
                 x = 0;
                 y--;
-            } else 
-            if (isdigit(buff)) 
+            }
+            else if (isdigit(buff))
             {
                 x = x + buff - '0';
-            } else 
+            }
+            else
             {
-                if (isupper(buff)) 
+                if (isupper(buff))
                 {
                     buff = tolower(buff);
                     side = Pieces::White;
-                } else
+                }
+                else
                 {
                     side = Pieces::Black;
                 }
-    
-                switch (buff) 
+
+                switch (buff)
                 {
-                    case 'p': 
-                        setOne(this->pieceBitboards[side][Pieces::Pawn], y * 8 + x); 
+                case 'p':
+                    setOne(this->pieceBitboards[side][Pieces::Pawn], y * 8 + x);
                     break;
 
-                    case 'n': 
-                        setOne(this->pieceBitboards[side][Pieces::Knight], y * 8 + x); 
+                case 'n':
+                    setOne(this->pieceBitboards[side][Pieces::Knight], y * 8 + x);
                     break;
 
-                    case 'b': 
-                        setOne(this->pieceBitboards[side][Pieces::Bishop], y * 8 + x); 
+                case 'b':
+                    setOne(this->pieceBitboards[side][Pieces::Bishop], y * 8 + x);
                     break;
 
-                    case 'r': 
-                        setOne(this->pieceBitboards[side][Pieces::Rook], y * 8 + x); 
+                case 'r':
+                    setOne(this->pieceBitboards[side][Pieces::Rook], y * 8 + x);
                     break;
 
-                    case 'q': 
-                        setOne(this->pieceBitboards[side][Pieces::Queen], y * 8 + x); 
+                case 'q':
+                    setOne(this->pieceBitboards[side][Pieces::Queen], y * 8 + x);
                     break;
 
-                    case 'k': 
-                        setOne(this->pieceBitboards[side][Pieces::King], y * 8 + x); 
+                case 'k':
+                    setOne(this->pieceBitboards[side][Pieces::King], y * 8 + x);
                     break;
                 }
 
@@ -263,7 +260,7 @@ public:
     static constexpr uint8_t White = 0;
     static constexpr uint8_t Black = 1;
 
-    friend ostream& operator <<(ostream& ostream, Pieces pieces)
+    friend ostream &operator<<(ostream &ostream, Pieces pieces)
     {
         ostream << " ";
 
@@ -274,68 +271,70 @@ public:
 
         ostream << "\n8";
 
-        for (int8_t y = 7; y >= 0; y--) 
+        for (int8_t y = 7; y >= 0; y--)
         {
-            for (uint8_t x = 0; x < 8; x++) 
+            for (uint8_t x = 0; x < 8; x++)
             {
                 ostream << "|  ";
 
                 if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Pawn], y * 8 + x))
                 {
                     ostream << "♟";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Knight], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Knight], y * 8 + x))
                 {
                     ostream << "♞";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Bishop], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Bishop], y * 8 + x))
                 {
                     ostream << "♝";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Rook], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Rook], y * 8 + x))
                 {
                     ostream << "♜";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Queen], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::Queen], y * 8 + x))
                 {
                     ostream << "♛";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::King], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::White][Pieces::King], y * 8 + x))
                 {
                     ostream << "♚";
-                } else
+                }
+                else
 
-                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn], y * 8 + x))
+                    if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn], y * 8 + x))
                 {
                     ostream << "♙";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Knight], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Knight], y * 8 + x))
                 {
                     ostream << "♘";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Bishop], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Bishop], y * 8 + x))
                 {
                     ostream << "♗";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Rook], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Rook], y * 8 + x))
                 {
                     ostream << "♖";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Queen], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Queen], y * 8 + x))
                 {
                     ostream << "♕";
-                } else
-                if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::King], y * 8 + x))
+                }
+                else if (getBit(pieces.pieceBitboards[Pieces::Black][Pieces::King], y * 8 + x))
                 {
                     ostream << "♔";
-                } else
+                }
+                else
 
-                ostream << " ";
+                    ostream << " ";
 
                 ostream << "  ";
             }
 
-            ostream << "|\n  " ;
+            ostream << "|\n  ";
 
             for (uint8_t i = 0; i < 8; i++)
             {
@@ -348,7 +347,6 @@ public:
             {
                 ostream << (int)y;
             }
-            
         }
 
         ostream << "    a     b     c     d     e     f     g     h  \n\n";
@@ -356,11 +354,11 @@ public:
         return ostream;
     }
 
-    friend bool operator ==(Pieces left, Pieces right)
+    friend bool operator==(Pieces left, Pieces right)
     {
-        for (uint8_t i = 0; i < 2; i++) 
+        for (uint8_t i = 0; i < 2; i++)
         {
-            for (uint8_t j = 0; j < 6; j++) 
+            for (uint8_t j = 0; j < 6; j++)
             {
                 if (left.pieceBitboards[i][j] != right.pieceBitboards[i][j])
                 {
@@ -372,7 +370,7 @@ public:
         return true;
     }
 
-    void updateBitboards() 
+    void updateBitboards()
     {
         this->sideBitboards[White] = this->pieceBitboards[White][Pawn] | this->pieceBitboards[White][Knight] | this->pieceBitboards[White][Bishop] | this->pieceBitboards[White][Rook] | this->pieceBitboards[White][Queen] | this->pieceBitboards[White][King];
 
@@ -385,39 +383,38 @@ public:
         this->empty = ~this->all;
     }
 
-    static uint8_t inverse(uint8_t side) 
+    static uint8_t inverse(uint8_t side)
     {
         return !side;
     }
 };
 
-//—————————————————— ZobristHash ——————————————————
-namespace ZobristHashConsteval 
+// —————————————————— Zobrist Hash ——————————————————
+namespace ZobristHashConsteval
 {
-    namespace randomKeyGenerator 
+    namespace randomKeyGenerator
     {
         static constexpr uint64_t Seed = 0x98f107;
         static constexpr uint64_t Multiplier = 0x71abc9;
         static constexpr uint64_t Summand = 0xff1b3f;
     }
 
-
-    static consteval uint64_t nextRandom(uint64_t previous) 
+    static consteval uint64_t nextRandom(uint64_t previous)
     {
         return ZobristHashConsteval::randomKeyGenerator::Multiplier * previous + ZobristHashConsteval::randomKeyGenerator::Summand;
     }
 
-    static consteval array<array<array<uint64_t, 6>, 2>, 64> calculateConstants() 
+    static consteval array<array<array<uint64_t, 6>, 2>, 64> calculateConstants()
     {
         array<array<array<uint64_t, 6>, 2>, 64> constants{};
 
         uint64_t previous = ZobristHashConsteval::randomKeyGenerator::Seed;
 
-        for (uint8_t square = 0; square < 64; square++) 
+        for (uint8_t square = 0; square < 64; square++)
         {
             for (uint8_t side = 0; side < 2; side++)
             {
-                for (uint8_t type = 0; type < 6; type++) 
+                for (uint8_t type = 0; type < 6; type++)
                 {
                     previous = ZobristHashConsteval::nextRandom(previous);
                     constants[square][side][type] = previous;
@@ -428,7 +425,6 @@ namespace ZobristHashConsteval
         return constants;
     }
 
-
     static constexpr array<array<array<uint64_t, 6>, 2>, 64> Constants = calculateConstants();
     static constexpr uint64_t BlackMove = ZobristHashConsteval::nextRandom(ZobristHashConsteval::Constants[63][1][5]);
     static constexpr uint64_t WhiteLongCastling = ZobristHashConsteval::nextRandom(ZobristHashConsteval::BlackMove);
@@ -437,7 +433,7 @@ namespace ZobristHashConsteval
     static constexpr uint64_t BlackShortCastling = ZobristHashConsteval::nextRandom(ZobristHashConsteval::BlackLongCastling);
 }
 
-class ZobristHash 
+class ZobristHash
 {
 public:
     ZobristHash() = default;
@@ -449,47 +445,48 @@ public:
         if (blackMove)
         {
             this->invertMove();
-        } 
+        }
 
         if (whiteLongCastling)
         {
             this->invertWhiteLongCastling();
-        } 
+        }
 
         if (whiteShortCastling)
         {
             this->invertWhiteShortCastling();
-        } 
+        }
 
         if (blackLongCastling)
         {
             this->invertBlackLongCastling();
-        } 
+        }
 
         if (blackShortCastling)
         {
             this->invertBlackShortCastling();
-        } 
+        }
 
         uint8_t side;
 
-        for (uint8_t square = 0; square < 64; square++) 
+        for (uint8_t square = 0; square < 64; square++)
         {
             if (getBit(pieces.sideBitboards[Pieces::White], square))
             {
                 side = Pieces::White;
-            } else 
-            if (getBit(pieces.sideBitboards[Pieces::Black], square))
+            }
+            else if (getBit(pieces.sideBitboards[Pieces::Black], square))
             {
                 side = Pieces::Black;
-            } else 
+            }
+            else
             {
                 continue;
             }
 
-            for (uint8_t type = 0; type < 6; type++) 
+            for (uint8_t type = 0; type < 6; type++)
             {
-                if (getBit(pieces.pieceBitboards[side][type], square)) 
+                if (getBit(pieces.pieceBitboards[side][type], square))
                 {
                     this->invertPiece(square, type, side);
                     break;
@@ -498,12 +495,12 @@ public:
         }
     }
 
-    friend bool operator ==(ZobristHash left, ZobristHash right)
+    friend bool operator==(ZobristHash left, ZobristHash right)
     {
         return (left.hash == right.hash);
     }
 
-    friend bool operator <(ZobristHash left, ZobristHash right)
+    friend bool operator<(ZobristHash left, ZobristHash right)
     {
         return (left.hash < right.hash);
     }
@@ -541,8 +538,8 @@ public:
     uint64_t hash;
 };
 
-//—————————————————— Moves ——————————————————
-class RepetitionHistory 
+// —————————————————— Moves ——————————————————
+class RepetitionHistory
 {
 public:
     RepetitionHistory() = default;
@@ -571,11 +568,12 @@ public:
 
         return ctr;
     }
+
 private:
     vector<ZobristHash> hashes;
 };
 
-class Move 
+class Move
 {
 public:
     Move() = default;
@@ -593,7 +591,7 @@ public:
         this->Flag = flag;
     }
 
-    friend bool operator ==(Move left, Move right)
+    friend bool operator==(Move left, Move right)
     {
         return (left.From == right.From && left.To == right.To && left.AttackerType == right.AttackerType && left.AttackerSide == right.AttackerSide && left.DefenderType == right.DefenderType && left.DefenderSide == right.DefenderSide && left.Flag == right.Flag);
     }
@@ -609,7 +607,7 @@ public:
 
     uint8_t Flag;
 
-    struct Flag 
+    struct Flag
     {
         static constexpr uint8_t Default = 0;
 
@@ -628,11 +626,10 @@ public:
     };
 };
 
-//—————————————————— Position ——————————————————
-class Position 
+// —————————————————— Position ——————————————————
+class Position
 {
 public:
-
     Pieces pieces;
     uint8_t EnPassant;
 
@@ -650,8 +647,8 @@ public:
     RepetitionHistory repetitionHistory;
 
     Position() = default;
-    Position(const string& shortFen, uint8_t enPassant, bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, float moveCtr)
-    {   
+    Position(const string &shortFen, uint8_t enPassant, bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, float moveCtr)
+    {
         this->pieces = {shortFen};
         this->EnPassant = enPassant;
 
@@ -670,21 +667,22 @@ public:
         this->fiftyMovesCtr = 0;
     }
 
-    friend ostream& operator <<(ostream& ostream, Position position)
+    friend ostream &operator<<(ostream &ostream, Position position)
     {
         ostream << position.pieces;
 
-        #if DEBUG
-            ostream << "En passant: " << (uint32_t)position.EnPassant << "\n";
-            ostream << "White long castling: " << position.WhiteLongCastling << "\n";
-            ostream << "White short castling: " << position.WhiteShortCastling << "\n";
-            ostream << "Black long castling: " << position.BlackLongCastling << "\n";
-            ostream << "Black short castling: " << position.BlackShortCastling << "\n";
-            ostream << "Move counter: " << position.MoveCtr << "\n";
-            ostream << "Zobrist hash: " << hex << "0x" << position.hash.hash << "\n" << dec;
-            ostream << "Fifty moves counter: " << position.fiftyMovesCtr << "\n";
-            ostream << "Threefold repetition counter: " << (uint32_t)position.repetitionHistory.getRepetionNumber(position.hash) << "\n";
-        #endif
+#if DEBUG
+        ostream << "En passant: " << (uint32_t)position.EnPassant << "\n";
+        ostream << "White long castling: " << position.WhiteLongCastling << "\n";
+        ostream << "White short castling: " << position.WhiteShortCastling << "\n";
+        ostream << "Black long castling: " << position.BlackLongCastling << "\n";
+        ostream << "Black short castling: " << position.BlackShortCastling << "\n";
+        ostream << "Move counter: " << position.MoveCtr << "\n";
+        ostream << "Zobrist hash: " << hex << "0x" << position.hash.hash << "\n"
+                << dec;
+        ostream << "Fifty moves counter: " << position.fiftyMovesCtr << "\n";
+        ostream << "Threefold repetition counter: " << (uint32_t)position.repetitionHistory.getRepetionNumber(position.hash) << "\n";
+#endif
 
         return ostream;
     }
@@ -699,68 +697,68 @@ public:
             this->removePiece(move.To, move.DefenderType, move.DefenderSide);
         }
 
-        switch (move.Flag) 
+        switch (move.Flag)
         {
-            case Move::Flag::Default:
+        case Move::Flag::Default:
             break;
 
-            case Move::Flag::PawnLongMove:
-                this->changeEnPassant((move.From + move.To) / 2);
+        case Move::Flag::PawnLongMove:
+            this->changeEnPassant((move.From + move.To) / 2);
             break;
 
-            case Move::Flag::EnPassantCapture:
-                if (move.AttackerSide == Pieces::White)
-                {
-                    this->removePiece(move.To - 8, Pieces::Pawn, Pieces::Black);
-                }
-                else
-                {
-                    this->removePiece(move.To + 8, Pieces::Pawn, Pieces::White);
-                }
+        case Move::Flag::EnPassantCapture:
+            if (move.AttackerSide == Pieces::White)
+            {
+                this->removePiece(move.To - 8, Pieces::Pawn, Pieces::Black);
+            }
+            else
+            {
+                this->removePiece(move.To + 8, Pieces::Pawn, Pieces::White);
+            }
             break;
 
-            case Move::Flag::WhiteLongCastling:
-                this->removePiece(0, Pieces::Rook, Pieces::White);
-                this->addPiece(3, Pieces::Rook, Pieces::White);
-                this->whiteCastlingHappened = true;
+        case Move::Flag::WhiteLongCastling:
+            this->removePiece(0, Pieces::Rook, Pieces::White);
+            this->addPiece(3, Pieces::Rook, Pieces::White);
+            this->whiteCastlingHappened = true;
             break;
 
-            case Move::Flag::WhiteShortCastling:
-                this->removePiece(7, Pieces::Rook, Pieces::White);
-                this->addPiece(5, Pieces::Rook, Pieces::White);
-                this->whiteCastlingHappened = true;
+        case Move::Flag::WhiteShortCastling:
+            this->removePiece(7, Pieces::Rook, Pieces::White);
+            this->addPiece(5, Pieces::Rook, Pieces::White);
+            this->whiteCastlingHappened = true;
             break;
 
-            case Move::Flag::BlackLongCastling:
-                this->removePiece(56, Pieces::Rook, Pieces::Black);
-                this->addPiece(59, Pieces::Rook, Pieces::Black);
-                this->blackCastlingHappened = true;
+        case Move::Flag::BlackLongCastling:
+            this->removePiece(56, Pieces::Rook, Pieces::Black);
+            this->addPiece(59, Pieces::Rook, Pieces::Black);
+            this->blackCastlingHappened = true;
             break;
 
-            case Move::Flag::BlackShortCastling:
-                this->removePiece(63, Pieces::Rook, Pieces::Black);
-                this->addPiece(61, Pieces::Rook, Pieces::Black);
-                this->blackCastlingHappened = true;
+        case Move::Flag::BlackShortCastling:
+            this->removePiece(63, Pieces::Rook, Pieces::Black);
+            this->addPiece(61, Pieces::Rook, Pieces::Black);
+            this->blackCastlingHappened = true;
             break;
 
-            case Move::Flag::PromoteToKnight:
-                this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
-                this->addPiece(move.To, Pieces::Knight, move.AttackerSide);
+        case Move::Flag::PromoteToKnight:
+            this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+            this->addPiece(move.To, Pieces::Knight, move.AttackerSide);
             break;
 
-            case Move::Flag::PromoteToBishop:
-                this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
-                this->addPiece(move.To, Pieces::Bishop, move.AttackerSide);
+        case Move::Flag::PromoteToBishop:
+            this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+            this->addPiece(move.To, Pieces::Bishop, move.AttackerSide);
             break;
 
-            case Move::Flag::PromoteToRook:
-                this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
-                this->addPiece(move.To, Pieces::Rook, move.AttackerSide);
+        case Move::Flag::PromoteToRook:
+            this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+            this->addPiece(move.To, Pieces::Rook, move.AttackerSide);
             break;
 
-            case Move::Flag::PromoteToQueen:
-                this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
-                this->addPiece(move.To, Pieces::Queen, move.AttackerSide);
+        case Move::Flag::PromoteToQueen:
+            this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+            this->addPiece(move.To, Pieces::Queen, move.AttackerSide);
             break;
         }
 
@@ -771,32 +769,32 @@ public:
             this->changeEnPassant(255);
         }
 
-        switch (move.From) 
+        switch (move.From)
         {
-            case 0:
-                this->removeWhiteLongCastling();
+        case 0:
+            this->removeWhiteLongCastling();
             break;
 
-            case 4:
-                this->removeWhiteLongCastling();
-                this->removeWhiteShortCastling();
+        case 4:
+            this->removeWhiteLongCastling();
+            this->removeWhiteShortCastling();
             break;
 
-            case 7:
-                this->removeWhiteShortCastling();
+        case 7:
+            this->removeWhiteShortCastling();
             break;
 
-            case 56:
-                this->removeBlackLongCastling();
+        case 56:
+            this->removeBlackLongCastling();
             break;
 
-            case 60:
-                this->removeBlackLongCastling();
-                this->removeBlackShortCastling();
+        case 60:
+            this->removeBlackLongCastling();
+            this->removeBlackShortCastling();
             break;
 
-            case 63:
-                this->removeBlackShortCastling();
+        case 63:
+            this->removeBlackShortCastling();
             break;
         }
 
@@ -812,11 +810,10 @@ public:
         this->repetitionHistory.addPosition(this->hash);
     }
 
-    
 private:
     void addPiece(uint8_t square, uint8_t type, uint8_t side)
     {
-        if (!getBit(this->pieces.pieceBitboards[side][type], square)) 
+        if (!getBit(this->pieces.pieceBitboards[side][type], square))
         {
             setOne(this->pieces.pieceBitboards[side][type], square);
             this->hash.invertPiece(square, type, side);
@@ -824,7 +821,7 @@ private:
     }
     void removePiece(uint8_t square, uint8_t type, uint8_t side)
     {
-        if (getBit(this->pieces.pieceBitboards[side][type], square)) 
+        if (getBit(this->pieces.pieceBitboards[side][type], square))
         {
             setZero(this->pieces.pieceBitboards[side][type], square);
             this->hash.invertPiece(square, type, side);
@@ -837,7 +834,7 @@ private:
 
     void removeWhiteLongCastling()
     {
-        if (this->WhiteLongCastling) 
+        if (this->WhiteLongCastling)
         {
             this->WhiteLongCastling = false;
             this->hash.invertWhiteLongCastling();
@@ -845,7 +842,7 @@ private:
     }
     void removeWhiteShortCastling()
     {
-        if (this->WhiteShortCastling) 
+        if (this->WhiteShortCastling)
         {
             this->WhiteShortCastling = false;
             this->hash.invertWhiteShortCastling();
@@ -853,7 +850,7 @@ private:
     }
     void removeBlackLongCastling()
     {
-        if (this->BlackLongCastling) 
+        if (this->BlackLongCastling)
         {
             this->BlackLongCastling = false;
             this->hash.invertBlackLongCastling();
@@ -861,7 +858,7 @@ private:
     }
     void removeBlackShortCastling()
     {
-        if (this->BlackShortCastling) 
+        if (this->BlackShortCastling)
         {
             this->BlackShortCastling = false;
             this->hash.invertBlackShortCastling();
@@ -878,17 +875,18 @@ private:
         if (breakEvent)
         {
             this->fiftyMovesCtr = 0;
-        } else
+        }
+        else
         {
             this->fiftyMovesCtr = this->fiftyMovesCtr + 0.5f;
         }
     };
 };
 
-//—————————————————— Movement masks ——————————————————
-namespace KingMasks 
+// —————————————————— Movement Masks ——————————————————
+namespace KingMasks
 {
-    static consteval uint8_t absSubtract(uint8_t left, uint8_t right) 
+    static consteval uint8_t absSubtract(uint8_t left, uint8_t right)
     {
         if (left >= right)
         {
@@ -898,20 +896,20 @@ namespace KingMasks
         return right - left;
     }
 
-    static consteval array<Bitboard, 64> calculateMasks() 
+    static consteval array<Bitboard, 64> calculateMasks()
     {
         array<Bitboard, 64> masks{};
 
         uint8_t dx;
         uint8_t dy;
 
-        for (uint8_t x0 = 0; x0 < 8; x0++) 
+        for (uint8_t x0 = 0; x0 < 8; x0++)
         {
-            for (uint8_t y0 = 0; y0 < 8; y0++) 
+            for (uint8_t y0 = 0; y0 < 8; y0++)
             {
-                for (uint8_t x1 = 0; x1 < 8; x1++) 
+                for (uint8_t x1 = 0; x1 < 8; x1++)
                 {
-                    for (uint8_t y1 = 0; y1 < 8; y1++) 
+                    for (uint8_t y1 = 0; y1 < 8; y1++)
                     {
 
                         dx = KingMasks::absSubtract(x0, x1);
@@ -920,7 +918,7 @@ namespace KingMasks
                         if (dx <= 1 && dy <= 1)
                         {
                             setOne(masks[y0 * 8 + x0], y1 * 8 + x1);
-                        } 
+                        }
                     }
                 }
             }
@@ -929,13 +927,12 @@ namespace KingMasks
         return masks;
     }
 
-
     static constexpr array<Bitboard, 64> Masks = KingMasks::calculateMasks();
 }
 
-namespace KnightMasks 
+namespace KnightMasks
 {
-    static consteval uint8_t absSubtract(uint8_t left, uint8_t right) 
+    static consteval uint8_t absSubtract(uint8_t left, uint8_t right)
     {
         if (left >= right)
         {
@@ -944,20 +941,20 @@ namespace KnightMasks
         return right - left;
     }
 
-    static consteval array<Bitboard, 64> calculateMasks() 
+    static consteval array<Bitboard, 64> calculateMasks()
     {
         array<Bitboard, 64> masks{};
 
         uint8_t dx;
         uint8_t dy;
 
-        for (uint8_t x0 = 0; x0 < 8; x0++) 
+        for (uint8_t x0 = 0; x0 < 8; x0++)
         {
-            for (uint8_t y0 = 0; y0 < 8; y0++) 
+            for (uint8_t y0 = 0; y0 < 8; y0++)
             {
-                for (uint8_t x1 = 0; x1 < 8; x1++) 
+                for (uint8_t x1 = 0; x1 < 8; x1++)
                 {
-                    for (uint8_t y1 = 0; y1 < 8; y1++) 
+                    for (uint8_t y1 = 0; y1 < 8; y1++)
                     {
 
                         dx = KnightMasks::absSubtract(x0, x1);
@@ -966,7 +963,7 @@ namespace KnightMasks
                         if ((dx == 2 and dy == 1) || (dx == 1 and dy == 2))
                         {
                             setOne(masks[y0 * 8 + x0], y1 * 8 + x1);
-                        } 
+                        }
                     }
                 }
             }
@@ -975,13 +972,12 @@ namespace KnightMasks
         return masks;
     }
 
-
     static constexpr array<Bitboard, 64> Masks = KnightMasks::calculateMasks();
 }
 
-namespace SlidersMasks 
+namespace SlidersMasks
 {
-    struct Direction 
+    struct Direction
     {
         static constexpr int8_t North = 0;
         static constexpr int8_t South = 1;
@@ -994,52 +990,51 @@ namespace SlidersMasks
         static constexpr int8_t SouthEast = 7;
     };
 
-
-    static consteval Bitboard calculateMask(uint8_t p, int8_t direction) 
+    static consteval Bitboard calculateMask(uint8_t p, int8_t direction)
     {
         Bitboard mask = 0;
 
         int8_t x = p % 8;
         int8_t y = p / 8;
 
-        for (;;) 
+        for (;;)
         {
-            switch (direction) 
+            switch (direction)
             {
-                case SlidersMasks::Direction::North: 
-                    y++; 
+            case SlidersMasks::Direction::North:
+                y++;
                 break;
 
-                case SlidersMasks::Direction::South: 
-                    y--; 
+            case SlidersMasks::Direction::South:
+                y--;
                 break;
 
-                case SlidersMasks::Direction::West: 
-                    x--; 
+            case SlidersMasks::Direction::West:
+                x--;
                 break;
 
-                case SlidersMasks::Direction::East: 
-                    x++; 
+            case SlidersMasks::Direction::East:
+                x++;
                 break;
 
-                case SlidersMasks::Direction::NorthWest:
-                    y++;  
-                    x--; 
+            case SlidersMasks::Direction::NorthWest:
+                y++;
+                x--;
                 break;
 
-                case SlidersMasks::Direction::NorthEast: 
-                    y++; 
-                    x++; 
+            case SlidersMasks::Direction::NorthEast:
+                y++;
+                x++;
                 break;
 
-                case SlidersMasks::Direction::SouthWest: 
-                    y--; 
-                    x--; 
+            case SlidersMasks::Direction::SouthWest:
+                y--;
+                x--;
                 break;
 
-                case SlidersMasks::Direction::SouthEast: 
-                    y--; 
-                    x++; 
+            case SlidersMasks::Direction::SouthEast:
+                y--;
+                x++;
                 break;
             }
 
@@ -1054,12 +1049,11 @@ namespace SlidersMasks
         return mask;
     }
 
-
-    static consteval array<array<Bitboard, 8>, 64> calculateMasks() 
+    static consteval array<array<Bitboard, 8>, 64> calculateMasks()
     {
         array<array<Bitboard, 8>, 64> masks{};
 
-        for (uint8_t i = 0; i < 64; i++) 
+        for (uint8_t i = 0; i < 64; i++)
         {
             for (uint8_t j = 0; j < 8; j++)
             {
@@ -1070,17 +1064,16 @@ namespace SlidersMasks
         return masks;
     }
 
-
     static constexpr std::array<std::array<Bitboard, 8>, 64> Masks = SlidersMasks::calculateMasks();
 };
 
-//—————————————————— Legality Check ——————————————————
-class PsLegalMoveMaskGen 
+// —————————————————— Legality Check ——————————————————
+class PsLegalMoveMaskGen
 {
 public:
     static Bitboard generatePawnDafaultMask(Pieces pieces, uint8_t side)
     {
-        if (side == Pieces::White) 
+        if (side == Pieces::White)
         {
             return (pieces.pieceBitboards[Pieces::White][Pieces::Pawn] << 8) & pieces.empty;
         }
@@ -1091,7 +1084,7 @@ public:
     {
         Bitboard defaultMask = PsLegalMoveMaskGen::generatePawnDafaultMask(pieces, side);
 
-        if (side == Pieces::White) 
+        if (side == Pieces::White)
         {
             return ((defaultMask & BitboardRows::Rows[2]) << 8) & pieces.empty;
         }
@@ -1100,7 +1093,7 @@ public:
     }
     static Bitboard generatePawnLeftCapturesMask(Pieces pieces, uint8_t side, bool includeAllPossibleCaptures)
     {
-        if (side == Pieces::White) 
+        if (side == Pieces::White)
         {
             Bitboard mask = (pieces.pieceBitboards[Pieces::White][Pieces::Pawn] << 7) & BitboardColumns::InversionColumns[7];
 
@@ -1117,13 +1110,13 @@ public:
         if (!includeAllPossibleCaptures)
         {
             mask = mask & pieces.sideBitboards[Pieces::White];
-        } 
+        }
 
         return mask;
     }
     static Bitboard generatePawnRightCapturesMask(Pieces pieces, uint8_t side, bool includeAllPossibleCaptures)
     {
-        if (side == Pieces::White) 
+        if (side == Pieces::White)
         {
             Bitboard mask = (pieces.pieceBitboards[Pieces::White][Pieces::Pawn] << 9) & BitboardColumns::InversionColumns[0];
 
@@ -1147,7 +1140,7 @@ public:
 
     static Bitboard generateKnightMask(Pieces pieces, uint8_t p, uint8_t side, bool onlyCaptures)
     {
-        if (onlyCaptures) 
+        if (onlyCaptures)
         {
             return KnightMasks::Masks[p] & pieces.sideBitboards[Pieces::inverse(side)];
         }
@@ -1181,7 +1174,7 @@ public:
     }
     static Bitboard generateKingMask(Pieces pieces, uint8_t p, uint8_t side, bool onlyCaptures)
     {
-        if (onlyCaptures) 
+        if (onlyCaptures)
         {
             return KingMasks::Masks[p] & pieces.sideBitboards[Pieces::inverse(side)];
         }
@@ -1223,12 +1216,13 @@ public:
 
         return false;
     }
+
 private:
     static Bitboard calculateRay(Pieces pieces, uint8_t p, uint8_t side, bool onlyCaptures, uint8_t direction, bool bsr)
     {
         Bitboard blockers = SlidersMasks::Masks[p][direction] & pieces.all;
 
-        if (blockers == 0) 
+        if (blockers == 0)
         {
             if (onlyCaptures)
             {
@@ -1240,23 +1234,27 @@ private:
 
         uint8_t blockingSquare;
 
-        if (bsr) blockingSquare = bsrFunc(blockers);
-        else blockingSquare = bsf(blockers);
+        if (bsr)
+            blockingSquare = bsrFunc(blockers);
+        else
+            blockingSquare = bsf(blockers);
 
         Bitboard moves;
 
         if (onlyCaptures)
         {
             moves = 0;
-        } else
+        }
+        else
         {
             moves = SlidersMasks::Masks[p][direction] ^ SlidersMasks::Masks[blockingSquare][direction];
-        } 
+        }
 
         if (getBit(pieces.sideBitboards[side], blockingSquare))
         {
             setZero(moves, blockingSquare);
-        } else
+        }
+        else
         {
             setOne(moves, blockingSquare);
         }
@@ -1265,12 +1263,12 @@ private:
     }
 };
 
-class MoveList 
+class MoveList
 {
 private:
     array<Move, 218> moves{};
     uint8_t Size;
-    
+
 public:
     MoveList()
     {
@@ -1295,10 +1293,9 @@ public:
     {
         return this->Size;
     }
-
 };
 
-class LegalMoveGen 
+class LegalMoveGen
 {
 public:
     static MoveList generate(Position position, uint8_t side, bool onlyCaptures = false)
@@ -1312,20 +1309,21 @@ public:
         int8_t pawnLeftCapture;
         int8_t pawnRightCapture;
 
-        if (side == Pieces::White) 
+        if (side == Pieces::White)
         {
             pawnLeftCapture = -7;
             pawnRightCapture = -9;
-        } else 
+        }
+        else
         {
             pawnLeftCapture = 9;
             pawnRightCapture = 7;
         }
 
-        LegalMoveGen::pawnMaskToMoves(position.pieces, pawnLeftCaptureMask, side, pawnLeftCapture, true,Move::Flag::Default, moves);
-        LegalMoveGen::pawnMaskToMoves(position.pieces, pawnRightCapturesMask, side, pawnRightCapture, true,Move::Flag::Default, moves);
+        LegalMoveGen::pawnMaskToMoves(position.pieces, pawnLeftCaptureMask, side, pawnLeftCapture, true, Move::Flag::Default, moves);
+        LegalMoveGen::pawnMaskToMoves(position.pieces, pawnRightCapturesMask, side, pawnRightCapture, true, Move::Flag::Default, moves);
 
-        if (!onlyCaptures) 
+        if (!onlyCaptures)
         {
             Bitboard pawnDafaultMask = PsLegalMoveMaskGen::generatePawnDafaultMask(position.pieces, side);
             Bitboard pawnLongMask = PsLegalMoveMaskGen::generatePawnLongMask(position.pieces, side);
@@ -1333,18 +1331,19 @@ public:
             int8_t pawnDefaultMove;
             int8_t pawnLongMove;
 
-            if (side == Pieces::White) 
+            if (side == Pieces::White)
             {
                 pawnDefaultMove = -8;
                 pawnLongMove = -16;
-            } else 
+            }
+            else
             {
                 pawnDefaultMove = 8;
                 pawnLongMove = 16;
             }
 
-            LegalMoveGen::pawnMaskToMoves(position.pieces, pawnDafaultMask, side, pawnDefaultMove, false,Move::Flag::Default, moves);
-            LegalMoveGen::pawnMaskToMoves(position.pieces, pawnLongMask, side, pawnLongMove, false,Move::Flag::PawnLongMove, moves);
+            LegalMoveGen::pawnMaskToMoves(position.pieces, pawnDafaultMask, side, pawnDefaultMove, false, Move::Flag::Default, moves);
+            LegalMoveGen::pawnMaskToMoves(position.pieces, pawnLongMask, side, pawnLongMove, false, Move::Flag::PawnLongMove, moves);
         }
 
         Bitboard allKnights = position.pieces.pieceBitboards[side][Pieces::Knight];
@@ -1355,7 +1354,7 @@ public:
         uint8_t attackerPos;
         Bitboard mask;
 
-        while (allKnights) 
+        while (allKnights)
         {
             attackerPos = bsf(allKnights);
             setZero(allKnights, attackerPos);
@@ -1363,7 +1362,7 @@ public:
             LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Knight, side, moves);
         }
 
-        while (allBishops) 
+        while (allBishops)
         {
             attackerPos = bsf(allBishops);
             setZero(allBishops, attackerPos);
@@ -1371,7 +1370,7 @@ public:
             LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Bishop, side, moves);
         }
 
-        while (allRooks) 
+        while (allRooks)
         {
             attackerPos = bsf(allRooks);
             setZero(allRooks, attackerPos);
@@ -1379,7 +1378,7 @@ public:
             LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Rook, side, moves);
         }
 
-        while (allQueens) 
+        while (allQueens)
         {
             attackerPos = bsf(allQueens);
             setZero(allQueens, attackerPos);
@@ -1393,19 +1392,21 @@ public:
 
         LegalMoveGen::addEnPassantCaptures(position.pieces, side, position.EnPassant, moves);
 
-        if (!onlyCaptures) 
+        if (!onlyCaptures)
         {
             if (side == Pieces::White)
             {
-                LegalMoveGen::addCastlingMoves(position.pieces, Pieces::White, position.WhiteLongCastling,position.WhiteShortCastling, moves);
-            } else 
+                LegalMoveGen::addCastlingMoves(position.pieces, Pieces::White, position.WhiteLongCastling, position.WhiteShortCastling, moves);
+            }
+            else
             {
                 LegalMoveGen::addCastlingMoves(position.pieces, Pieces::Black, position.BlackLongCastling, position.BlackShortCastling, moves);
-            } 
+            }
         }
 
         return moves;
     }
+
 private:
     static void pieceMaskToMoves(Pieces pieces, Bitboard mask, uint8_t attackerPos, uint8_t attackerType, uint8_t attackerSide, MoveList &moves)
     {
@@ -1414,16 +1415,16 @@ private:
 
         Move move;
 
-        while (mask) 
+        while (mask)
         {
             defenderPos = bsf(mask);
             setZero(mask, defenderPos);
 
             defenderType = 255;
 
-            for (uint8_t i = 0; i < 6; i++) 
+            for (uint8_t i = 0; i < 6; i++)
             {
-                if (getBit(pieces.pieceBitboards[Pieces::inverse(attackerSide)][i], defenderPos)) 
+                if (getBit(pieces.pieceBitboards[Pieces::inverse(attackerSide)][i], defenderPos))
                 {
                     defenderType = i;
                     break;
@@ -1446,18 +1447,18 @@ private:
 
         Move move;
 
-        while (mask) 
+        while (mask)
         {
             defenderPos = bsf(mask);
             setZero(mask, defenderPos);
 
-            if (lookForDefender) 
+            if (lookForDefender)
             {
                 defenderType = 255;
 
-                for (uint8_t i = 0; i < 6; i++) 
+                for (uint8_t i = 0; i < 6; i++)
                 {
-                    if (getBit(pieces.pieceBitboards[Pieces::inverse(attackerSide)][i], defenderPos)) 
+                    if (getBit(pieces.pieceBitboards[Pieces::inverse(attackerSide)][i], defenderPos))
                     {
                         defenderType = i;
                         break;
@@ -1467,15 +1468,16 @@ private:
 
             move = {(uint8_t)(defenderPos + attackerIndex), defenderPos, Pieces::Pawn, attackerSide, defenderType, Pieces::inverse(attackerSide), flag};
 
-            if (LegalMoveGen::isLegal(pieces, move, false)) 
+            if (LegalMoveGen::isLegal(pieces, move, false))
             {
-                if (defenderPos < 8 or defenderPos > 55) 
+                if (defenderPos < 8 or defenderPos > 55)
                 {
                     moves.push_back({(uint8_t)(defenderPos + attackerIndex), defenderPos, 0, attackerSide, defenderType, Pieces::inverse(attackerSide), Move::Flag::PromoteToKnight});
                     moves.push_back({(uint8_t)(defenderPos + attackerIndex), defenderPos, 0, attackerSide, defenderType, Pieces::inverse(attackerSide), Move::Flag::PromoteToBishop});
                     moves.push_back({(uint8_t)(defenderPos + attackerIndex), defenderPos, 0, attackerSide, defenderType, Pieces::inverse(attackerSide), Move::Flag::PromoteToRook});
                     moves.push_back({(uint8_t)(defenderPos + attackerIndex), defenderPos, 0, attackerSide, defenderType, Pieces::inverse(attackerSide), Move::Flag::PromoteToQueen});
-                } else
+                }
+                else
                 {
                     moves.push_back(move);
                 }
@@ -1491,14 +1493,14 @@ private:
         if (move.DefenderType != 255)
         {
             setZero(pieces.pieceBitboards[move.DefenderSide][move.DefenderType], move.To);
-        } 
+        }
 
-        if (enPassantCapture) 
+        if (enPassantCapture)
         {
             if (move.AttackerSide == Pieces::White)
             {
                 setZero(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn], move.To - 8);
-            } 
+            }
 
             setZero(pieces.pieceBitboards[Pieces::White][Pieces::Pawn], move.To + 8);
         }
@@ -1508,20 +1510,21 @@ private:
         if (PsLegalMoveMaskGen::inDanger(pieces, bsf(pieces.pieceBitboards[move.AttackerSide][Pieces::King]), move.AttackerSide))
         {
             return false;
-        } 
+        }
 
         return true;
     }
 
     static void addEnPassantCaptures(Pieces pieces, uint8_t side, uint8_t enPassant, MoveList &moves)
     {
-        if (enPassant == 255) return;
+        if (enPassant == 255)
+            return;
 
         Move move;
 
-        if (side == Pieces::White) 
+        if (side == Pieces::White)
         {
-            if (enPassant % 8 != 7 and getBit(pieces.pieceBitboards[Pieces::White][Pieces::Pawn], enPassant - 7)) 
+            if (enPassant % 8 != 7 and getBit(pieces.pieceBitboards[Pieces::White][Pieces::Pawn], enPassant - 7))
             {
                 move = {(uint8_t)(enPassant - 7), enPassant, Pieces::Pawn, Pieces::White, 255, 255, Move::Flag::EnPassantCapture};
 
@@ -1531,7 +1534,7 @@ private:
                 }
             }
 
-            if (enPassant % 8 != 0 and getBit(pieces.pieceBitboards[Pieces::White][Pieces::Pawn], enPassant - 9)) 
+            if (enPassant % 8 != 0 and getBit(pieces.pieceBitboards[Pieces::White][Pieces::Pawn], enPassant - 9))
             {
                 move = {(uint8_t)(enPassant - 9), enPassant, Pieces::Pawn, Pieces::White, 255, 255, Move::Flag::EnPassantCapture};
 
@@ -1540,9 +1543,10 @@ private:
                     moves.push_back(move);
                 }
             }
-        } else 
+        }
+        else
         {
-            if (enPassant % 8 != 0 and getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn], enPassant + 7)) 
+            if (enPassant % 8 != 0 and getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn], enPassant + 7))
             {
                 move = {(uint8_t)(enPassant + 7), enPassant, Pieces::Pawn, Pieces::Black, 255, 255, Move::Flag::EnPassantCapture};
 
@@ -1552,7 +1556,7 @@ private:
                 }
             }
 
-            if (enPassant % 8 != 7 and getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn], enPassant + 9)) 
+            if (enPassant % 8 != 7 and getBit(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn], enPassant + 9))
             {
                 move = {(uint8_t)(enPassant + 9), enPassant, Pieces::Pawn, Pieces::Black, 255, 255, Move::Flag::EnPassantCapture};
 
@@ -1569,51 +1573,51 @@ private:
         uint8_t longCastlingFlag;
         uint8_t shortCastlingFlag;
 
-        if (side == Pieces::White) 
+        if (side == Pieces::White)
         {
             index = 0;
             longCastlingFlag = Move::Flag::WhiteLongCastling;
             shortCastlingFlag = Move::Flag::WhiteShortCastling;
-        } else 
+        }
+        else
         {
             index = 56;
             longCastlingFlag = Move::Flag::BlackLongCastling;
             shortCastlingFlag = Move::Flag::BlackShortCastling;
         }
 
-        if (longCastling && getBit(pieces.pieceBitboards[side][Pieces::Rook], 0 + index) && getBit(pieces.empty, 1 + index) && getBit(pieces.empty, 2 + index) && getBit(pieces.empty, 3 + index)) 
+        if (longCastling && getBit(pieces.pieceBitboards[side][Pieces::Rook], 0 + index) && getBit(pieces.empty, 1 + index) && getBit(pieces.empty, 2 + index) && getBit(pieces.empty, 3 + index))
         {
-            if (!PsLegalMoveMaskGen::inDanger(pieces, bsf(pieces.pieceBitboards[side][Pieces::King]), side) && !PsLegalMoveMaskGen::inDanger(pieces, 2 + index, side) && !PsLegalMoveMaskGen::inDanger(pieces, 3 + index, side)) moves.push_back({(uint8_t)(4 + index), (uint8_t)(2 + index), Pieces::King, side, 255, 255, longCastlingFlag});
+            if (!PsLegalMoveMaskGen::inDanger(pieces, bsf(pieces.pieceBitboards[side][Pieces::King]), side) && !PsLegalMoveMaskGen::inDanger(pieces, 2 + index, side) && !PsLegalMoveMaskGen::inDanger(pieces, 3 + index, side))
+                moves.push_back({(uint8_t)(4 + index), (uint8_t)(2 + index), Pieces::King, side, 255, 255, longCastlingFlag});
         }
 
-        if (shortCastling && getBit(pieces.pieceBitboards[side][Pieces::Rook], 7 + index) && getBit(pieces.empty, 5 + index) && getBit(pieces.empty, 6 + index)) 
+        if (shortCastling && getBit(pieces.pieceBitboards[side][Pieces::Rook], 7 + index) && getBit(pieces.empty, 5 + index) && getBit(pieces.empty, 6 + index))
         {
-            if (!PsLegalMoveMaskGen::inDanger(pieces, bsf(pieces.pieceBitboards[side][Pieces::King]), side) && !PsLegalMoveMaskGen::inDanger(pieces, 5 + index, side) && !PsLegalMoveMaskGen::inDanger(pieces, 6 + index, side)) moves.push_back({(uint8_t)(4 + index), (uint8_t)(6 + index), Pieces::King, side, 255, 255, shortCastlingFlag});
+            if (!PsLegalMoveMaskGen::inDanger(pieces, bsf(pieces.pieceBitboards[side][Pieces::King]), side) && !PsLegalMoveMaskGen::inDanger(pieces, 5 + index, side) && !PsLegalMoveMaskGen::inDanger(pieces, 6 + index, side))
+                moves.push_back({(uint8_t)(4 + index), (uint8_t)(6 + index), Pieces::King, side, 255, 255, shortCastlingFlag});
         }
     }
 };
 
-
-
-//—————————————————— AI ——————————————————
+// —————————————————— AI ——————————————————
 static atomic<bool> stopSearch;
-
 
 static int64_t evaluated;
 static int32_t maxDepth;
 static int32_t cutOffs;
 
-class OpeningBook 
+class OpeningBook
 {
 public:
     OpeningBook() = default;
-    OpeningBook(const string& path)
+    OpeningBook(const string &path)
     {
         ifstream file(path);
 
-        if (!file.is_open()) 
+        if (!file.is_open())
         {
-            cout  << "Could not find the opening book." << endl;
+            cout << "Could not find the opening book." << endl;
             exit(255);
         }
 
@@ -1629,14 +1633,14 @@ public:
 
         Position buff;
 
-        while (getline(file, game)) 
+        while (getline(file, game))
         {
             gameThread = stringstream(game);
             this->moves.resize(this->moves.size() + 1);
 
             buff = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
 
-            while (gameThread >> stringMove && gameThread.good()) 
+            while (gameThread >> stringMove && gameThread.good())
             {
                 from = (stringMove[1] - '1') * 8 + stringMove[0] - 'a';
                 to = (stringMove[3] - '1') * 8 + stringMove[2] - 'a';
@@ -1644,9 +1648,9 @@ public:
                 possibleMoves = LegalMoveGen::generate(buff, buff.MoveCtr - floor(buff.MoveCtr) > 1e-7);
                 MoveFound = false;
 
-                for (uint8_t i = 0; i < possibleMoves.size(); i = i + 1) 
+                for (uint8_t i = 0; i < possibleMoves.size(); i = i + 1)
                 {
-                    if (possibleMoves[i].From == from && possibleMoves[i].To == to) 
+                    if (possibleMoves[i].From == from && possibleMoves[i].To == to)
                     {
                         this->moves.back().push_back(possibleMoves[i]);
 
@@ -1657,7 +1661,7 @@ public:
                     }
                 }
 
-                if (!MoveFound) 
+                if (!MoveFound)
                 {
                     cout << "Error in the opening book." << endl;
                     exit(255);
@@ -1668,57 +1672,59 @@ public:
         file.close();
     }
 
-    tuple<Move, int32_t> tryToFindMove(const Position& position)
+    tuple<Move, int32_t> tryToFindMove(const Position &position)
     {
         Position buff;
 
         vector<Move> possibleMoves;
         bool moveExist;
 
-        for (int32_t game = 0; game < this->moves.size(); game++) 
+        for (int32_t game = 0; game < this->moves.size(); game++)
         {
             buff = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
 
-            if (buff.pieces == position.pieces) 
+            if (buff.pieces == position.pieces)
             {
                 moveExist = false;
 
-                for (auto added_move : possibleMoves) 
+                for (auto added_move : possibleMoves)
                 {
-                    if (added_move == this->moves[game][0]) 
+                    if (added_move == this->moves[game][0])
                     {
                         moveExist = true;
                         break;
                     }
                 }
 
-                if (!moveExist) possibleMoves.push_back(this->moves[game][0]);
+                if (!moveExist)
+                    possibleMoves.push_back(this->moves[game][0]);
                 continue;
             }
 
-            for (int32_t move = 0; move < this->moves[game].size() - 1; move++) 
+            for (int32_t move = 0; move < this->moves[game].size() - 1; move++)
             {
                 buff.move(this->moves[game][move]);
 
-                if (buff.pieces == position.pieces) 
+                if (buff.pieces == position.pieces)
                 {
                     moveExist = false;
 
-                    for (auto addedMove : possibleMoves) 
+                    for (auto addedMove : possibleMoves)
                     {
-                        if (addedMove == this->moves[game][move + 1]) 
+                        if (addedMove == this->moves[game][move + 1])
                         {
                             moveExist = true;
                             break;
                         }
                     }
 
-                    if (!moveExist) possibleMoves.push_back(this->moves[game][move + 1]);
+                    if (!moveExist)
+                        possibleMoves.push_back(this->moves[game][move + 1]);
                 }
             }
         }
 
-        if (possibleMoves.empty()) 
+        if (possibleMoves.empty())
         {
             return make_tuple(Move(), 0);
         }
@@ -1730,24 +1736,28 @@ private:
     vector<vector<Move>> moves;
 };
 
-namespace PawnShieldMasks 
+namespace PawnShieldMasks
 {
-    static consteval array<Bitboard, 64> calculateWhitePawnShieldMasks() 
+    static consteval array<Bitboard, 64> calculateWhitePawnShieldMasks()
     {
         array<Bitboard, 64> whitePawnShieldMasks{};
 
-        for (uint8_t x = 0; x < 8; x = x + 1) 
+        for (uint8_t x = 0; x < 8; x = x + 1)
         {
-            for (uint8_t y = 0; y < 7; y = y + 1) 
+            for (uint8_t y = 0; y < 7; y = y + 1)
             {
-                if (x != 0) setOne(whitePawnShieldMasks[y * 8 + x], (y + 1) * 8 + x - 1);
-                if (x != 7) setOne(whitePawnShieldMasks[y * 8 + x], (y + 1) * 8 + x + 1);
+                if (x != 0)
+                    setOne(whitePawnShieldMasks[y * 8 + x], (y + 1) * 8 + x - 1);
+                if (x != 7)
+                    setOne(whitePawnShieldMasks[y * 8 + x], (y + 1) * 8 + x + 1);
                 setOne(whitePawnShieldMasks[y * 8 + x], (y + 1) * 8 + x);
 
-                if (y != 6) 
+                if (y != 6)
                 {
-                    if (x != 0) setOne(whitePawnShieldMasks[y * 8 + x], (y + 2) * 8 + x - 1);
-                    if (x != 7) setOne(whitePawnShieldMasks[y * 8 + x], (y + 2) * 8 + x + 1);
+                    if (x != 0)
+                        setOne(whitePawnShieldMasks[y * 8 + x], (y + 2) * 8 + x - 1);
+                    if (x != 7)
+                        setOne(whitePawnShieldMasks[y * 8 + x], (y + 2) * 8 + x + 1);
                     setOne(whitePawnShieldMasks[y * 8 + x], (y + 2) * 8 + x);
                 }
             }
@@ -1756,23 +1766,26 @@ namespace PawnShieldMasks
         return whitePawnShieldMasks;
     }
 
-
-    static consteval array<Bitboard, 64> calculatePawnShieldMasks() 
+    static consteval array<Bitboard, 64> calculatePawnShieldMasks()
     {
         array<Bitboard, 64> blackPawnShieldMasks{};
 
-        for (uint8_t x = 0; x < 8; x = x + 1) 
+        for (uint8_t x = 0; x < 8; x = x + 1)
         {
-            for (uint8_t y = 1; y < 8; y = y + 1) 
+            for (uint8_t y = 1; y < 8; y = y + 1)
             {
-                if (x != 0) setOne(blackPawnShieldMasks[y * 8 + x], (y - 1) * 8 + x - 1);
-                if (x != 7) setOne(blackPawnShieldMasks[y * 8 + x], (y - 1) * 8 + x + 1);
+                if (x != 0)
+                    setOne(blackPawnShieldMasks[y * 8 + x], (y - 1) * 8 + x - 1);
+                if (x != 7)
+                    setOne(blackPawnShieldMasks[y * 8 + x], (y - 1) * 8 + x + 1);
                 setOne(blackPawnShieldMasks[y * 8 + x], (y - 1) * 8 + x);
 
-                if (y != 1) 
+                if (y != 1)
                 {
-                    if (x != 0) setOne(blackPawnShieldMasks[y * 8 + x], (y - 2) * 8 + x - 1);
-                    if (x != 7) setOne(blackPawnShieldMasks[y * 8 + x], (y - 2) * 8 + x + 1);
+                    if (x != 0)
+                        setOne(blackPawnShieldMasks[y * 8 + x], (y - 2) * 8 + x - 1);
+                    if (x != 7)
+                        setOne(blackPawnShieldMasks[y * 8 + x], (y - 2) * 8 + x + 1);
                     setOne(blackPawnShieldMasks[y * 8 + x], (y - 2) * 8 + x);
                 }
             }
@@ -1781,26 +1794,27 @@ namespace PawnShieldMasks
         return blackPawnShieldMasks;
     }
 
-
     static constexpr array<Bitboard, 64> WhitePawnShieldMasks = PawnShieldMasks::calculateWhitePawnShieldMasks();
     static constexpr array<Bitboard, 64> BlackPawnShieldMasks = PawnShieldMasks::calculatePawnShieldMasks();
 }
 
-namespace PassedPawnMasks 
+namespace PassedPawnMasks
 {
-    static consteval array<Bitboard, 64> calculateWhitePassedPawnMasks() 
+    static consteval array<Bitboard, 64> calculateWhitePassedPawnMasks()
     {
         array<Bitboard, 64> masks{};
 
-        for (uint8_t x = 0; x < 8; x = x + 1) 
+        for (uint8_t x = 0; x < 8; x = x + 1)
         {
-            for (uint8_t y = 0; y < 8; y = y + 1) 
+            for (uint8_t y = 0; y < 8; y = y + 1)
             {
 
-                for (uint8_t y1 = y + 1; y1 < 8; y1 = y1 + 1) 
+                for (uint8_t y1 = y + 1; y1 < 8; y1 = y1 + 1)
                 {
-                    if (x != 0) setOne(masks[y * 8 + x], y1 * 8 + x - 1);
-                    if (x != 7) setOne(masks[y * 8 + x], y1 * 8 + x + 1);
+                    if (x != 0)
+                        setOne(masks[y * 8 + x], y1 * 8 + x - 1);
+                    if (x != 7)
+                        setOne(masks[y * 8 + x], y1 * 8 + x + 1);
                     setOne(masks[y * 8 + x], y1 * 8 + x);
                 }
             }
@@ -1809,20 +1823,21 @@ namespace PassedPawnMasks
         return masks;
     }
 
-
-    static consteval array<Bitboard, 64> calculateBlackPassedPawnMasks() 
+    static consteval array<Bitboard, 64> calculateBlackPassedPawnMasks()
     {
         array<Bitboard, 64> masks{};
 
-        for (uint8_t x = 0; x < 8; x = x + 1) 
+        for (uint8_t x = 0; x < 8; x = x + 1)
         {
-            for (uint8_t y = 0; y < 8; y = y + 1) 
+            for (uint8_t y = 0; y < 8; y = y + 1)
             {
 
-                for (int8_t y1 = y - 1; y1 >= 0; y1 = y1 - 1) 
+                for (int8_t y1 = y - 1; y1 >= 0; y1 = y1 - 1)
                 {
-                    if (x != 0) setOne(masks[y * 8 + x], y1 * 8 + x - 1);
-                    if (x != 7) setOne(masks[y * 8 + x], y1 * 8 + x + 1);
+                    if (x != 0)
+                        setOne(masks[y * 8 + x], y1 * 8 + x - 1);
+                    if (x != 7)
+                        setOne(masks[y * 8 + x], y1 * 8 + x + 1);
                     setOne(masks[y * 8 + x], y1 * 8 + x);
                 }
             }
@@ -1830,13 +1845,12 @@ namespace PassedPawnMasks
 
         return masks;
     }
-
 
     static constexpr array<Bitboard, 64> WhitePassedPawnMasks = PassedPawnMasks::calculateWhitePassedPawnMasks();
     static constexpr array<Bitboard, 64> BlackPassedPawnMasks = PassedPawnMasks::calculateBlackPassedPawnMasks();
 }
 
-class StaticEvaluator 
+class StaticEvaluator
 {
 public:
     static int32_t evaluate(Pieces pieces, bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, bool whiteCastlingHappened, bool blackCastlingHappened, bool showDebugInfo = false)
@@ -1863,7 +1877,7 @@ public:
         evaluation = evaluation + twoBishops;
         evaluation = evaluation + endgame;
 
-        if (showDebugInfo) 
+        if (showDebugInfo)
         {
             cout << "Details of static evaluation of current position." << endl;
             cout << "Material: " << (float)material / 100.0f << " pawns." << endl;
@@ -1885,13 +1899,13 @@ private:
     static int32_t material(Pieces pieces)
     {
         int32_t material = 0;
-    
+
         material = material + StaticEvaluator::Material::Pawn * (countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Pawn]) - countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn]));
         material = material + StaticEvaluator::Material::Knight * (countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Knight]) - countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Knight]));
         material = material + StaticEvaluator::Material::Bishop * (countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Bishop]) - countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Bishop]));
         material = material + StaticEvaluator::Material::Rook * (countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Rook]) - countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Rook]));
         material = material + StaticEvaluator::Material::Queen * (countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Queen]) - countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Queen]));
-    
+
         return material;
     }
 
@@ -1907,49 +1921,49 @@ private:
         int32_t rook_moves = 0;
         int32_t queen_moves = 0;
 
-        while (iteration_masks[Pieces::White][Pieces::Knight]) 
+        while (iteration_masks[Pieces::White][Pieces::Knight])
         {
             index = bsf(iteration_masks[Pieces::White][Pieces::Knight]);
             setZero(iteration_masks[Pieces::White][Pieces::Knight], index);
             knight_moves = knight_moves + countOnes(PsLegalMoveMaskGen::generateKnightMask(pieces, index, Pieces::White, false));
         }
 
-        while (iteration_masks[Pieces::White][Pieces::Bishop]) 
+        while (iteration_masks[Pieces::White][Pieces::Bishop])
         {
             index = bsf(iteration_masks[Pieces::White][Pieces::Bishop]);
             setZero(iteration_masks[Pieces::White][Pieces::Bishop], index);
             bishop_moves = bishop_moves + countOnes(PsLegalMoveMaskGen::generateBishopMask(pieces, index, Pieces::White, false));
         }
 
-        while (iteration_masks[Pieces::White][Pieces::Rook]) 
+        while (iteration_masks[Pieces::White][Pieces::Rook])
         {
             index = bsf(iteration_masks[Pieces::White][Pieces::Rook]);
             setZero(iteration_masks[Pieces::White][Pieces::Rook], index);
             rook_moves = rook_moves + countOnes(PsLegalMoveMaskGen::generateRookMask(pieces, index, Pieces::White, false));
         }
 
-        while (iteration_masks[Pieces::White][Pieces::Queen]) 
+        while (iteration_masks[Pieces::White][Pieces::Queen])
         {
             index = bsf(iteration_masks[Pieces::White][Pieces::Queen]);
             setZero(iteration_masks[Pieces::White][Pieces::Queen], index);
             queen_moves = queen_moves + countOnes(PsLegalMoveMaskGen::generateQueenMask(pieces, index, Pieces::White, false));
         }
 
-        while (iteration_masks[Pieces::Black][Pieces::Knight]) 
+        while (iteration_masks[Pieces::Black][Pieces::Knight])
         {
             index = bsf(iteration_masks[Pieces::Black][Pieces::Knight]);
             setZero(iteration_masks[Pieces::Black][Pieces::Knight], index);
             knight_moves = knight_moves - countOnes(PsLegalMoveMaskGen::generateKnightMask(pieces, index, Pieces::Black, false));
         }
 
-        while (iteration_masks[Pieces::Black][Pieces::Bishop]) 
+        while (iteration_masks[Pieces::Black][Pieces::Bishop])
         {
             index = bsf(iteration_masks[Pieces::Black][Pieces::Bishop]);
             setZero(iteration_masks[Pieces::Black][Pieces::Bishop], index);
             bishop_moves = bishop_moves - countOnes(PsLegalMoveMaskGen::generateBishopMask(pieces, index, Pieces::Black, false));
         }
 
-        while (iteration_masks[Pieces::Black][Pieces::Rook]) 
+        while (iteration_masks[Pieces::Black][Pieces::Rook])
         {
             index = bsf(iteration_masks[Pieces::Black][Pieces::Rook]);
             setZero(iteration_masks[Pieces::Black][Pieces::Rook], index);
@@ -1979,7 +1993,7 @@ private:
         uint8_t whitePawns;
         uint8_t blackPawns;
 
-        for (uint8_t x = 0; x < 8; x = x + 1) 
+        for (uint8_t x = 0; x < 8; x = x + 1)
         {
             whitePawns = countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Pawn] & BitboardColumns::Columns[x]);
             blackPawns = countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Pawn] & BitboardColumns::Columns[x]);
@@ -1995,17 +2009,17 @@ private:
     static int32_t pawnStructureConnectedPawn(Pieces pieces)
     {
         int32_t connectedPawn = 0;
-    
+
         int32_t connected_pawn_ctr = 0;
-    
+
         Bitboard white_captures = PsLegalMoveMaskGen::generatePawnLeftCapturesMask(pieces, Pieces::White, true) | PsLegalMoveMaskGen::generatePawnRightCapturesMask(pieces, Pieces::White, true);
         Bitboard black_captures = PsLegalMoveMaskGen::generatePawnLeftCapturesMask(pieces, Pieces::Black, true) | PsLegalMoveMaskGen::generatePawnRightCapturesMask(pieces, Pieces::Black, true);
-    
+
         connected_pawn_ctr = connected_pawn_ctr + countOnes(white_captures & pieces.pieceBitboards[Pieces::White][Pieces::Pawn]);
         connected_pawn_ctr = connected_pawn_ctr - countOnes(black_captures & pieces.pieceBitboards[Pieces::Black][Pieces::Pawn]);
-    
+
         connectedPawn = connectedPawn + StaticEvaluator::PawnStructure::ConnectedPawn * connected_pawn_ctr;
-    
+
         return connectedPawn;
     }
     static int32_t pawnStructurePawnPromotion(Pieces pieces)
@@ -2017,22 +2031,26 @@ private:
 
         uint8_t index;
 
-        while (whitePawns) 
+        while (whitePawns)
         {
             index = bsf(whitePawns);
             setZero(whitePawns, index);
 
-            if (PassedPawnMasks::WhitePassedPawnMasks[index] & pieces.pieceBitboards[Pieces::Black][Pieces::Pawn]) pawnPromotion = pawnPromotion + StaticEvaluator::PawnStructure::DefaultPawnPromotion[index / 8];
-            else pawnPromotion = pawnPromotion + StaticEvaluator::PawnStructure::PassedPawnPromotion[index / 8];
+            if (PassedPawnMasks::WhitePassedPawnMasks[index] & pieces.pieceBitboards[Pieces::Black][Pieces::Pawn])
+                pawnPromotion = pawnPromotion + StaticEvaluator::PawnStructure::DefaultPawnPromotion[index / 8];
+            else
+                pawnPromotion = pawnPromotion + StaticEvaluator::PawnStructure::PassedPawnPromotion[index / 8];
         }
 
-        while (blackPawns) 
+        while (blackPawns)
         {
             index = bsf(blackPawns);
             setZero(blackPawns, index);
 
-            if (PassedPawnMasks::BlackPassedPawnMasks[index] & pieces.pieceBitboards[Pieces::White][Pieces::Pawn]) pawnPromotion = pawnPromotion - StaticEvaluator::PawnStructure::DefaultPawnPromotion[7 - index / 8];
-            else pawnPromotion = pawnPromotion - StaticEvaluator::PawnStructure::PassedPawnPromotion[7 - index / 8];
+            if (PassedPawnMasks::BlackPassedPawnMasks[index] & pieces.pieceBitboards[Pieces::White][Pieces::Pawn])
+                pawnPromotion = pawnPromotion - StaticEvaluator::PawnStructure::DefaultPawnPromotion[7 - index / 8];
+            else
+                pawnPromotion = pawnPromotion - StaticEvaluator::PawnStructure::PassedPawnPromotion[7 - index / 8];
         }
 
         return pawnPromotion;
@@ -2041,16 +2059,20 @@ private:
     {
         int32_t crashedCastling = 0;
 
-        if (!whiteCastlingHappened) 
+        if (!whiteCastlingHappened)
         {
-            if (!whiteLongCastling) crashedCastling = crashedCastling + StaticEvaluator::KingSafety::CrashedCastling;
-            if (!whiteShortCastling) crashedCastling = crashedCastling + StaticEvaluator::KingSafety::CrashedCastling;
+            if (!whiteLongCastling)
+                crashedCastling = crashedCastling + StaticEvaluator::KingSafety::CrashedCastling;
+            if (!whiteShortCastling)
+                crashedCastling = crashedCastling + StaticEvaluator::KingSafety::CrashedCastling;
         }
 
-        if (!blackCastlingHappened) 
+        if (!blackCastlingHappened)
         {
-            if (!blackLongCastling) crashedCastling = crashedCastling - StaticEvaluator::KingSafety::CrashedCastling;
-            if (!blackShortCastling) crashedCastling = crashedCastling - StaticEvaluator::KingSafety::CrashedCastling;
+            if (!blackLongCastling)
+                crashedCastling = crashedCastling - StaticEvaluator::KingSafety::CrashedCastling;
+            if (!blackShortCastling)
+                crashedCastling = crashedCastling - StaticEvaluator::KingSafety::CrashedCastling;
         }
 
         return crashedCastling;
@@ -2061,14 +2083,14 @@ private:
 
         int32_t pawnShieldCtr = 0;
 
-        if (whiteCastlingHappened) 
+        if (whiteCastlingHappened)
         {
             Bitboard whitePawns = pieces.pieceBitboards[Pieces::White][Pieces::Pawn];
             Bitboard whitePawnShield = PawnShieldMasks::WhitePawnShieldMasks[bsf(pieces.pieceBitboards[Pieces::White][Pieces::King])];
             pawnShieldCtr = pawnShieldCtr + countOnes(whitePawns & whitePawnShield);
         }
 
-        if (blackCastlingHappened) 
+        if (blackCastlingHappened)
         {
             Bitboard blackPawns = pieces.pieceBitboards[Pieces::Black][Pieces::Pawn];
             Bitboard blackPawnShield = PawnShieldMasks::BlackPawnShieldMasks[bsf(pieces.pieceBitboards[Pieces::Black][Pieces::King])];
@@ -2083,26 +2105,31 @@ private:
     static int32_t twoBishops(Pieces pieces)
     {
         int32_t twoBishops = 0;
-    
-        if (countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Bishop]) >= 2) twoBishops = twoBishops + StaticEvaluator::TwoBishops;
-        if (countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Bishop]) >= 2) twoBishops = twoBishops - StaticEvaluator::TwoBishops;
-    
+
+        if (countOnes(pieces.pieceBitboards[Pieces::White][Pieces::Bishop]) >= 2)
+            twoBishops = twoBishops + StaticEvaluator::TwoBishops;
+        if (countOnes(pieces.pieceBitboards[Pieces::Black][Pieces::Bishop]) >= 2)
+            twoBishops = twoBishops - StaticEvaluator::TwoBishops;
+
         return twoBishops;
     }
     static int32_t endgame(Pieces pieces, bool whiteLeading)
     {
         int32_t endgame = 0;
 
-        if (countOnes(pieces.all) > StaticEvaluator::Endgame::MaximumPiecesForEndgame) return endgame;
+        if (countOnes(pieces.all) > StaticEvaluator::Endgame::MaximumPiecesForEndgame)
+            return endgame;
 
         uint8_t attacker_side;
         uint8_t defender_side;
 
-        if (whiteLeading) {
+        if (whiteLeading)
+        {
             attacker_side = Pieces::White;
             defender_side = Pieces::Black;
         }
-        else {
+        else
+        {
             attacker_side = Pieces::Black;
             defender_side = Pieces::White;
         }
@@ -2118,12 +2145,13 @@ private:
         endgame = endgame + StaticEvaluator::Endgame::AttackerKingProximityToDefenderKing * (16 - std::abs(attacker_king_x - defender_king_x) - std::abs(attacker_king_y - defender_king_y));
         endgame = endgame + StaticEvaluator::Endgame::DistanceBetweenDefenderKingAndMiddle * (std::abs(defender_king_x - 3) + std::abs(defender_king_y - 4));
 
-        if (!whiteLeading) endgame = -endgame;
+        if (!whiteLeading)
+            endgame = -endgame;
 
         return endgame;
     }
 
-    struct Material 
+    struct Material
     {
         static constexpr int32_t Pawn = 100;
         static constexpr int32_t Knight = 305;
@@ -2132,7 +2160,7 @@ private:
         static constexpr int32_t Queen = 950;
     };
 
-    struct Mobility 
+    struct Mobility
     {
         static constexpr int32_t Knight = 9;
         static constexpr int32_t Bishop = 4;
@@ -2140,7 +2168,7 @@ private:
         static constexpr int32_t Queen = 3;
     };
 
-    struct PawnStructure 
+    struct PawnStructure
     {
         static constexpr int32_t DoublePawn = -25;
         static constexpr int32_t ConnectedPawn = 12;
@@ -2148,7 +2176,7 @@ private:
         static constexpr std::array<int32_t, 8> PassedPawnPromotion = {0, 50, 50, 50, 70, 90, 110, 0};
     };
 
-    struct KingSafety 
+    struct KingSafety
     {
         static constexpr int32_t CrashedCastling = -50;
         static constexpr int32_t PawnShield = 33;
@@ -2156,7 +2184,7 @@ private:
 
     static constexpr int32_t TwoBishops = 50;
 
-    struct Endgame 
+    struct Endgame
     {
         static constexpr int32_t MaximumPiecesForEndgame = 8;
         static constexpr int32_t AttackerKingProximityToDefenderKing = 10;
@@ -2166,107 +2194,109 @@ private:
     friend class MoveSorter;
 };
 
-class MoveSorter 
+class MoveSorter
 {
 public:
     static MoveList sort(Pieces pieces, MoveList moves)
     {
-        for (uint8_t i = 0; i < moves.size() - 1; i++) 
+        for (uint8_t i = 0; i < moves.size() - 1; i++)
         {
-            for (uint8_t j = 0; j < moves.size() - i - 1; j++) 
+            for (uint8_t j = 0; j < moves.size() - i - 1; j++)
             {
-                if (MoveSorter::evaluateMove(pieces, moves[j]) < MoveSorter::evaluateMove(pieces, moves[j + 1])) swap(moves[j], moves[j + 1]);
+                if (MoveSorter::evaluateMove(pieces, moves[j]) < MoveSorter::evaluateMove(pieces, moves[j + 1]))
+                    swap(moves[j], moves[j + 1]);
             }
         }
 
         return moves;
     }
+
 private:
     static int32_t evaluateMove(Pieces pieces, Move move)
     {
         int32_t evaluation = 0;
-    
-        if (move.AttackerType != Pieces::Pawn) 
+
+        if (move.AttackerType != Pieces::Pawn)
         {
             Bitboard opponent_pawn_attacks = PsLegalMoveMaskGen::generatePawnLeftCapturesMask(pieces, Pieces::inverse(move.AttackerSide), true) | PsLegalMoveMaskGen::generatePawnRightCapturesMask(pieces, Pieces::inverse(move.AttackerSide), true);
-            
-            if (getBit(opponent_pawn_attacks, move.To)) 
+
+            if (getBit(opponent_pawn_attacks, move.To))
             {
-                switch (move.AttackerType) 
+                switch (move.AttackerType)
                 {
-                    case Pieces::Knight: 
-                        evaluation = evaluation - StaticEvaluator::Material::Knight; 
+                case Pieces::Knight:
+                    evaluation = evaluation - StaticEvaluator::Material::Knight;
                     break;
 
-                    case Pieces::Bishop: 
-                        evaluation = evaluation - StaticEvaluator::Material::Bishop; 
+                case Pieces::Bishop:
+                    evaluation = evaluation - StaticEvaluator::Material::Bishop;
                     break;
 
-                    case Pieces::Rook: 
-                        evaluation = evaluation - StaticEvaluator::Material::Rook; 
+                case Pieces::Rook:
+                    evaluation = evaluation - StaticEvaluator::Material::Rook;
                     break;
 
-                    case Pieces::Queen: 
-                        evaluation = evaluation - StaticEvaluator::Material::Queen; 
+                case Pieces::Queen:
+                    evaluation = evaluation - StaticEvaluator::Material::Queen;
                     break;
                 }
             }
         }
-    
-        if (move.DefenderType != 255) 
+
+        if (move.DefenderType != 255)
         {
-            switch (move.DefenderType) 
-            {
-                case Pieces::Pawn:
-                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Pawn; 
-                break;
-
-                case Pieces::Knight: 
-                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Knight; 
-                break;
-
-                case Pieces::Bishop: 
-                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Bishop; 
-                break;
-
-                case Pieces::Rook: 
-                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Rook; 
-                break;
-
-                case Pieces::Queen: 
-                    evaluation = evaluation + 1000 * StaticEvaluator::Material::Queen; 
-                break;
-            }
-            
             switch (move.DefenderType)
             {
-                case Pieces::Pawn:
-                    evaluation = evaluation - StaticEvaluator::Material::Pawn; 
+            case Pieces::Pawn:
+                evaluation = evaluation + 1000 * StaticEvaluator::Material::Pawn;
                 break;
 
-                case Pieces::Knight: 
-                    evaluation = evaluation - StaticEvaluator::Material::Knight; 
+            case Pieces::Knight:
+                evaluation = evaluation + 1000 * StaticEvaluator::Material::Knight;
                 break;
 
-                case Pieces::Bishop: 
-                    evaluation = evaluation - StaticEvaluator::Material::Bishop; 
+            case Pieces::Bishop:
+                evaluation = evaluation + 1000 * StaticEvaluator::Material::Bishop;
                 break;
 
-                case Pieces::Rook: 
-                    evaluation = evaluation - StaticEvaluator::Material::Rook; 
+            case Pieces::Rook:
+                evaluation = evaluation + 1000 * StaticEvaluator::Material::Rook;
                 break;
 
-                case Pieces::Queen: 
-                    evaluation = evaluation - StaticEvaluator::Material::Queen; 
+            case Pieces::Queen:
+                evaluation = evaluation + 1000 * StaticEvaluator::Material::Queen;
+                break;
+            }
+
+            switch (move.DefenderType)
+            {
+            case Pieces::Pawn:
+                evaluation = evaluation - StaticEvaluator::Material::Pawn;
+                break;
+
+            case Pieces::Knight:
+                evaluation = evaluation - StaticEvaluator::Material::Knight;
+                break;
+
+            case Pieces::Bishop:
+                evaluation = evaluation - StaticEvaluator::Material::Bishop;
+                break;
+
+            case Pieces::Rook:
+                evaluation = evaluation - StaticEvaluator::Material::Rook;
+                break;
+
+            case Pieces::Queen:
+                evaluation = evaluation - StaticEvaluator::Material::Queen;
                 break;
             }
         }
-    
+
         return evaluation;
     }
 };
 
-class Entry 
+class Entry
 {
 public:
     Entry() = default;
@@ -2277,7 +2307,7 @@ public:
         this->BestMoveIndex = bestMoveIndex;
     }
 
-    friend bool operator <(Entry left, Entry right)
+    friend bool operator<(Entry left, Entry right)
     {
         return (left.Hash < right.Hash);
     }
@@ -2287,7 +2317,7 @@ public:
     uint8_t BestMoveIndex;
 };
 
-class TranspositionTable 
+class TranspositionTable
 {
 public:
     TranspositionTable() = default;
@@ -2299,7 +2329,7 @@ public:
         if (hashCopy == this->Set.end() || hashCopy->Depth < entry.Depth)
         {
             this->Set.insert(entry);
-        } 
+        }
     }
 
     uint8_t tryToFindBestMoveIndex(ZobristHash hash)
@@ -2318,16 +2348,16 @@ private:
     set<Entry> Set;
 };
 
-class AI 
+class AI
 {
 public:
     AI() = default;
-    AI(const string& openingBookPath)
+    AI(const string &openingBookPath)
     {
         this->openingBook = {openingBookPath};
-    }  
+    }
 
-    Move bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t maxMs)
+    Move bestMove(const Position &position, uint8_t side, int32_t minMs, int32_t maxMs)
     {
         cout << endl;
 
@@ -2335,9 +2365,9 @@ public:
 
         bool debug = false;
 
-        #if DEBUG
-            debug = true;
-        #endif
+#if DEBUG
+        debug = true;
+#endif
 
         StaticEvaluator::evaluate(position.pieces, position.WhiteLongCastling, position.WhiteShortCastling, position.BlackLongCastling, position.BlackShortCastling, position.whiteCastlingHappened, position.blackCastlingHappened, debug);
 
@@ -2347,11 +2377,11 @@ public:
 
         tuple<Move, int32_t> openingBookResult = this->openingBook.tryToFindMove(position);
 
-        #if DEBUG
-            cout << YELLOWBG << "Number of available moves in the opening book: " << get<1>(openingBookResult) << "." << END << endl;
-        #endif
+#if DEBUG
+        cout << YELLOWBG << "Number of available moves in the opening book: " << get<1>(openingBookResult) << "." << END << endl;
+#endif
 
-        if (get<1>(openingBookResult)) 
+        if (get<1>(openingBookResult))
         {
             usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
 
@@ -2367,7 +2397,7 @@ public:
 
         bool updateBestMove;
 
-        for (int32_t i = 1; i < 1e+3; i = i + 1) 
+        for (int32_t i = 1; i < 1e+3; i = i + 1)
         {
             evaluated = 0;
             maxDepth = 0;
@@ -2377,9 +2407,9 @@ public:
 
             updateBestMove = true;
 
-            while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready) 
+            while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
             {
-                if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs) 
+                if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs)
                 {
                     updateBestMove = false;
                     break;
@@ -2388,17 +2418,20 @@ public:
                 usleep(20000);
             }
 
-            if (updateBestMove || i == 1) tie(bestMoveEvaluation, bestMove) = bestMoveThread.get();
-            else {
+            if (updateBestMove || i == 1)
+                tie(bestMoveEvaluation, bestMove) = bestMoveThread.get();
+            else
+            {
                 stopSearch = true;
                 break;
             }
-            
-            #if DEBUG
-                cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
-            #endif
 
-            if (bestMoveEvaluation > AI::Infinity::Positive - 2000 || bestMoveEvaluation < AI::Infinity::Negative + 2000) break;
+#if DEBUG
+            cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
+#endif
+
+            if (bestMoveEvaluation > AI::Infinity::Positive - 2000 || bestMoveEvaluation < AI::Infinity::Negative + 2000)
+                break;
         }
 
         usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
@@ -2411,21 +2444,26 @@ public:
 private:
     OpeningBook openingBook;
 
-    static tuple<int32_t, Move> BestMove(const Position& position, uint8_t side, int32_t depth, TranspositionTable &TransposTable)
+    static tuple<int32_t, Move> BestMove(const Position &position, uint8_t side, int32_t depth, TranspositionTable &TransposTable)
     {
-        if (side == Pieces::White) return AI::alphaBetaMax(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
+        if (side == Pieces::White)
+            return AI::alphaBetaMax(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
 
         return AI::alphaBetaMin(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
     }
 
     static tuple<int32_t, Move> alphaBetaMin(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable &TransposTable)
     {
-        if (stopSearch) return make_tuple(0, Move());
-        if (currentDepth > maxDepth) maxDepth = currentDepth;
+        if (stopSearch)
+            return make_tuple(0, Move());
+        if (currentDepth > maxDepth)
+            maxDepth = currentDepth;
 
-        if (depth_left == 0) return make_tuple(AI::alphaBetaMinOnlyCaptures(position, alpha, beta, currentDepth), Move());
+        if (depth_left == 0)
+            return make_tuple(AI::alphaBetaMinOnlyCaptures(position, alpha, beta, currentDepth), Move());
 
-        if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3) return make_tuple(0, Move());
+        if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
+            return make_tuple(0, Move());
 
         MoveList moves = LegalMoveGen::generate(position, Pieces::Black);
         moves = MoveSorter::sort(position.pieces, moves);
@@ -2436,9 +2474,10 @@ private:
 
         bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[Pieces::Black][Pieces::King]), Pieces::Black);
 
-        if (moves.size() == 0) 
+        if (moves.size() == 0)
         {
-            if (in_check) return make_tuple(AI::Infinity::Positive - currentDepth, Move());
+            if (in_check)
+                return make_tuple(AI::Infinity::Positive - currentDepth, Move());
             return std::make_tuple(0, Move());
         }
 
@@ -2448,16 +2487,20 @@ private:
 
         uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
 
-        for (uint8_t i = 0; i < moves.size(); i = i + 1) 
+        for (uint8_t i = 0; i < moves.size(); i = i + 1)
         {
-            if (tt_result >= moves.size()) move = moves[i];
-            else 
+            if (tt_result >= moves.size())
+                move = moves[i];
+            else
             {
-                if (i == 0) move = moves[tt_result];
-                else 
+                if (i == 0)
+                    move = moves[tt_result];
+                else
                 {
-                    if (i == tt_result) move = moves[0];
-                    else move = moves[i];
+                    if (i == tt_result)
+                        move = moves[0];
+                    else
+                        move = moves[i];
                 }
             }
 
@@ -2465,14 +2508,16 @@ private:
             copy.move(move);
             evaluation = get<0>(AI::alphaBetaMax(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
 
-            if (evaluation <= alpha) 
+            if (evaluation <= alpha)
             {
-                if (tt_result >= moves.size() or i != 0) TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
-                else cutOffs = cutOffs + 1;
+                if (tt_result >= moves.size() or i != 0)
+                    TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
+                else
+                    cutOffs = cutOffs + 1;
                 return make_tuple(alpha, bestMove);
             }
 
-            if (evaluation < beta) 
+            if (evaluation < beta)
             {
                 bestMove = move;
                 bestMoveIndex = i;
@@ -2485,12 +2530,16 @@ private:
     }
     static tuple<int32_t, Move> alphaBetaMax(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable &TransposTable)
     {
-        if (stopSearch) return std::make_tuple(0, Move());
-        if (currentDepth > maxDepth) maxDepth = currentDepth;
+        if (stopSearch)
+            return std::make_tuple(0, Move());
+        if (currentDepth > maxDepth)
+            maxDepth = currentDepth;
 
-        if (depth_left == 0) return std::make_tuple(AI::alphaBetaMaxOnlyCaptures(position, alpha, beta, currentDepth), Move());
+        if (depth_left == 0)
+            return std::make_tuple(AI::alphaBetaMaxOnlyCaptures(position, alpha, beta, currentDepth), Move());
 
-        if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3) return std::make_tuple(0, Move());
+        if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
+            return std::make_tuple(0, Move());
 
         MoveList moves = LegalMoveGen::generate(position, Pieces::White);
         moves = MoveSorter::sort(position.pieces, moves);
@@ -2500,9 +2549,10 @@ private:
 
         bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[Pieces::White][Pieces::King]), Pieces::White);
 
-        if (moves.size() == 0) 
+        if (moves.size() == 0)
         {
-            if (in_check) return std::make_tuple(AI::Infinity::Negative + currentDepth, Move());
+            if (in_check)
+                return std::make_tuple(AI::Infinity::Negative + currentDepth, Move());
             return std::make_tuple(0, Move());
         }
 
@@ -2512,16 +2562,20 @@ private:
 
         uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
 
-        for (uint8_t i = 0; i < moves.size(); i = i + 1) 
+        for (uint8_t i = 0; i < moves.size(); i = i + 1)
         {
-            if (tt_result >= moves.size()) move = moves[i];
-            else 
+            if (tt_result >= moves.size())
+                move = moves[i];
+            else
             {
-                if (i == 0) move = moves[tt_result];
-                else 
+                if (i == 0)
+                    move = moves[tt_result];
+                else
                 {
-                    if (i == tt_result) move = moves[0];
-                    else move = moves[i];
+                    if (i == tt_result)
+                        move = moves[0];
+                    else
+                        move = moves[i];
                 }
             }
 
@@ -2529,14 +2583,16 @@ private:
             copy.move(move);
             evaluation = get<0>(AI::alphaBetaMin(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
 
-            if (evaluation >= beta) 
+            if (evaluation >= beta)
             {
-                if (tt_result >= moves.size() or i != 0) TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
-                else cutOffs = cutOffs + 1;
+                if (tt_result >= moves.size() or i != 0)
+                    TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
+                else
+                    cutOffs = cutOffs + 1;
                 return make_tuple(beta, bestMove);
             }
 
-            if (evaluation > alpha) 
+            if (evaluation > alpha)
             {
                 bestMove = move;
                 bestMoveIndex = i;
@@ -2548,7 +2604,7 @@ private:
         return make_tuple(alpha, bestMove);
     }
 
-    static int32_t alphaBetaMinOnlyCaptures(const Position& position, int32_t alpha, int32_t beta, int32_t currentDepth)
+    static int32_t alphaBetaMinOnlyCaptures(const Position &position, int32_t alpha, int32_t beta, int32_t currentDepth)
     {
         if (stopSearch)
         {
@@ -2566,7 +2622,7 @@ private:
         if (evaluation <= alpha)
         {
             return alpha;
-        } 
+        }
 
         if (evaluation < beta)
         {
@@ -2579,7 +2635,7 @@ private:
 
         Position copy;
 
-        for (uint8_t i = 0; i < moves.size(); i++) 
+        for (uint8_t i = 0; i < moves.size(); i++)
         {
             move = moves[i];
 
@@ -2601,7 +2657,7 @@ private:
         return beta;
     }
 
-    static int32_t alphaBetaMaxOnlyCaptures(const Position& position, int32_t alpha, int32_t beta, int32_t currentDepth)
+    static int32_t alphaBetaMaxOnlyCaptures(const Position &position, int32_t alpha, int32_t beta, int32_t currentDepth)
     {
         if (stopSearch)
         {
@@ -2632,7 +2688,7 @@ private:
 
         Position copy;
 
-        for (uint8_t i = 0; i < moves.size(); i++) 
+        for (uint8_t i = 0; i < moves.size(); i++)
         {
             move = moves[i];
 
@@ -2655,16 +2711,45 @@ private:
         return alpha;
     }
 
-    struct Infinity 
+    struct Infinity
     {
         static constexpr int32_t Negative = -1e+9;
         static constexpr int32_t Positive = 1e+9;
     };
 };
 
+// —————————————————— Log to File ——————————————————
+class logToFile
+{
+public:
+    logToFile()
+    {
+        this->file.open(logFile);
 
+        if (!file.is_open())
+        {
+            cout << RED << "[ERROR] Couldn't open the log file." << END << endl;
+            exit(255);
+        }
+    }
 
-//—————————————————— Game ——————————————————
+    ~logToFile()
+    {
+        this->file.close();
+    }
+
+    template <typename T>
+    logToFile &operator<<(const T &value)
+    {
+        this->file << value << endl;
+        return *this;
+    }
+
+private:
+    ofstream file;
+};
+
+// —————————————————— Game ——————————————————
 class Game
 {
 public:
@@ -2673,18 +2758,26 @@ public:
         this->position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
 
         #if TEST_PROMOTION
-            this->position = {"rnbqkbnr/11111111/8/8/8/8/K111111p/11111111", 255, true, true, true, true, 1};
+                this->position = {"rnbqkbnr/11111111/8/8/8/8/K111111p/11111111", 255, true, true, true, true, 1};
         #endif
 
         #if TEST_CASTLING
-            this->position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK11R", 255, true, true, true, true, 1};
+                this->position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK11R", 255, true, true, true, true, 1};
         #endif
 
         #if TEST_EN_PASSANT
-            this->position = {"rnbqkbnr/pppppppp/8/1111P111/8/8/PPPP1PPP/RNBQKBNR", 255, true, true, true, true, 1};
+                this->position = {"rnbqkbnr/pppppppp/8/1111P111/8/8/PPPP1PPP/RNBQKBNR", 255, true, true, true, true, 1};
+        #endif
+
+        #if TEST_THREEE_POS_RULE
+                this->position = {"rnbqkbnr/8/8/8/8/8/8/RNBQKBNR", 255, true, true, true, true, 1};
         #endif
 
         cout << "Welcome to the chess engine!" << endl;
+
+        #if LOG_TO_FILE
+                log << "Welcome to the chess engine!";
+        #endif
 
         chooseGameMode();
     }
@@ -2697,8 +2790,11 @@ private:
     uint8_t playerSide;
     uint8_t aiSide;
     Move playerMove;
+    #if LOG_TO_FILE
+        logToFile log;
+    #endif
 
-    bool whiteVictory() 
+    bool whiteVictory()
     {
         bool blackHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::Black).size() == 0);
         bool blackInCheck = PsLegalMoveMaskGen::inDanger(this->position.pieces, bsf(this->position.pieces.pieceBitboards[Pieces::Black][Pieces::King]), Pieces::Black);
@@ -2707,17 +2803,25 @@ private:
         {
             cout << GREEN << endl;
             cout << "White win!" << END << endl;
-        } else
-        if (blackHaventGotMoves && blackInCheck)
+
+            #if LOG_TO_FILE
+                log << GREEN << "White win!" << END;
+            #endif
+        }
+        else if (blackHaventGotMoves && blackInCheck)
         {
             cout << RED << endl;
             cout << "White win!" << END << endl;
+
+            #if LOG_TO_FILE
+                log << RED << "White win!" << END;
+            #endif
         }
 
         return (blackHaventGotMoves && blackInCheck);
     }
 
-    bool blackVictory() 
+    bool blackVictory()
     {
         bool whiteHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::White).size() == 0);
         bool whiteInCheck = PsLegalMoveMaskGen::inDanger(this->position.pieces, bsf(this->position.pieces.pieceBitboards[Pieces::White][Pieces::King]), Pieces::White);
@@ -2726,17 +2830,25 @@ private:
         {
             cout << GREEN << endl;
             cout << "Black win!" << END << endl;
-        } else
-        if (whiteHaventGotMoves && whiteInCheck)
+
+            #if LOG_TO_FILE
+                log << GREEN << "Black win!" << END;
+            #endif
+        }
+        else if (whiteHaventGotMoves && whiteInCheck)
         {
             cout << RED << endl;
             cout << "Black win!" << END << endl;
+
+            #if LOG_TO_FILE
+                log << RED << "Black win!" << END;
+            #endif
         }
-        
+
         return (whiteHaventGotMoves && whiteInCheck);
     }
 
-    bool draw() 
+    bool draw()
     {
         bool whiteHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::White).size() == 0);
         bool whiteInCheck = PsLegalMoveMaskGen::inDanger(this->position.pieces, bsf(this->position.pieces.pieceBitboards[Pieces::White][Pieces::King]), Pieces::White);
@@ -2753,46 +2865,66 @@ private:
         if (whiteHaventGotMoves && !whiteInCheck && whiteMove)
         {
             cout << YELLOW << "[DRAW] White haven't got moves." << END << endl;
+
+            #if LOG_TO_FILE
+                log << YELLOW << "[DRAW] White haven't got moves." << END;
+            #endif
+
             return true;
         }
 
         if (blackHaventGotMoves && !blackInCheck && blackMove)
         {
             cout << YELLOW << "[DRAW] Black haven't got moves." << END << endl;
+
+            #if LOG_TO_FILE
+                log << YELLOW << "[DRAW] Black haven't got moves." << END;
+            #endif
+
             return true;
         }
 
         if (fiftyMovesRule)
         {
             cout << YELLOW << "[DRAW] Fifty moves rule." << END << endl;
+
+            #if LOG_TO_FILE
+                log << YELLOW << "[DRAW] Fifty moves rule." << END;
+            #endif
+
             return true;
         }
 
         if (threeMovesRule)
         {
             cout << YELLOW << "[DRAW] Three moves rule." << END << endl;
+
+            #if LOG_TO_FILE
+                log << YELLOW << "[DRAW] Three moves rule." << END;
+            #endif
+
             return true;
         }
 
         return false;
     }
 
-    bool gameFinished() 
+    bool gameFinished()
     {
         return (this->whiteVictory() || this->blackVictory() || this->draw());
     }
 
-    bool isWhiteMove() const 
+    bool isWhiteMove() const
     {
         return (this->position.MoveCtr - floor(this->position.MoveCtr) < 1e-7);
     }
 
-    bool isBlackMove() 
+    bool isBlackMove()
     {
         return !isWhiteMove();
     }
 
-    Move getMove() 
+    Move getMove()
     {
         Move PlayerMove;
         string from, to;
@@ -2802,7 +2934,7 @@ private:
 
         PlayerMove.From = (from[0] - 'a') + (from[1] - '1') * 8;
         PlayerMove.To = (to[0] - 'a') + (to[1] - '1') * 8;
-        
+
         return PlayerMove;
     }
 
@@ -2826,28 +2958,38 @@ private:
                 cout << RED << "[ERROR] Invalid input. Please try again." << END << endl;
             }
         } while (cin.fail() || choice < 1 || choice > 2);
-        
+
         if (choice == 1)
         {
             cout << WHITE << "You are playing as white." << END << endl;
+
+            #if LOG_TO_FILE
+                log << WHITE << "User is playing as white." << END;
+            #endif
+
             playerSide = Pieces::White;
             aiSide = Pieces::Black;
-        } else
+        }
+        else
         {
             cout << BLACK << WHITEBG << "You are playing as black." << END << endl;
+
+            #if LOG_TO_FILE
+                log << BLACK << WHITEBG << "User is playing as black." << END;
+            #endif
+
             playerSide = Pieces::Black;
             aiSide = Pieces::White;
         }
-        
     }
 
-    bool movePlayer(uint8_t side) //Returns true if player move is valid
+    bool movePlayer(uint8_t side) // Returns true if player move is valid
     {
         this->moves = LegalMoveGen::generate(this->position, side);
 
         this->playerMove = getMove();
         bool moveFound = false;
-        
+
         for (uint8_t i = 0; i < moves.size(); i++)
         {
             if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
@@ -2856,10 +2998,10 @@ private:
                 moveFound = true;
 
                 break;
-            } else
-            if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
+            }
+            else if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
             {
-                //Choose promotion piece
+                // Choose promotion piece
                 cout << "\nChoose promotion piece: " << endl;
                 cout << "1. Knight" << endl;
                 cout << "2. Bishop" << endl;
@@ -2871,33 +3013,33 @@ private:
 
                 switch (promotionPiece)
                 {
-                    case 1:
-                        move = moves[i];
-                        move.Flag = Move::Flag::PromoteToKnight;
-                        moveFound = true;
+                case 1:
+                    move = moves[i];
+                    move.Flag = Move::Flag::PromoteToKnight;
+                    moveFound = true;
                     break;
 
-                    case 2:
-                        move = moves[i];
-                        move.Flag = Move::Flag::PromoteToBishop;
-                        moveFound = true;
+                case 2:
+                    move = moves[i];
+                    move.Flag = Move::Flag::PromoteToBishop;
+                    moveFound = true;
                     break;
 
-                    case 3:
-                        move = moves[i];
-                        move.Flag = Move::Flag::PromoteToRook;
-                        moveFound = true;
+                case 3:
+                    move = moves[i];
+                    move.Flag = Move::Flag::PromoteToRook;
+                    moveFound = true;
                     break;
 
-                    case 4:
-                        move = moves[i];
-                        move.Flag = Move::Flag::PromoteToQueen;
-                        moveFound = true;
+                case 4:
+                    move = moves[i];
+                    move.Flag = Move::Flag::PromoteToQueen;
+                    moveFound = true;
                     break;
 
-                    default:
-                        cout << RED << "\n[ERROR] Illegal move!" << END << endl;
-                        continue;
+                default:
+                    cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                    continue;
                     break;
                 }
 
@@ -2919,28 +3061,28 @@ private:
 
             switch (move.DefenderType)
             {
-                case 0:
-                    cout << YELLOW << "Pawn has been captured!" << END << endl;
+            case 0:
+                cout << YELLOW << "Pawn has been captured!" << END << endl;
                 break;
 
-                case 1:
-                    cout << YELLOW << "Knight has been captured!" << END << endl;
+            case 1:
+                cout << YELLOW << "Knight has been captured!" << END << endl;
                 break;
 
-                case 2:
-                    cout << YELLOW << "Bishop has been captured!" << END << endl;
+            case 2:
+                cout << YELLOW << "Bishop has been captured!" << END << endl;
                 break;
 
-                case 3:
-                    cout << YELLOW << "Rook has been captured!" << END << endl;
+            case 3:
+                cout << YELLOW << "Rook has been captured!" << END << endl;
                 break;
 
-                case 4:
-                    cout << YELLOW << "Queen has been captured!" << END << endl;
+            case 4:
+                cout << YELLOW << "Queen has been captured!" << END << endl;
                 break;
 
-                default:
-                    cout << RED << "[ERROR] Unknown piece type!" << END << endl;
+            default:
+                cout << RED << "[ERROR] Unknown piece type!" << END << endl;
                 break;
             }
         }
@@ -2955,69 +3097,99 @@ private:
     {
         sideChoose();
 
-        if (playerSide == Pieces::White) 
+        if (playerSide == Pieces::White)
         {
-            while (true) 
+            while (true)
             {
 
                 cout << position << endl;
 
-                if(!movePlayer(playerSide))
+                #if LOG_TO_FILE
+                    log << position;
+                #endif
+
+                if (!movePlayer(playerSide))
                 {
                     continue;
                 }
-                
 
-                //Check if game is finished
+                // Check if game is finished
                 if (this->gameFinished())
                 {
                     cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
                     break;
                 }
 
-                //AI move
+                // AI move
                 move = ai.bestMove(position, aiSide, 0, 10000);
                 position.move(move);
 
-                //Check if game is finished
+                // Check if game is finished
                 if (this->gameFinished())
                 {
                     cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
                     break;
                 }
             }
-        } else 
+        }
+        else
         {
             cout << position << endl;
 
-            while (true) 
+            #if LOG_TO_FILE
+                log << position;
+            #endif
+
+            while (true)
             {
 
-                //AI move
+                // AI move
                 move = ai.bestMove(position, aiSide, 0, 10000);
                 position.move(move);
 
                 cout << position << endl;
-                
-                //Check if game is finished
+
+                #if LOG_TO_FILE
+                    log << position;
+                #endif
+
+                // Check if game is finished
                 if (this->gameFinished())
                 {
                     cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
                     break;
                 }
 
-                //Player move
+                // Player move
                 while (!movePlayer(playerSide))
                 {
                     continue;
                 }
-                
-                
-    
-                //Check if game is finished
+
+                // Check if game is finished
                 if (this->gameFinished())
                 {
                     cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
                     break;
                 }
             }
@@ -3030,38 +3202,58 @@ private:
 
         cout << position << endl;
 
-        while (true) 
+        #if LOG_TO_FILE
+            log << position;
+        #endif
+
+        while (true)
         {
-            
-            //Player 1 move
+
+            // Player 1 move
             cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+            #if LOG_TO_FILE
+                log << GREEN << "\nPlayer 1 move:" << END;
+            #endif
 
             while (!movePlayer(playerSide))
             {
                 continue;
             }
-            
 
-            //Check if game is finished
+            // Check if game is finished
             if (this->gameFinished())
             {
                 cout << position << endl;
+
+                #if LOG_TO_FILE
+                    log << position;
+                #endif
+
                 break;
             }
 
-            //Player 2 move
+            // Player 2 move
             cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+            #if LOG_TO_FILE
+                log << YELLOW << "\nPlayer 2 move:" << END;
+            #endif
 
             while (!movePlayer(aiSide))
             {
                 continue;
             }
-            
 
-            //Check if game is finished
+            // Check if game is finished
             if (this->gameFinished())
             {
                 cout << position << endl;
+
+                #if LOG_TO_FILE
+                    log << position;
+                #endif
+
                 break;
             }
         }
@@ -3072,31 +3264,49 @@ private:
         playerSide = Pieces::White;
         aiSide = Pieces::Black;
 
-        while (true) 
+        while (true)
         {
             cout << position << endl;
 
-            //AI 1 move
+            #if LOG_TO_FILE
+                log << position;
+            #endif
+
+            // AI 1 move
             move = ai.bestMove(position, playerSide, 0, 10000);
             position.move(move);
 
-            //Check if game is finished
+            // Check if game is finished
             if (this->gameFinished())
             {
                 cout << position << endl;
+
+                #if LOG_TO_FILE
+                                log << position;
+                #endif
+
                 break;
             }
 
             cout << position << endl;
 
-            //AI 2 move
+            #if LOG_TO_FILE
+                log << position;
+            #endif
+
+            // AI 2 move
             move = ai.bestMove(position, aiSide, 0, 10000);
             position.move(move);
 
-            //Check if game is finished
+            // Check if game is finished
             if (this->gameFinished())
             {
                 cout << position << endl;
+
+                #if LOG_TO_FILE
+                                log << position;
+                #endif
+
                 break;
             }
         }
@@ -3104,7 +3314,7 @@ private:
 
     void chooseGameMode()
     {
-        //Choose game mode
+        // Choose game mode
         cout << "Choose game mode: " << endl;
         cout << "1. Player vs Player" << endl;
         cout << "2. Player vs AI" << endl;
@@ -3116,14 +3326,25 @@ private:
         switch (gameMode)
         {
             case 1:
+                #if LOG_TO_FILE
+                    log << "Game mode: Player vs Player";
+                #endif
+
                 PvP();
             break;
 
             case 2:
+                #if LOG_TO_FILE
+                    log << "Game mode: Player vs AI";
+                #endif
+
                 PvE();
             break;
 
             case 3:
+                #if LOG_TO_FILE
+                    log << "Game mode: AI vs AI";
+                #endif
                 EvE();
             break;
 
@@ -3148,27 +3369,27 @@ int main()
         start();
 
         #if LINUX && YESNO_MENU
-            system("printf \"\033[100m\"");
-            int statusCode = system("dialog --title \"Chess\" --colors --yesno \"\\Zb\\Z1Do you want to play again ?\" 0 0 --erase-on-exit");
-            system("printf \"\033[0m\"");
+                system("printf \"\033[100m\"");
+                int statusCode = system("dialog --title \"Chess\" --colors --yesno \"\\Zb\\Z1Do you want to play again ?\" 0 0 --erase-on-exit");
+                system("printf \"\033[0m\"");
 
-            if (statusCode == 256)
-            {
-                break;
-            }
+                if (statusCode == 256)
+                {
+                    break;
+                }
 
-            system("clear");
+                system("clear");
         #else
-            cout << "Do you want to play again ?" << endl;
-            cout << "Enter N to exit or any other key to continue." << endl;
+                cout << "Do you want to play again ?" << endl;
+                cout << "Enter N to exit or any other key to continue." << endl;
 
-            char answer;
-            cin >> answer;
+                char answer;
+                cin >> answer;
 
-            if (answer == 'N' || answer == 'n')
-            {
-                break;
-            }
+                if (answer == 'N' || answer == 'n')
+                {
+                    break;
+                }
         #endif
     }
 

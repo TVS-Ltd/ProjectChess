@@ -5,6 +5,7 @@
         "tuple": "cpp",
         "future": "cpp",
         "iostream": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "chrono": "cpp"
     }
 }

@@ -17,6 +17,13 @@
 - Player vs Player
 - AI vs AI
 
->[SOURCE CODE](https://github.com/TVS-Ltd/ProjectChess/tree/master/src)
 
->[INSTALLATION PACKAGE FOR DEBIAN/UBUNTU/LINUX MINT](https://github.com/TVS-Ltd/ProjectChess/blob/master/chessEngine.deb)
+> **Note**
+> Installation package is for Linux Mint, Ubuntu and Debian
+
+>[INSTALLATION PACKAGE](https://github.com/TVS-Ltd/ProjectChess/blob/master/chessEngine.deb)
+
+> **Warning**
+> To compile source code you have to use C++20 standard or later.
+
+>[SOURCE CODE](https://github.com/TVS-Ltd/ProjectChess/tree/master/src)

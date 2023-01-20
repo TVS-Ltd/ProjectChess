@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <set>
 
-#define DEBUG false
+#define DEBUG true
 #define TEST_PROMOTION false
 #define TEST_CASTLING false
 #define TEST_EN_PASSANT false
@@ -212,28 +212,28 @@ public:
 
                 switch (buff)
                 {
-                case 'p':
-                    setOne(this->pieceBitboards[side][Pieces::Pawn], y * 8 + x);
+                    case 'p':
+                        setOne(this->pieceBitboards[side][Pieces::Pawn], y * 8 + x);
                     break;
 
-                case 'n':
-                    setOne(this->pieceBitboards[side][Pieces::Knight], y * 8 + x);
+                    case 'n':
+                        setOne(this->pieceBitboards[side][Pieces::Knight], y * 8 + x);
                     break;
 
-                case 'b':
-                    setOne(this->pieceBitboards[side][Pieces::Bishop], y * 8 + x);
+                    case 'b':
+                        setOne(this->pieceBitboards[side][Pieces::Bishop], y * 8 + x);
                     break;
 
-                case 'r':
-                    setOne(this->pieceBitboards[side][Pieces::Rook], y * 8 + x);
+                    case 'r':
+                        setOne(this->pieceBitboards[side][Pieces::Rook], y * 8 + x);
                     break;
 
-                case 'q':
-                    setOne(this->pieceBitboards[side][Pieces::Queen], y * 8 + x);
+                    case 'q':
+                        setOne(this->pieceBitboards[side][Pieces::Queen], y * 8 + x);
                     break;
 
-                case 'k':
-                    setOne(this->pieceBitboards[side][Pieces::King], y * 8 + x);
+                    case 'k':
+                        setOne(this->pieceBitboards[side][Pieces::King], y * 8 + x);
                     break;
                 }
 
@@ -671,18 +671,18 @@ public:
     {
         ostream << position.pieces;
 
-#if DEBUG
-        ostream << "En passant: " << (uint32_t)position.EnPassant << "\n";
-        ostream << "White long castling: " << position.WhiteLongCastling << "\n";
-        ostream << "White short castling: " << position.WhiteShortCastling << "\n";
-        ostream << "Black long castling: " << position.BlackLongCastling << "\n";
-        ostream << "Black short castling: " << position.BlackShortCastling << "\n";
-        ostream << "Move counter: " << position.MoveCtr << "\n";
-        ostream << "Zobrist hash: " << hex << "0x" << position.hash.hash << "\n"
-                << dec;
-        ostream << "Fifty moves counter: " << position.fiftyMovesCtr << "\n";
-        ostream << "Threefold repetition counter: " << (uint32_t)position.repetitionHistory.getRepetionNumber(position.hash) << "\n";
-#endif
+        #if DEBUG
+                ostream << "En passant: " << (uint32_t)position.EnPassant << "\n";
+                ostream << "White long castling: " << position.WhiteLongCastling << "\n";
+                ostream << "White short castling: " << position.WhiteShortCastling << "\n";
+                ostream << "Black long castling: " << position.BlackLongCastling << "\n";
+                ostream << "Black short castling: " << position.BlackShortCastling << "\n";
+                ostream << "Move counter: " << position.MoveCtr << "\n";
+                ostream << "Zobrist hash: " << hex << "0x" << position.hash.hash << "\n"
+                        << dec;
+                ostream << "Fifty moves counter: " << position.fiftyMovesCtr << "\n";
+                ostream << "Threefold repetition counter: " << (uint32_t)position.repetitionHistory.getRepetionNumber(position.hash) << "\n";
+        #endif
 
         return ostream;
     }
@@ -699,66 +699,66 @@ public:
 
         switch (move.Flag)
         {
-        case Move::Flag::Default:
+            case Move::Flag::Default:
             break;
 
-        case Move::Flag::PawnLongMove:
-            this->changeEnPassant((move.From + move.To) / 2);
+            case Move::Flag::PawnLongMove:
+                this->changeEnPassant((move.From + move.To) / 2);
             break;
 
-        case Move::Flag::EnPassantCapture:
-            if (move.AttackerSide == Pieces::White)
-            {
-                this->removePiece(move.To - 8, Pieces::Pawn, Pieces::Black);
-            }
-            else
-            {
-                this->removePiece(move.To + 8, Pieces::Pawn, Pieces::White);
-            }
+            case Move::Flag::EnPassantCapture:
+                if (move.AttackerSide == Pieces::White)
+                {
+                    this->removePiece(move.To - 8, Pieces::Pawn, Pieces::Black);
+                }
+                else
+                {
+                    this->removePiece(move.To + 8, Pieces::Pawn, Pieces::White);
+                }
             break;
 
-        case Move::Flag::WhiteLongCastling:
-            this->removePiece(0, Pieces::Rook, Pieces::White);
-            this->addPiece(3, Pieces::Rook, Pieces::White);
-            this->whiteCastlingHappened = true;
+            case Move::Flag::WhiteLongCastling:
+                this->removePiece(0, Pieces::Rook, Pieces::White);
+                this->addPiece(3, Pieces::Rook, Pieces::White);
+                this->whiteCastlingHappened = true;
             break;
 
-        case Move::Flag::WhiteShortCastling:
-            this->removePiece(7, Pieces::Rook, Pieces::White);
-            this->addPiece(5, Pieces::Rook, Pieces::White);
-            this->whiteCastlingHappened = true;
+            case Move::Flag::WhiteShortCastling:
+                this->removePiece(7, Pieces::Rook, Pieces::White);
+                this->addPiece(5, Pieces::Rook, Pieces::White);
+                this->whiteCastlingHappened = true;
             break;
 
-        case Move::Flag::BlackLongCastling:
-            this->removePiece(56, Pieces::Rook, Pieces::Black);
-            this->addPiece(59, Pieces::Rook, Pieces::Black);
-            this->blackCastlingHappened = true;
+            case Move::Flag::BlackLongCastling:
+                this->removePiece(56, Pieces::Rook, Pieces::Black);
+                this->addPiece(59, Pieces::Rook, Pieces::Black);
+                this->blackCastlingHappened = true;
             break;
 
-        case Move::Flag::BlackShortCastling:
-            this->removePiece(63, Pieces::Rook, Pieces::Black);
-            this->addPiece(61, Pieces::Rook, Pieces::Black);
-            this->blackCastlingHappened = true;
+            case Move::Flag::BlackShortCastling:
+                this->removePiece(63, Pieces::Rook, Pieces::Black);
+                this->addPiece(61, Pieces::Rook, Pieces::Black);
+                this->blackCastlingHappened = true;
             break;
 
-        case Move::Flag::PromoteToKnight:
-            this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
-            this->addPiece(move.To, Pieces::Knight, move.AttackerSide);
+            case Move::Flag::PromoteToKnight:
+                this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+                this->addPiece(move.To, Pieces::Knight, move.AttackerSide);
             break;
 
-        case Move::Flag::PromoteToBishop:
-            this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
-            this->addPiece(move.To, Pieces::Bishop, move.AttackerSide);
+            case Move::Flag::PromoteToBishop:
+                this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+                this->addPiece(move.To, Pieces::Bishop, move.AttackerSide);
             break;
 
-        case Move::Flag::PromoteToRook:
-            this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
-            this->addPiece(move.To, Pieces::Rook, move.AttackerSide);
+            case Move::Flag::PromoteToRook:
+                this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+                this->addPiece(move.To, Pieces::Rook, move.AttackerSide);
             break;
 
-        case Move::Flag::PromoteToQueen:
-            this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
-            this->addPiece(move.To, Pieces::Queen, move.AttackerSide);
+            case Move::Flag::PromoteToQueen:
+                this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+                this->addPiece(move.To, Pieces::Queen, move.AttackerSide);
             break;
         }
 
@@ -771,30 +771,30 @@ public:
 
         switch (move.From)
         {
-        case 0:
-            this->removeWhiteLongCastling();
+            case 0:
+                this->removeWhiteLongCastling();
             break;
 
-        case 4:
-            this->removeWhiteLongCastling();
-            this->removeWhiteShortCastling();
+            case 4:
+                this->removeWhiteLongCastling();
+                this->removeWhiteShortCastling();
             break;
 
-        case 7:
-            this->removeWhiteShortCastling();
+            case 7:
+                this->removeWhiteShortCastling();
             break;
 
-        case 56:
-            this->removeBlackLongCastling();
+            case 56:
+                this->removeBlackLongCastling();
             break;
 
-        case 60:
-            this->removeBlackLongCastling();
-            this->removeBlackShortCastling();
+            case 60:
+                this->removeBlackLongCastling();
+                this->removeBlackShortCastling();
             break;
 
-        case 63:
-            this->removeBlackShortCastling();
+            case 63:
+                this->removeBlackShortCastling();
             break;
         }
 
@@ -1001,40 +1001,40 @@ namespace SlidersMasks
         {
             switch (direction)
             {
-            case SlidersMasks::Direction::North:
-                y++;
+                case SlidersMasks::Direction::North:
+                    y++;
                 break;
 
-            case SlidersMasks::Direction::South:
-                y--;
+                case SlidersMasks::Direction::South:
+                    y--;
                 break;
 
-            case SlidersMasks::Direction::West:
-                x--;
+                case SlidersMasks::Direction::West:
+                    x--;
                 break;
 
-            case SlidersMasks::Direction::East:
-                x++;
+                case SlidersMasks::Direction::East:
+                    x++;
                 break;
 
-            case SlidersMasks::Direction::NorthWest:
-                y++;
-                x--;
+                case SlidersMasks::Direction::NorthWest:
+                    y++;
+                    x--;
                 break;
 
-            case SlidersMasks::Direction::NorthEast:
-                y++;
-                x++;
+                case SlidersMasks::Direction::NorthEast:
+                    y++;
+                    x++;
                 break;
 
-            case SlidersMasks::Direction::SouthWest:
-                y--;
-                x--;
+                case SlidersMasks::Direction::SouthWest:
+                    y--;
+                    x--;
                 break;
 
-            case SlidersMasks::Direction::SouthEast:
-                y--;
-                x++;
+                case SlidersMasks::Direction::SouthEast:
+                    y--;
+                    x++;
                 break;
             }
 
@@ -2197,16 +2197,38 @@ private:
 class MoveSorter
 {
 public:
-    static MoveList sort(Pieces pieces, MoveList moves)
+    // static MoveList sort(Pieces pieces, MoveList moves)
+    // {
+    //     for (uint8_t i = 0; i < moves.size() - 1; i++)
+    //     {
+    //         for (uint8_t j = 0; j < moves.size() - i - 1; j++)
+    //         {
+    //             if (MoveSorter::evaluateMove(pieces, moves[j]) < MoveSorter::evaluateMove(pieces, moves[j + 1]))
+    //                 swap(moves[j], moves[j + 1]);
+    //         }
+    //     }
+
+    //     return moves;
+    // }
+
+    
+
+    static MoveList quickSort(Pieces pieces, MoveList moves, int start, int end)
     {
-        for (uint8_t i = 0; i < moves.size() - 1; i++)
+        // base case
+	    if (start >= end)
         {
-            for (uint8_t j = 0; j < moves.size() - i - 1; j++)
-            {
-                if (MoveSorter::evaluateMove(pieces, moves[j]) < MoveSorter::evaluateMove(pieces, moves[j + 1]))
-                    swap(moves[j], moves[j + 1]);
-            }
+            return moves;
         }
+
+	    // partitioning the array
+	    int pivot = partition(pieces, moves, start, end);
+
+	    // Sorting the left part
+	    quickSort(pieces, moves, start, pivot - 1);
+
+	    // Sorting the right part
+	    quickSort(pieces, moves, pivot + 1, end);
 
         return moves;
     }
@@ -2293,6 +2315,50 @@ private:
         }
 
         return evaluation;
+    }
+
+    static size_t partition(Pieces pieces, MoveList moves, int start, int end)
+    {
+
+    	Move pivot = moves[start];
+
+    	size_t count = 0;
+
+    	for (size_t i = start + 1; i <= end; i++) 
+        {
+    		if (MoveSorter::evaluateMove(pieces, moves[i]) <= MoveSorter::evaluateMove(pieces, pivot))
+            {
+                count++;
+            }
+    	}
+
+    	// Giving pivot element its correct position
+    	size_t pivotIndex = start + count;
+    	swap(moves[pivotIndex], moves[start]);
+
+    	// Sorting left and right parts of the pivot element
+    	size_t i = start, j = end;
+
+    	while (i < pivotIndex && j > pivotIndex) 
+        {
+
+    		while (MoveSorter::evaluateMove(pieces, moves[i]) <= MoveSorter::evaluateMove(pieces, pivot)) 
+            {
+    			i++;
+    		}
+
+    		while (MoveSorter::evaluateMove(pieces, moves[j]) > MoveSorter::evaluateMove(pieces, pivot)) 
+            {
+    			j--;
+    		}
+
+    		if (i < pivotIndex && j > pivotIndex) 
+            {
+    			swap(moves[i++], moves[j--]);
+    		}
+    	}
+
+    	return pivotIndex;
     }
 };
 
@@ -2466,7 +2532,7 @@ private:
             return make_tuple(0, Move());
 
         MoveList moves = LegalMoveGen::generate(position, Pieces::Black);
-        moves = MoveSorter::sort(position.pieces, moves);
+        moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
 
         Move move;
         Move bestMove;
@@ -2542,7 +2608,7 @@ private:
             return std::make_tuple(0, Move());
 
         MoveList moves = LegalMoveGen::generate(position, Pieces::White);
-        moves = MoveSorter::sort(position.pieces, moves);
+        moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
         Move move;
         Move bestMove;
         uint8_t bestMoveIndex;
@@ -2630,7 +2696,7 @@ private:
         }
 
         MoveList moves = LegalMoveGen::generate(position, Pieces::Black, true);
-        moves = MoveSorter::sort(position.pieces, moves);
+        moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
         Move move;
 
         Position copy;
@@ -2683,7 +2749,7 @@ private:
         }
 
         MoveList moves = LegalMoveGen::generate(position, Pieces::White, true);
-        moves = MoveSorter::sort(position.pieces, moves);
+        moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
         Move move;
 
         Position copy;
@@ -2749,6 +2815,67 @@ private:
     ofstream file;
 };
 
+// —————————————————— Timer ——————————————————
+class Timer 
+{
+    using clock = std::chrono::steady_clock;
+    clock::time_point startTime = {};
+    clock::duration elapsedTime = {};
+
+public:
+    bool isRunning() const 
+    {
+        return startTime != clock::time_point{};
+    }
+
+    void start() 
+    {
+        if(!isRunning()) 
+        {
+            startTime = clock::now();
+        }
+    }
+
+    void stop() 
+    {
+        if(isRunning()) 
+        {
+            elapsedTime += clock::now() - startTime;
+            startTime = {};
+        }
+    }
+
+    void reset() 
+    {
+        startTime = {};
+        elapsedTime = {};
+    }
+
+    // Return the elapsed time in seconds
+    uint64_t getElapsedSeconds() 
+    {
+        return std::chrono::duration_cast<std::chrono::duration<uint64_t>>(getElapsed()).count();
+    }
+
+    // Return the elapsed time in minutes
+    uint64_t getElapsedMinutes() 
+    {
+        return std::chrono::duration_cast<std::chrono::duration<uint64_t>>(getElapsed()).count() / 60;
+    }
+
+    clock::duration getElapsed() 
+    {
+        auto result = elapsedTime;
+
+        if(isRunning()) 
+        {
+            result += clock::now() - startTime;
+        }
+
+        return result;
+    }
+};
+
 // —————————————————— Game ——————————————————
 class Game
 {
@@ -2793,6 +2920,9 @@ private:
     #if LOG_TO_FILE
         logToFile log;
     #endif
+    uint32_t timerLose = 0;
+    Timer timerWhite;
+    Timer timerBlack;
 
     bool whiteVictory()
     {
@@ -2807,8 +2937,8 @@ private:
             #if LOG_TO_FILE
                 log << GREEN << "White win!" << END;
             #endif
-        }
-        else if (blackHaventGotMoves && blackInCheck)
+        } else 
+        if (blackHaventGotMoves && blackInCheck)
         {
             cout << RED << endl;
             cout << "White win!" << END << endl;
@@ -2816,7 +2946,31 @@ private:
             #if LOG_TO_FILE
                 log << RED << "White win!" << END;
             #endif
+        } else
+        if(playerSide == Pieces::Black && timerBlack.getElapsedSeconds() > timerLose)
+        {
+            cout << RED << "White win!" << END << endl;
+            clog << RED << "Time is over!" << END << endl;
+
+            #if LOG_TO_FILE
+                log << GREEN << "White win!" << END;
+            #endif
+
+            return true;
+        } else
+        if (playerSide == Pieces::White && timerBlack.getElapsedSeconds() > timerLose)
+        {
+            cout << GREEN << "White win!" << END << endl;
+            clog << RED << "Time is over!" << END << endl;
+
+            #if LOG_TO_FILE
+                log << GREEN << "White win!" << END;
+            #endif
+
+            return true;
         }
+        
+        
 
         return (blackHaventGotMoves && blackInCheck);
     }
@@ -2843,7 +2997,31 @@ private:
             #if LOG_TO_FILE
                 log << RED << "Black win!" << END;
             #endif
-        }
+        } else
+        if (playerSide == Pieces::White && timerWhite.getElapsedSeconds() > timerLose)
+        {
+            cout << RED << "Black win!" << END << endl;
+            clog << RED << "Time is over!" << END << endl;
+
+            #if LOG_TO_FILE
+                log << RED << "Black win!" << END;
+            #endif
+
+            return true;
+        } else 
+        if (playerSide == Pieces::Black && timerWhite.getElapsedSeconds() > timerLose)
+        {
+            cout << GREEN << "Black win!" << END << endl;
+            clog << RED << "Time is over!" << END << endl;
+
+            #if LOG_TO_FILE
+                log << RED << "Black win!" << END;
+            #endif
+
+            return true;
+        } 
+        
+        
 
         return (whiteHaventGotMoves && whiteInCheck);
     }
@@ -2901,6 +3079,17 @@ private:
 
             #if LOG_TO_FILE
                 log << YELLOW << "[DRAW] Three moves rule." << END;
+            #endif
+
+            return true;
+        }
+
+        if (timerWhite.getElapsedSeconds() == timerBlack.getElapsedSeconds() && timerWhite.getElapsedSeconds() > timerLose)
+        {
+            cout << YELLOW << "[DRAW] Time is up." << END << endl;
+
+            #if LOG_TO_FILE
+                log << YELLOW << "[DRAW] Time is up." << END;
             #endif
 
             return true;
@@ -3013,33 +3202,33 @@ private:
 
                 switch (promotionPiece)
                 {
-                case 1:
-                    move = moves[i];
-                    move.Flag = Move::Flag::PromoteToKnight;
-                    moveFound = true;
+                    case 1:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToKnight;
+                        moveFound = true;
                     break;
 
-                case 2:
-                    move = moves[i];
-                    move.Flag = Move::Flag::PromoteToBishop;
-                    moveFound = true;
+                    case 2:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToBishop;
+                        moveFound = true;
                     break;
 
-                case 3:
-                    move = moves[i];
-                    move.Flag = Move::Flag::PromoteToRook;
-                    moveFound = true;
+                    case 3:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToRook;
+                        moveFound = true;
                     break;
 
-                case 4:
-                    move = moves[i];
-                    move.Flag = Move::Flag::PromoteToQueen;
-                    moveFound = true;
+                    case 4:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToQueen;
+                        moveFound = true;
                     break;
 
-                default:
-                    cout << RED << "\n[ERROR] Illegal move!" << END << endl;
-                    continue;
+                    default:
+                        cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                        continue;
                     break;
                 }
 
@@ -3282,7 +3471,7 @@ private:
                 cout << position << endl;
 
                 #if LOG_TO_FILE
-                                log << position;
+                    log << position;
                 #endif
 
                 break;
@@ -3312,6 +3501,141 @@ private:
         }
     }
 
+    void PvPTime()
+    {
+        //Start game in which each side has 10 minutes to make a move use class Timer
+        //If one side doesn't make a move in time, he loses the game
+        //If both sides don't make a move in time, draw
+
+        sideChoose();
+
+        cout << position << endl;
+
+        #if LOG_TO_FILE
+            log << position;
+        #endif
+
+        //Start timer for player 1
+        timerWhite.start();
+
+        while (true)
+        {
+            // Player 1 move
+            cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+            //Output time left in format mm:ss
+            cout << "Time left (minutes:seconds): " << (timerLose - timerWhite.getElapsedSeconds()) / 60 << ":" << (60 - (timerWhite.getElapsedSeconds() - timerWhite.getElapsedMinutes() * 60)) % 60 << endl;
+            
+            #if LOG_TO_FILE
+                log << GREEN << "\nPlayer 1 move:" << END;
+            #endif
+
+            while (!movePlayer(playerSide))
+            {
+                continue;
+            }
+
+            // Check if game is finished
+            if (this->gameFinished())
+            {
+                cout << position << endl;
+
+                #if LOG_TO_FILE
+                    log << position;
+                #endif
+
+                break;
+            }
+
+            //Stop timer for player 1
+            timerWhite.stop();
+
+            //Start timer for player 2
+            timerBlack.start();
+
+            // Player 2 move
+            cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+            //Output time left in format mm:ss
+            cout << "Time left (minutes:seconds): " << (timerLose - timerBlack.getElapsedSeconds()) / 60 << ":" << (60 - (timerBlack.getElapsedSeconds() - timerBlack.getElapsedMinutes() * 60)) % 60 << endl;
+
+            #if LOG_TO_FILE
+                log << YELLOW << "\nPlayer 2 move:" << END;
+            #endif
+
+            while (!movePlayer(aiSide))
+            {
+                continue;
+            }
+
+            // Check if game is finished
+            if (this->gameFinished())
+            {
+                cout << position << endl;
+
+                #if LOG_TO_FILE
+                    log << position;
+                #endif
+
+                break;
+            }
+
+            //Stop timer for player 2
+            timerBlack.stop();
+
+            //Start timer for player 1
+            timerWhite.start();
+        }
+        
+    }
+    
+    void chooseLimitedTimeMode()
+    {
+        //Choose time mode for game (Blitz, Rapid, Classical)
+        cout << "Choose time mode: " << endl;
+        cout << "1. Blitz (5 min)" << endl;
+        cout << "2. Rapid (10 min)" << endl;
+        cout << "3. Classical (15 min)" << endl;
+
+        int timeMode = 0;
+        cin >> timeMode;
+
+        switch (timeMode)
+        {
+            case 1:
+                #if LOG_TO_FILE
+                    log << "Time mode: Blitz (5 min)";
+                #endif
+
+                timerLose = 5 * 60; //5 minutes
+                PvPTime();
+            break;
+
+            case 2:
+                #if LOG_TO_FILE
+                    log << "Time mode: Rapid (10 min)";
+                #endif
+
+                timerLose = 10 * 60; //10 minutes
+                PvPTime();
+            break;
+
+            case 3:
+                #if LOG_TO_FILE
+                    log << "Time mode: Classical (15 min)";
+                #endif
+
+                timerLose = 15 * 60; //15 minutes
+                PvPTime();
+            break;
+
+            default:
+                cout << "Wrong input!" << endl;
+                chooseLimitedTimeMode();
+            break;
+        }
+    }
+
     void chooseGameMode()
     {
         // Choose game mode
@@ -3319,6 +3643,7 @@ private:
         cout << "1. Player vs Player" << endl;
         cout << "2. Player vs AI" << endl;
         cout << "3. AI vs AI" << endl;
+        cout << "4. Player vs Player (10 min limit)" << endl;
 
         int gameMode = 0;
         cin >> gameMode;
@@ -3348,6 +3673,20 @@ private:
                 EvE();
             break;
 
+            case 4:
+                #if LOG_TO_FILE
+                    log << "Game mode: Player vs Player with time";
+                #endif
+
+                timerWhite.reset();
+                timerBlack.reset();
+
+                chooseLimitedTimeMode();
+                
+                PvPTime();
+            break;
+
+
             default:
                 cout << RED << "\n[ERROR] Illegal game mode!\n" << END << endl;
                 this->chooseGameMode();
@@ -3359,12 +3698,21 @@ private:
 void start()
 {
     Game game;
-    game.start();
+    try
+    {
+        game.start();
+    }
+    catch (const exception& e)
+    {
+        cout << "Error: " << e.what() << endl;
+    }
 }
 
 int main()
 {
-    while (true)
+    bool exit = false;
+
+    while (!exit)
     {
         start();
 
@@ -3375,7 +3723,7 @@ int main()
 
                 if (statusCode == 256)
                 {
-                    break;
+                    exit = true;
                 }
 
                 system("clear");
@@ -3388,7 +3736,7 @@ int main()
 
                 if (answer == 'N' || answer == 'n')
                 {
-                    break;
+                    exit = true;
                 }
         #endif
     }

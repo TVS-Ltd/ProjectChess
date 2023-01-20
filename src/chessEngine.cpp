@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <set>
 
-#define DEBUG true
+#define DEBUG false
 #define TEST_PROMOTION false
 #define TEST_CASTLING false
 #define TEST_EN_PASSANT false
@@ -3100,7 +3100,15 @@ private:
 
     bool gameFinished()
     {
-        return (this->whiteVictory() || this->blackVictory() || this->draw());
+        if (this->whiteVictory() || this->blackVictory() || this->draw())
+        {
+            timerWhite.stop();
+            timerBlack.stop();
+
+            return true;
+        }
+
+        return false;
     }
 
     bool isWhiteMove() const
@@ -3395,55 +3403,112 @@ private:
             log << position;
         #endif
 
-        while (true)
+        if(playerSide == Pieces::White)
         {
-
-            // Player 1 move
-            cout << GREEN << "\nPlayer 1 move:" << END << endl;
-
-            #if LOG_TO_FILE
-                log << GREEN << "\nPlayer 1 move:" << END;
-            #endif
-
-            while (!movePlayer(playerSide))
+            while (true)
             {
-                continue;
-            }
 
-            // Check if game is finished
-            if (this->gameFinished())
-            {
-                cout << position << endl;
+                // Player 1 move
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
 
                 #if LOG_TO_FILE
-                    log << position;
+                    log << GREEN << "\nPlayer 1 move:" << END;
                 #endif
 
-                break;
-            }
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
 
-            // Player 2 move
-            cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
 
-            #if LOG_TO_FILE
-                log << YELLOW << "\nPlayer 2 move:" << END;
-            #endif
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
 
-            while (!movePlayer(aiSide))
-            {
-                continue;
-            }
+                    break;
+                }
 
-            // Check if game is finished
-            if (this->gameFinished())
-            {
-                cout << position << endl;
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
 
                 #if LOG_TO_FILE
-                    log << position;
+                    log << YELLOW << "\nPlayer 2 move:" << END;
                 #endif
 
-                break;
+                while (!movePlayer(aiSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+            }
+        }
+        else
+        {
+            while (true)
+            {
+
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 2 move:" << END;
+                #endif
+
+                while (!movePlayer(aiSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                // Player 1 move
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 1 move:" << END;
+                #endif
+
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
             }
         }
     }
@@ -3515,78 +3580,150 @@ private:
             log << position;
         #endif
 
-        //Start timer for player 1
+        //Start timer for white
         timerWhite.start();
 
-        while (true)
+        if(playerSide == Pieces::White)
         {
-            // Player 1 move
-            cout << GREEN << "\nPlayer 1 move:" << END << endl;
-
-            //Output time left in format mm:ss
-            cout << "Time left (minutes:seconds): " << (timerLose - timerWhite.getElapsedSeconds()) / 60 << ":" << (60 - (timerWhite.getElapsedSeconds() - timerWhite.getElapsedMinutes() * 60)) % 60 << endl;
-            
-            #if LOG_TO_FILE
-                log << GREEN << "\nPlayer 1 move:" << END;
-            #endif
-
-            while (!movePlayer(playerSide))
+            while (true)
             {
-                continue;
-            }
+                // Player 1 move
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
 
-            // Check if game is finished
-            if (this->gameFinished())
-            {
-                cout << position << endl;
+                //Output time left in format mm:ss
+                cout << "Time left (min:sec): " << (timerLose - timerWhite.getElapsedSeconds()) / 60 << ":" << (60 - (timerWhite.getElapsedSeconds() - timerWhite.getElapsedMinutes() * 60)) % 60 << endl;
 
                 #if LOG_TO_FILE
-                    log << position;
+                    log << GREEN << "\nPlayer 1 move:" << END;
                 #endif
 
-                break;
-            }
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
 
-            //Stop timer for player 1
-            timerWhite.stop();
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
 
-            //Start timer for player 2
-            timerBlack.start();
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
 
-            // Player 2 move
-            cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+                    break;
+                }
 
-            //Output time left in format mm:ss
-            cout << "Time left (minutes:seconds): " << (timerLose - timerBlack.getElapsedSeconds()) / 60 << ":" << (60 - (timerBlack.getElapsedSeconds() - timerBlack.getElapsedMinutes() * 60)) % 60 << endl;
+                //Stop timer for white
+                timerWhite.stop();
 
-            #if LOG_TO_FILE
-                log << YELLOW << "\nPlayer 2 move:" << END;
-            #endif
+                //Start timer for black
+                timerBlack.start();
 
-            while (!movePlayer(aiSide))
-            {
-                continue;
-            }
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
 
-            // Check if game is finished
-            if (this->gameFinished())
-            {
-                cout << position << endl;
+                //Output time left in format mm:ss
+                cout << "Time left (min:sec): " << (timerLose - timerBlack.getElapsedSeconds()) / 60 << ":" << (60 - (timerBlack.getElapsedSeconds() - timerBlack.getElapsedMinutes() * 60)) % 60 << endl;
 
                 #if LOG_TO_FILE
-                    log << position;
+                    log << YELLOW << "\nPlayer 2 move:" << END;
                 #endif
 
-                break;
+                while (!movePlayer(aiSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                //Stop timer for black
+                timerBlack.stop();
+
+                //Start timer for white
+                timerWhite.start();
             }
+        } else
+        {
+            while (true)
+            {
+                // Player 1 move
+                cout << GREEN << "\nPlayer 2 move:" << END << endl;
 
-            //Stop timer for player 2
-            timerBlack.stop();
+                //Output time left in format mm:ss
+                cout << "Time left (min:sec): " << (timerLose - timerWhite.getElapsedSeconds()) / 60 << ":" << (60 - (timerWhite.getElapsedSeconds() - timerWhite.getElapsedMinutes() * 60)) % 60 << endl;
 
-            //Start timer for player 1
-            timerWhite.start();
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 2 move:" << END;
+                #endif
+
+                while (!movePlayer(aiSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                //Stop timer for white
+                timerWhite.stop();
+
+                //Start timer for black
+                timerBlack.start();
+
+                // Player 1 move
+                cout << YELLOW << "\nPlayer 1 move:" << END << endl;
+
+                //Output time left in format mm:ss
+                cout << "Time left (min:sec): " << (timerLose - timerBlack.getElapsedSeconds()) / 60 << ":" << (60 - (timerBlack.getElapsedSeconds() - timerBlack.getElapsedMinutes() * 60)) % 60 << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 1 move:" << END;
+                #endif
+
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                //Stop timer for black
+                timerBlack.stop();
+
+                //Start timer for white
+                timerWhite.start();
+            }
         }
-        
     }
     
     void chooseLimitedTimeMode()

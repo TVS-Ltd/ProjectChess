@@ -12,6 +12,7 @@
 #include <set>
 
 #define DEBUG false
+#define TEST_WHITE_WIN false
 #define TEST_PROMOTION false
 #define TEST_CASTLING false
 #define TEST_EN_PASSANT false
@@ -2884,6 +2885,10 @@ public:
     {
         this->position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
 
+        #if TEST_WHITE_WIN
+            this->position = {"rnbqkbnr/pppppppp/8/8/2B5/5Q2/PPPPPPPP/RNB1K1NR", 255, true, true, true, true, 1};
+        #endif
+
         #if TEST_PROMOTION
                 this->position = {"rnbqkbnr/11111111/8/8/8/8/K111111p/11111111", 255, true, true, true, true, 1};
         #endif
@@ -3102,8 +3107,8 @@ private:
     {
         if (this->whiteVictory() || this->blackVictory() || this->draw())
         {
-            timerWhite.stop();
-            timerBlack.stop();
+            timerWhite.reset();
+            timerBlack.reset();
 
             return true;
         }
@@ -3819,8 +3824,6 @@ private:
                 timerBlack.reset();
 
                 chooseLimitedTimeMode();
-                
-                PvPTime();
             break;
 
 

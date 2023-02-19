@@ -30,7 +30,7 @@
     #define OpeningBookFile "./OpeningBook.txt"
 #endif
 
-#define logFile "log.txt"
+
 
 // ——————————————————Terminal colors——————————————————
 const char *END = "\033[0m";
@@ -328,7 +328,6 @@ public:
                 {
                     ostream << "♔";
                 }
-                else
 
                     ostream << " ";
 

@@ -65,5 +65,12 @@
         "io_context": "cpp",
         "netfwd": "cpp",
         "timer": "cpp"
-    }
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/tyomavader/Documents/ProjectCAlpha",
+            "binaryPath": "/home/tyomavader/Documents/ProjectCAlpha/chess",
+            "binaryArgs": []
+        }
+    ]
 }

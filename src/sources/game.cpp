@@ -80,8 +80,6 @@ using namespace std;
 
             return true;
         }
-        
-        
 
         return (blackHaventGotMoves && blackInCheck);
     }
@@ -227,7 +225,7 @@ using namespace std;
         return (this->position.MoveCtr - floor(this->position.MoveCtr) < 1e-7);
     }
 
-    bool Game::isBlackMove()
+    bool Game::isBlackMove() const
     {
         return !isWhiteMove();
     }

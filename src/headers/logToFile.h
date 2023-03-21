@@ -6,6 +6,9 @@
 #pragma once
 
 // —————————————————— Log to File ——————————————————
+/**
+ * Class for handling the logging to a file.
+*/
 class logToFile
 {
 public:

@@ -2,6 +2,9 @@
 
 #pragma once
 
+/**
+ * Class for storing all required info about the move.
+*/
 class Move
 {
 public:

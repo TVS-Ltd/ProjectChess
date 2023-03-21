@@ -7,27 +7,62 @@
 using namespace std;
 
 // ——————————————————  Bitboards  ——————————————————
+
+/**
+ * Type for storing board in the form of bitboards.
+*/
 typedef uint64_t Bitboard;
 
-// Set a bit in a bitboard to 1
+/**
+ * Set a bit in a bitboard to 1.
+ *
+ * @param bitBoard Reference to the bitboard you wanna change.
+ * @param square Bitboard's square to set to 1.
+ *
+ * @exception This function does not throw exceptions.
+*/
 static constexpr void setOne(Bitboard &bitBoard, uint8_t square)
 {
     bitBoard = bitBoard | (1ull << square);
 }
 
-// Set a bit in a bitboard to 0
+/**
+ * Set a bit in a bitboard to 0.
+ *
+ * @param bitBoard Reference to the bitboard you wanna change.
+ * @param square Bitboard's square to set to 0.
+ *
+ * @exception This function does not throw exceptions.
+*/
 static constexpr void setZero(Bitboard &bitBoard, uint8_t square)
 {
     bitBoard = bitBoard & (~(1ull << square));
 }
 
-// Get the value of a bit in a bitboard
+/**
+ * Get the value of a bit in a bitboard.
+ *
+ * @param bitBoard Bitboard you wanna get info about.
+ * @param square Bitboard's square you wanna get value for.
+ * 
+ * @return Value (0/1) of the requested square.
+ *
+ * @exception This function does not throw exceptions.
+*/
 static constexpr bool getBit(Bitboard bitBoard, uint8_t square)
 {
     return (bitBoard & (1ull << square));
 }
 
-// Count the number of 1s in a bitboard
+/**
+ * Count the amount of ones in a bitboard.
+ *
+ * @param bitBoard Bitboard you wanna get info about.
+ * 
+ * @return Amount of squares with value 1.
+ *
+ * @exception This function does not throw exceptions.
+*/
 static constexpr uint8_t countOnes(Bitboard bitBoard)
 {
     return popcount(bitBoard);

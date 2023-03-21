@@ -17,6 +17,17 @@ public:
     AI();
     AI(const string &openingBookPath);
 
+    /**
+    * Calculate the best AI move.
+    *
+    * @param position Current board position.
+    * @param side AI side (Black/White).
+    * @param minMs,maxMs Time bounds given for best move calculation.
+    * 
+    * @return Best move.
+    *
+    * @exception This function does not throw exceptions.
+    */
     Move bestMove(const Position &position, uint8_t side, int32_t minMs, int32_t maxMs);
 
 private:

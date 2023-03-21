@@ -3,3 +3,5 @@ chessEngine.deb
 logAIgame.txt
 .vscode
 .gitignore
+chess
+*.o

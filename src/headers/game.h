@@ -1,9 +1,10 @@
 #include "bitboards.h"
-
+#include "handsdeck.h"
+#include "card.h"
 #include "ai.h"
 #include "move.h"
 #include "timer.h"
-
+#include "deck.h"
 #pragma once
 
 #if LINUX
@@ -61,6 +62,8 @@ private:
     void EvE();
 
     void PvPTime();
+
+    void Gwent();
     
     void chooseLimitedTimeMode();
 

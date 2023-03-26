@@ -65,5 +65,12 @@
         "io_context": "cpp",
         "netfwd": "cpp",
         "timer": "cpp"
-    }
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/danila/CCG/ProjectChess",
+            "binaryPath": "/home/danila/CCG/ProjectChess/chess",
+            "binaryArgs": []
+        }
+    ]
 }

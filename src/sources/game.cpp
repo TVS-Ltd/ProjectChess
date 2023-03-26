@@ -624,6 +624,115 @@ using namespace std;
         }
     }
 
+    int RandFigure() // Генерирует индекс для фигуры, которую мы вызовем в колоду
+    {
+        int count = 0;
+
+        count = rand() % 5;
+
+        return count;
+    }
+
+    void Game::Gwent()
+    {
+        std::string str = "prkbq";
+    
+        // std::vector<card> deck; // Вектор объектов
+
+        std::cout << "Your deck" << endl;
+
+        card obj_1(str[RandFigure()], "test", " test_1");// Создаем 5 карт с рандомными фигурами 
+        card obj_2(str[RandFigure()], "test", " test_1");
+        card obj_3(str[RandFigure()], "test", " test_1");
+        card obj_4(str[RandFigure()], "test", " test_1");
+        card obj_5(str[RandFigure()], "test", " test_1");
+
+        handsdeck coloda;
+    
+        coloda.push_b(obj_1); // Кладем их в вектор
+        coloda.push_b(obj_2);
+        coloda.push_b(obj_3);
+        coloda.push_b(obj_4);
+        coloda.push_b(obj_5);
+
+        // Выводим на экран колоду для пользователя
+        
+        coloda.print();        
+
+        std::cout << endl;
+
+        std::cout << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << endl;
+
+        int t = 2;
+
+        while (t != 0) // Две замены карты
+        {
+            int choice;
+
+            cin >> choice;
+
+            if (choice == 0)
+            {
+                break;
+            }else 
+            if (choice == 1)
+            {
+                obj_1.setFigure(str[RandFigure()]);
+
+                coloda.VectorChange(0, obj_1);
+                
+                // deck[0] = obj_1;
+            }else 
+            if (choice == 2)
+            {
+                obj_2.setFigure(str[RandFigure()]);
+
+                coloda.VectorChange(1, obj_2);
+                
+                // deck[1] = obj_2;
+            }else
+            if (choice == 3)
+            {
+                obj_3.setFigure(str[RandFigure()]);
+
+                coloda.VectorChange(2, obj_3);
+
+                // deck[2] = obj_3;
+            }else 
+            if (choice == 4)
+            {
+                obj_4.setFigure(str[RandFigure()]);
+
+                coloda.VectorChange(3, obj_4);
+
+                // deck[3] = obj_4;
+            }else 
+            if (choice == 5)
+            {
+                obj_5.setFigure(str[RandFigure()]);
+
+                coloda.VectorChange(4, obj_5);
+
+                // deck[4] = obj_5;
+            }else 
+            if (choice > 5 || choice < 0 || double(choice))
+            {
+                std::cout << "Incorrect input. Please, try again" << endl;
+                t++;
+            }
+
+            std::cout << "Updated deck " << endl;
+
+            // Выводим на экран измененную колоду для пользователя
+ 
+            coloda.print();
+
+            std::cout << endl;
+
+            t--;
+        }	
+    }
+
     void Game::EvE()
     {
         playerSide = Pieces::White;

@@ -679,7 +679,7 @@ using namespace std;
             {
                 obj_1.setFigure(str[RandFigure()]);
 
-                coloda.VectorChange(0, obj_1);
+                coloda.CardChange(0, obj_1);
                 
                 // deck[0] = obj_1;
             }else 
@@ -687,7 +687,7 @@ using namespace std;
             {
                 obj_2.setFigure(str[RandFigure()]);
 
-                coloda.VectorChange(1, obj_2);
+                coloda.CardChange(1, obj_2);
                 
                 // deck[1] = obj_2;
             }else
@@ -695,7 +695,7 @@ using namespace std;
             {
                 obj_3.setFigure(str[RandFigure()]);
 
-                coloda.VectorChange(2, obj_3);
+                coloda.CardChange(2, obj_3);
 
                 // deck[2] = obj_3;
             }else 
@@ -703,7 +703,7 @@ using namespace std;
             {
                 obj_4.setFigure(str[RandFigure()]);
 
-                coloda.VectorChange(3, obj_4);
+                coloda.CardChange(3, obj_4);
 
                 // deck[3] = obj_4;
             }else 
@@ -711,7 +711,7 @@ using namespace std;
             {
                 obj_5.setFigure(str[RandFigure()]);
 
-                coloda.VectorChange(4, obj_5);
+                coloda.CardChange(4, obj_5);
 
                 // deck[4] = obj_5;
             }else 

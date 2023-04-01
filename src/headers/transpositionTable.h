@@ -1,4 +1,4 @@
-#include <set>
+#include <unordered_set>
 #include "entry.h"
 
 #pragma once
@@ -13,5 +13,5 @@ public:
     uint8_t tryToFindBestMoveIndex(ZobristHash hash);
 
 private:
-    set<Entry> Set;
+    unordered_set<Entry, HashFunction> Set;
 };

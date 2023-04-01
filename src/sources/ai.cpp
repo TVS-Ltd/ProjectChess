@@ -100,180 +100,209 @@ static int32_t cutOffs;
 
     OpeningBook openingBook;
 
-    tuple<int32_t, Move> AI::BestMove(const Position &position, uint8_t side, int32_t depth, TranspositionTable &TransposTable)
-    {
-        if (side == Pieces::White)
-            return AI::alphaBetaMax(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
+   
+tuple<int32_t, Move> AI::BestMove(const Position& position, uint8_t side, int32_t depth, TranspositionTable& TransposTable)
+{
+    if (side == Pieces::White)
+        return AI::alphaBetaMax(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
 
-        return AI::alphaBetaMin(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
+    return AI::alphaBetaMin(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
+}
+
+tuple<int32_t, Move> AI::alphaBetaMin(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable)
+{
+    if (stopSearch)
+        return make_tuple(AI::Infinity::Positive, Move());
+    if (currentDepth > maxDepth)
+        maxDepth = currentDepth;
+
+    if (depth_left == 0)
+        return make_tuple(AI::alphaBetaMinOnlyCaptures(position, alpha, beta, currentDepth), Move());
+
+    if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
+        return make_tuple(AI::Infinity::Positive, Move());
+
+    MoveList moves = LegalMoveGen::generate(position, Pieces::Black);
+    moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+
+    Move move;
+    Move bestMove;
+    uint8_t bestMoveIndex = -1;
+
+    bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[Pieces::Black][Pieces::King]), Pieces::Black);
+
+    if (moves.size() == 0)
+    {
+        if (in_check)
+            return make_tuple(AI::Infinity::Positive - currentDepth, Move());
+        return std::make_tuple(AI::Infinity::Positive, Move());
     }
 
-    tuple<int32_t, Move> AI::alphaBetaMin(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable &TransposTable)
+    int32_t evaluation;
+
+    Position copy;
+
+    uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
+
+    for (uint8_t i = 0; i < moves.size(); i = i + 1)
     {
-        if (stopSearch)
-            return make_tuple(0, Move());
-        if (currentDepth > maxDepth)
-            maxDepth = currentDepth;
-
-        if (depth_left == 0)
-            return make_tuple(AI::alphaBetaMinOnlyCaptures(position, alpha, beta, currentDepth), Move());
-
-        if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
-            return make_tuple(0, Move());
-
-        MoveList moves = LegalMoveGen::generate(position, Pieces::Black);
-        moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
-
-        Move move;
-        Move bestMove;
-        uint8_t bestMoveIndex;
-
-        bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[Pieces::Black][Pieces::King]), Pieces::Black);
-
-        if (moves.size() == 0)
+        if (tt_result >= moves.size())
+            move = moves[i];
+        else
         {
-            if (in_check)
-                return make_tuple(AI::Infinity::Positive - currentDepth, Move());
-            return std::make_tuple(0, Move());
-        }
-
-        int32_t evaluation;
-
-        Position copy;
-
-        uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
-
-        for (uint8_t i = 0; i < moves.size(); i = i + 1)
-        {
-            if (tt_result >= moves.size())
-                move = moves[i];
+            if (i == 0)
+                move = moves[tt_result];
             else
             {
-                if (i == 0)
-                    move = moves[tt_result];
+                if (i == tt_result)
+                    move = moves[0];
                 else
-                {
-                    if (i == tt_result)
-                        move = moves[0];
-                    else
-                        move = moves[i];
-                }
-            }
-
-            copy = position;
-            copy.move(move);
-            evaluation = get<0>(AI::alphaBetaMax(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
-
-            if (evaluation <= alpha)
-            {
-                if (tt_result >= moves.size() or i != 0)
-                    TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
-                else
-                    cutOffs = cutOffs + 1;
-                return make_tuple(alpha, bestMove);
-            }
-
-            if (evaluation < beta)
-            {
-                bestMove = move;
-                bestMoveIndex = i;
-                beta = evaluation;
+                    move = moves[i];
             }
         }
 
-        TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
-        return std::make_tuple(beta, bestMove);
+        copy = position;
+        copy.move(move);
+        evaluation = get<0>(AI::alphaBetaMax(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
+
+
+        if (evaluation <= alpha)
+        {
+            if (bestMoveIndex == -1) return make_tuple(AI::alphaBetaMinOnlyCaptures(position, alpha, beta, currentDepth), Move());
+            if (tt_result >= moves.size() or i != 0)
+                TransposTable.addEntry({ position.hash, depth_left, bestMoveIndex });
+            else
+                cutOffs = cutOffs + 1;
+            return make_tuple(alpha, bestMove);
+        }
+
+        if (evaluation < beta)
+        {
+            bestMove = move;
+            bestMoveIndex = i;
+            beta = evaluation;
+        }
     }
-    tuple<int32_t, Move> AI::alphaBetaMax(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable &TransposTable)
+
+    TransposTable.addEntry({ position.hash, depth_left, bestMoveIndex });
+    return std::make_tuple(beta, bestMove);
+}
+tuple<int32_t, Move> AI::alphaBetaMax(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable)
+{
+    if (stopSearch)
+        return std::make_tuple(AI::Infinity::Negative, Move());
+    if (currentDepth > maxDepth)
+        maxDepth = currentDepth;
+
+    if (depth_left == 0)
+        return std::make_tuple(AI::alphaBetaMaxOnlyCaptures(position, alpha, beta, currentDepth), Move());
+
+    if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
+        return std::make_tuple(AI::Infinity::Negative, Move());
+
+    MoveList moves = LegalMoveGen::generate(position, Pieces::White);
+    moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+    Move move;
+    Move bestMove;
+    uint8_t bestMoveIndex = -1;
+
+    bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[Pieces::White][Pieces::King]), Pieces::White);
+
+    if (moves.size() == 0)
     {
-        if (stopSearch)
-            return std::make_tuple(0, Move());
-        if (currentDepth > maxDepth)
-            maxDepth = currentDepth;
+        if (in_check)
+            return std::make_tuple(AI::Infinity::Negative + currentDepth, Move());
+        return std::make_tuple(AI::Infinity::Negative, Move());
+    }
 
-        if (depth_left == 0)
-            return std::make_tuple(AI::alphaBetaMaxOnlyCaptures(position, alpha, beta, currentDepth), Move());
+    int32_t evaluation;
 
-        if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
-            return std::make_tuple(0, Move());
+    Position copy;
 
-        MoveList moves = LegalMoveGen::generate(position, Pieces::White);
-        moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
-        Move move;
-        Move bestMove;
-        uint8_t bestMoveIndex;
+    uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
 
-        bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[Pieces::White][Pieces::King]), Pieces::White);
-
-        if (moves.size() == 0)
+    for (uint8_t i = 0; i < moves.size(); i = i + 1)
+    {
+        if (tt_result >= moves.size())
+            move = moves[i];
+        else
         {
-            if (in_check)
-                return std::make_tuple(AI::Infinity::Negative + currentDepth, Move());
-            return std::make_tuple(0, Move());
-        }
-
-        int32_t evaluation;
-
-        Position copy;
-
-        uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
-
-        for (uint8_t i = 0; i < moves.size(); i = i + 1)
-        {
-            if (tt_result >= moves.size())
-                move = moves[i];
+            if (i == 0)
+                move = moves[tt_result];
             else
             {
-                if (i == 0)
-                    move = moves[tt_result];
+                if (i == tt_result)
+                    move = moves[0];
                 else
-                {
-                    if (i == tt_result)
-                        move = moves[0];
-                    else
-                        move = moves[i];
-                }
-            }
-
-            copy = position;
-            copy.move(move);
-            evaluation = get<0>(AI::alphaBetaMin(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
-
-            if (evaluation >= beta)
-            {
-                if (tt_result >= moves.size() or i != 0)
-                    TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
-                else
-                    cutOffs = cutOffs + 1;
-                return make_tuple(beta, bestMove);
-            }
-
-            if (evaluation > alpha)
-            {
-                bestMove = move;
-                bestMoveIndex = i;
-                alpha = evaluation;
+                    move = moves[i];
             }
         }
 
-        TransposTable.addEntry({position.hash, depth_left, bestMoveIndex});
-        return make_tuple(alpha, bestMove);
+        copy = position;
+        copy.move(move);
+        evaluation = get<0>(AI::alphaBetaMin(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
+
+        if (evaluation >= beta)
+        {
+            if (bestMoveIndex == -1) return make_tuple(AI::alphaBetaMaxOnlyCaptures(position, alpha, beta, currentDepth), Move());
+
+            if (tt_result >= moves.size() or i != 0)
+                TransposTable.addEntry({ position.hash, depth_left, bestMoveIndex });
+            else
+                cutOffs = cutOffs + 1;
+            return make_tuple(beta, bestMove);
+        }
+
+        if (evaluation > alpha)
+        {
+            bestMove = move;
+            bestMoveIndex = i;
+            alpha = evaluation;
+        }
     }
 
-    int32_t AI::alphaBetaMinOnlyCaptures(const Position &position, int32_t alpha, int32_t beta, int32_t currentDepth)
+    TransposTable.addEntry({ position.hash, depth_left, bestMoveIndex });
+    return make_tuple(alpha, bestMove);
+}
+
+int32_t AI::alphaBetaMinOnlyCaptures(const Position& position, int32_t alpha, int32_t beta, int32_t currentDepth)
+{
+    if (stopSearch)
     {
-        if (stopSearch)
-        {
-            return 0;
-        }
+        return 0;
+    }
 
-        if (currentDepth > maxDepth)
-        {
-            maxDepth = currentDepth;
-        }
+    if (currentDepth > maxDepth)
+    {
+        maxDepth = currentDepth;
+    }
 
-        int32_t evaluation = StaticEvaluator::evaluate(position.pieces, position.WhiteLongCastling, position.WhiteShortCastling, position.BlackLongCastling, position.BlackShortCastling, position.whiteCastlingHappened, position.blackCastlingHappened);
-        evaluated++;
+    int32_t evaluation = StaticEvaluator::evaluate(position.pieces, position.WhiteLongCastling, position.WhiteShortCastling, position.BlackLongCastling, position.BlackShortCastling, position.whiteCastlingHappened, position.blackCastlingHappened);
+    evaluated++;
+
+    if (evaluation <= alpha)
+    {
+        return alpha;
+    }
+
+    if (evaluation < beta)
+    {
+        beta = evaluation;
+    }
+
+    MoveList moves = LegalMoveGen::generate(position, Pieces::Black, true);
+    moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+    Move move;
+
+    Position copy;
+
+    for (uint8_t i = 0; i < moves.size(); i++)
+    {
+        move = moves[i];
+
+        copy = position;
+        copy.move(move);
+        evaluation = AI::alphaBetaMaxOnlyCaptures(copy, alpha, beta, currentDepth + 1);
 
         if (evaluation <= alpha)
         {
@@ -284,49 +313,50 @@ static int32_t cutOffs;
         {
             beta = evaluation;
         }
+    }
 
-        MoveList moves = LegalMoveGen::generate(position, Pieces::Black, true);
-        moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
-        Move move;
+    return beta;
+}
 
-        Position copy;
+int32_t AI::alphaBetaMaxOnlyCaptures(const Position& position, int32_t alpha, int32_t beta, int32_t currentDepth)
+{
+    if (stopSearch)
+    {
+        return 0;
+    }
 
-        for (uint8_t i = 0; i < moves.size(); i++)
-        {
-            move = moves[i];
+    if (currentDepth > maxDepth)
+    {
+        maxDepth = currentDepth;
+    }
 
-            copy = position;
-            copy.move(move);
-            evaluation = AI::alphaBetaMaxOnlyCaptures(copy, alpha, beta, currentDepth + 1);
+    int32_t evaluation = StaticEvaluator::evaluate(position.pieces, position.WhiteLongCastling, position.WhiteShortCastling, position.BlackLongCastling, position.BlackShortCastling, position.whiteCastlingHappened, position.blackCastlingHappened);
+    evaluated++;
 
-            if (evaluation <= alpha)
-            {
-                return alpha;
-            }
-
-            if (evaluation < beta)
-            {
-                beta = evaluation;
-            }
-        }
-
+    if (evaluation >= beta)
+    {
         return beta;
     }
 
-    int32_t AI::alphaBetaMaxOnlyCaptures(const Position &position, int32_t alpha, int32_t beta, int32_t currentDepth)
+    if (evaluation > alpha)
     {
-        if (stopSearch)
-        {
-            return 0;
-        }
+        alpha = evaluation;
+    }
 
-        if (currentDepth > maxDepth)
-        {
-            maxDepth = currentDepth;
-        }
+    MoveList moves = LegalMoveGen::generate(position, Pieces::White, true);
+    moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+    Move move;
 
-        int32_t evaluation = StaticEvaluator::evaluate(position.pieces, position.WhiteLongCastling, position.WhiteShortCastling, position.BlackLongCastling, position.BlackShortCastling, position.whiteCastlingHappened, position.blackCastlingHappened);
-        evaluated++;
+    Position copy;
+
+    for (uint8_t i = 0; i < moves.size(); i++)
+    {
+        move = moves[i];
+
+        copy = position;
+        copy.move(move);
+
+        evaluation = AI::alphaBetaMinOnlyCaptures(copy, alpha, beta, currentDepth + 1);
 
         if (evaluation >= beta)
         {
@@ -337,32 +367,7 @@ static int32_t cutOffs;
         {
             alpha = evaluation;
         }
-
-        MoveList moves = LegalMoveGen::generate(position, Pieces::White, true);
-        moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
-        Move move;
-
-        Position copy;
-
-        for (uint8_t i = 0; i < moves.size(); i++)
-        {
-            move = moves[i];
-
-            copy = position;
-            copy.move(move);
-
-            evaluation = AI::alphaBetaMinOnlyCaptures(copy, alpha, beta, currentDepth + 1);
-
-            if (evaluation >= beta)
-            {
-                return beta;
-            }
-
-            if (evaluation > alpha)
-            {
-                alpha = evaluation;
-            }
-        }
-
-        return alpha;
     }
+
+    return alpha;
+}

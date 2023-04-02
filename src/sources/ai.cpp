@@ -11,7 +11,7 @@ static atomic<bool> stopSearch;
 static int64_t evaluated;
 static int32_t maxDepth;
 static int32_t cutOffs;
-
+static int32_t width = 10000;
 
 using namespace std;
 
@@ -50,7 +50,6 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
 
     int64_t timeStart = nsecs;
     stopSearch = false;
-    TranspositionTable TransposTable;
 
     tuple<Move, int32_t> openingBookResult = this->openingBook.tryToFindMove(position);
 
@@ -67,7 +66,7 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
 
     cout << "\033[93m" << "Search started." << "\033[0m" << endl;
 
-    int32_t bestMoveEvaluation;
+    int32_t bestMoveEvaluation = 0;
     Move bestMove;
 
     future<tuple<int32_t, Move>> bestMoveThread;
@@ -80,7 +79,7 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
         maxDepth = 0;
         cutOffs = 0;
 
-        bestMoveThread = async(AI::BestMove, position, side, i, ref(TransposTable));
+        bestMoveThread = async(AI::BestMove, position, side, i, bestMoveEvaluation, ref(TransposTable));
 
         updateBestMove = true;
 
@@ -122,18 +121,40 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
 OpeningBook openingBook;
 
 
-tuple<int32_t, Move> AI::BestMove(const Position& position, uint8_t side, int32_t depth, TranspositionTable& TransposTable)
+tuple<int32_t, Move> AI::BestMove(const Position& position, uint8_t side, int32_t depth, int32_t evaluation, TranspositionTable& TransposTable)
 {
-    if (side == Pieces::White)
-        return AI::alphaBetaMax(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
+    tuple<int32_t, Move> score;
 
-    return AI::alphaBetaMin(position, AI::Infinity::Negative, AI::Infinity::Positive, depth, 0, TransposTable);
+    int32_t L = evaluation - width, R = evaluation + width;
+
+    if (side == Pieces::White)
+    {
+        score = AI::alphaBetaMax(position, L, R, depth, 0, TransposTable);
+
+        if (get<0>(score) <= L)
+            score = AI::alphaBetaMax(position, AI::Infinity::Negative, L, depth, 0, TransposTable);
+        else
+            if (get<0>(score) >= R)
+                score = AI::alphaBetaMax(position, R, AI::Infinity::Negative, depth, 0, TransposTable);
+    }
+    else
+    {
+        score = AI::alphaBetaMin(position, L, R, depth, 0, TransposTable);
+        if (get<0>(score) <= L)
+            score = AI::alphaBetaMin(position, AI::Infinity::Negative, L, depth, 0, TransposTable);
+        else
+            if (get<0>(score) >= R)
+                score = AI::alphaBetaMin(position, R, AI::Infinity::Positive, depth, 0, TransposTable);
+    }
+
+    return score;
 }
 
 tuple<int32_t, Move> AI::alphaBetaMin(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable)
 {
     if (stopSearch)
         return make_tuple(AI::Infinity::Positive, Move());
+
     if (currentDepth > maxDepth)
         maxDepth = currentDepth;
 
@@ -146,9 +167,7 @@ tuple<int32_t, Move> AI::alphaBetaMin(Position position, int32_t alpha, int32_t 
     MoveList moves = LegalMoveGen::generate(position, Pieces::Black);
     moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
 
-    Move move;
     Move bestMove;
-    uint8_t bestMoveIndex = -1;
 
     bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[Pieces::Black][Pieces::King]), Pieces::Black);
 
@@ -159,59 +178,62 @@ tuple<int32_t, Move> AI::alphaBetaMin(Position position, int32_t alpha, int32_t 
         return std::make_tuple(AI::Infinity::Positive, Move());
     }
 
-    int32_t evaluation;
+    int32_t evaluation = AI::Infinity::Negative;
 
-    Position copy;
+    Entry tt_result = TransposTable.tryToFindBestMove(position.hash);
 
-    uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
+    uint8_t i = 0;
+    Position copy = position;
 
-    if (tt_result < moves.size()) {
-        copy = position;
-        copy.move(moves[tt_result]);
+    if (tt_result.Depth != -1) {
+        if (tt_result.Depth >= depth_left)
+        {
+            if (tt_result.Flag == Entry::LBound) 
+                alpha = max(alpha, tt_result.Score);
+            else 
+                beta = min(beta, tt_result.Score);
+            if (alpha >= beta) 
+                return make_tuple(tt_result.Score, tt_result.BestMove);
+        }
 
-        evaluation = get<0>(AI::alphaBetaMax(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
-
-        alpha = (alpha < evaluation) ? evaluation : alpha;
-        bestMove = moves[tt_result];
-        bestMoveIndex = tt_result;
+        copy.move(tt_result.BestMove);
+        bestMove = tt_result.BestMove;
+    }
+    else
+    {
+        copy.move(moves[i]);
+        bestMove = moves[i++];
     }
 
-    for (uint8_t i = 0; i < moves.size(); i = i + 1)
-    {
-        if (tt_result == i) continue;
-        move = moves[i];
+    evaluation = get<0>(AI::alphaBetaMax(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
+    alpha = max(alpha, evaluation);
 
+    for (; i < moves.size(); i = i + 1)
+    {
         copy = position;
-        copy.move(move);
+        copy.move(moves[i]);
 
         evaluation = get<0>(AI::alphaBetaMax(copy, beta - 1, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
 
-        if (evaluation >= alpha && evaluation <= beta) {
+        if (evaluation >= alpha && evaluation <= beta)
+        {
             evaluation = get<0>(AI::alphaBetaMax(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
         }
 
         if (evaluation <= alpha)
         {
-            if (bestMoveIndex == -1) return make_tuple(AI::alphaBetaMinOnlyCaptures(position, alpha, beta, currentDepth), Move());
-            if (tt_result >= moves.size() or i != 0)
-            {
-
-                TransposTable.addEntry({ position.hash, depth_left, bestMoveIndex });
-            }
-            else
-                cutOffs = cutOffs + 1;
+            TransposTable.addEntry({ position.hash, bestMove, depth_left, alpha, Entry::RBound});
             return make_tuple(alpha, bestMove);
         }
 
         if (evaluation < beta)
         {
-            bestMove = move;
-            bestMoveIndex = i;
+            bestMove = moves[i];
             beta = evaluation;
         }
     }
 
-    TransposTable.addEntry({ position.hash, depth_left, bestMoveIndex });
+    TransposTable.addEntry({ position.hash, bestMove, depth_left, beta, Entry::LBound });
     return std::make_tuple(beta, bestMove);
 }
 tuple<int32_t, Move> AI::alphaBetaMax(Position position, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable)
@@ -230,9 +252,8 @@ tuple<int32_t, Move> AI::alphaBetaMax(Position position, int32_t alpha, int32_t 
 
     MoveList moves = LegalMoveGen::generate(position, Pieces::White);
     moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
-    Move move;
+
     Move bestMove;
-    uint8_t bestMoveIndex = -1;
 
     bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[Pieces::White][Pieces::King]), Pieces::White);
 
@@ -245,54 +266,62 @@ tuple<int32_t, Move> AI::alphaBetaMax(Position position, int32_t alpha, int32_t 
 
     int32_t evaluation;
 
-    Position copy;
+    Entry tt_result = TransposTable.tryToFindBestMove(position.hash);
 
-    uint8_t tt_result = TransposTable.tryToFindBestMoveIndex(position.hash);
+    uint8_t i = 0;
+    Position copy = position;
 
-    if (tt_result < moves.size()) {
-        copy = position;
-        copy.move(moves[tt_result]);
+    if (tt_result.Depth != -1)
+    {
+        if (tt_result.Depth >= depth_left)
+        {
+            if (tt_result.Flag == Entry::RBound) 
+                beta = min(beta, tt_result.Score);
+            else 
+                alpha = max(alpha, tt_result.Score);
 
-        evaluation = get<0>(AI::alphaBetaMin(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
-        beta = (beta > evaluation) ? evaluation : beta;
+            if (alpha >= beta) 
+                return make_tuple(tt_result.Score, tt_result.BestMove);
+        }
 
-        bestMove = moves[tt_result];
-        bestMoveIndex = tt_result;
+        copy.move(tt_result.BestMove);
+        bestMove = tt_result.BestMove;
+    }
+    else
+    {
+        copy.move(moves[i]);
+        bestMove = moves[i++];
     }
 
-    for (uint8_t i = 0; i < moves.size(); i = i + 1)
-    {
-        if (i == tt_result) continue;
+    evaluation = get<0>(AI::alphaBetaMin(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
+    beta = min(beta, evaluation);
 
-        move = moves[i];
+    for (; i < moves.size(); i = i + 1)
+    {
         copy = position;
-        copy.move(move);
+        copy.move(moves[i]);
+
         evaluation = get<0>(AI::alphaBetaMin(copy, alpha, alpha + 1, depth_left - !in_check, currentDepth + 1, TransposTable));
 
-        if (evaluation >= alpha && evaluation <= beta) {
+        if (evaluation >= alpha && evaluation <= beta)
+        {
             evaluation = get<0>(AI::alphaBetaMin(copy, alpha, beta, depth_left - !in_check, currentDepth + 1, TransposTable));
         }
 
         if (evaluation >= beta)
         {
-            if (bestMoveIndex == -1) return make_tuple(AI::alphaBetaMaxOnlyCaptures(position, alpha, beta, currentDepth), Move());
-
-            if (tt_result >= moves.size() or i != 0)
-                TransposTable.addEntry({ position.hash, depth_left, bestMoveIndex });
-            else
-                cutOffs = cutOffs + 1;
+            TransposTable.addEntry({ position.hash, bestMove, depth_left, beta, Entry::LBound });
             return make_tuple(beta, bestMove);
         }
 
         if (evaluation > alpha)
         {
-            bestMove = move;
-            bestMoveIndex = i;
+            bestMove = moves[i];
             alpha = evaluation;
         }
     }
 
-    TransposTable.addEntry({ position.hash, depth_left, bestMoveIndex });
+    TransposTable.addEntry({ position.hash, bestMove, depth_left, alpha, Entry::RBound });
     return make_tuple(alpha, bestMove);
 }
 

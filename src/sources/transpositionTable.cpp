@@ -1,26 +1,31 @@
 #include "transpositionTable.h"
 
 
-    TranspositionTable::TranspositionTable() = default;
+TranspositionTable::TranspositionTable() = default;
 
-    void TranspositionTable::addEntry(Entry entry)
+void TranspositionTable::addEntry(Entry entry)
+{
+    auto hashCopy = this->Set.find(entry);
+
+    if (hashCopy == this->Set.end())
     {
-        auto hashCopy = this->Set.find(entry);
-
-        if (hashCopy == this->Set.end() || hashCopy->Depth < entry.Depth)
+        this->Set.insert(entry);
+    }
+    else
+        if (hashCopy->Depth < entry.Depth)
         {
+            this->Set.erase(hashCopy);
             this->Set.insert(entry);
         }
-    }
+}
 
-    uint8_t TranspositionTable::tryToFindBestMoveIndex(ZobristHash hash)
-    {
-        auto entry = this->Set.find({hash, 0, 0});
+Entry TranspositionTable::tryToFindBestMove(ZobristHash hash)
+{
+    auto entry = this->Set.find({ hash, Move(), 0, 0, 0 });
+    return ((entry == this->Set.end()) ? Entry() : *entry);
+}
 
-        if (entry == this->Set.end())
-        {
-            return 255;
-        }
-
-        return entry->BestMoveIndex;
-    }
+int32_t TranspositionTable::size()
+{
+    return Set.size();
+}

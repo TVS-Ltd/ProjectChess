@@ -10,7 +10,9 @@ public:
 
     void addEntry(Entry entry);
 
-    uint8_t tryToFindBestMoveIndex(ZobristHash hash);
+    Entry tryToFindBestMove(ZobristHash hash);
+
+    int32_t size();
 
 private:
     unordered_set<Entry, HashFunction> Set;

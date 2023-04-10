@@ -1,5 +1,4 @@
 #include "game.h"
-
 using namespace std;
 
     void Game::start()
@@ -628,16 +627,82 @@ using namespace std;
     {
         int count = 0;
 
-        count = rand() % 5;
+        count = rand() % 6;
 
         return count;
     }
 
     void Game::Gwent()
     {
+        char* filename = "/DataBase/DB.db";
+        
+        std::cout << "Create your deck:" << endl;
+
+        deck bd;
+        
+        //Реализовать заполнение бд с учетом доступных для игрока очков
+     
+        int point = 200; //рандомное кол-во
+
+        std::cout << "You have a " << point << " points" << endl;
+
+        std::cout << "Choose a figure \n 1. Queen (50 points) \n 2. Rook(20 points) \n 3.Knight(30 points) \n 4.Bishop(25 points) \n 5.Pawn(10 points)";  
+
+        int choice;
+
+        while (true) //Блок для формирования колоды
+        {
+
+            cin >> choice;
+
+            if((choice == 1 && point >= 50) || (choice == 2 && point >= 20) || (choice == 3 && point >= 30) || (choice == 4 && point >= 25) || (choice == 5 && point >= 10))
+            {
+                switch (choice)
+                {
+                case 1:
+                    bd.appendToBD(filename, "Queen");
+                    point -= 50;
+                    break;
+
+                case 2:
+                    bd.appendToBD(filename, "Rook");
+                    point -= 20;
+                    break;
+
+                case 3:
+                    bd.appendToBD(filename, "Knight");
+                    point -= 30;
+                    break;
+
+                case 4:
+                    bd.appendToBD(filename, "Bishop");
+                    point -= 25;
+                    break;
+
+                case 5:
+                    bd.appendToBD(filename, "Pawn");
+                    point -= 10;
+                    break;
+
+                default:
+                    break;
+                }
+            }else
+            {
+                cout << "You have't so much points";
+                break;
+            }
+        }
+        
         std::string str = "prkbq";
+
+        std::string str_1 = "Queen";
+        std::string str_2 = "Rook";
+        std::string str_3 = "Knight";
+        std::string str_4 = "Bishop";
+        std::string str_5 = "Pawn";
     
-        // std::vector<card> deck; // Вектор объектов
+        //Реализовать рaндомное взятие кард из бд
 
         std::cout << "Your deck" << endl;
 
@@ -1001,7 +1066,7 @@ using namespace std;
         cout << "2. Player vs AI" << endl;
         cout << "3. AI vs AI" << endl;
         cout << "4. Player vs Player (10 min limit)" << endl;
-
+        cout << "5. Gwent" << endl; // Gwent mode
         int gameMode = 0;
         cin >> gameMode;
 
@@ -1041,7 +1106,12 @@ using namespace std;
                 chooseLimitedTimeMode();
             break;
 
+            case 5:
+                #if LOG_TO_FILE
+                    log << "Game mode: Player vs AI";
+                #endif
 
+                Gwent();
             default:
                 cout << RED << "\n[ERROR] Illegal game mode!\n" << END << endl;
                 this->chooseGameMode();

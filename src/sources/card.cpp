@@ -1,5 +1,6 @@
 #include "card.h"
 #include <string>
+
 card::card(char fig, std::string icn, std::string pie) 
 {
     this->figure = fig;
@@ -17,15 +18,19 @@ char card::getFigure()
     return figure; 
 }
 
+void card::setIcon(std::string icn) 
+{ 
+    this->icon = icn; 
+}
 
 std::string card::getIcon() 
 {
     return icon; 
 }
 
-void card::setIcon(std::string icn) 
+void card::setPiece(std::string pie) 
 { 
-    this->icon = icn; 
+    this->piece = pie; 
 }
 
 std::string card::getPiece() 
@@ -33,7 +38,3 @@ std::string card::getPiece()
     return piece; 
 }
 
-void card::setPiece(std::string pie) 
-{ 
-    this->piece = pie; 
-}

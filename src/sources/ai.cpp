@@ -11,7 +11,7 @@ static atomic<bool> stopSearch;
 static int64_t evaluated;
 static int32_t maxDepth;
 static int32_t cutOffs;
-static int32_t width = 10000;
+static int32_t width = 1000;
 
 using namespace std;
 
@@ -74,40 +74,45 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
 
     bool updateBestMove;
 
-    for (int32_t i = 1; i < 1e+3 && !stopSearch; i = i + 1)
     {
-        evaluated = 0;
-        maxDepth = 0;
-        cutOffs = 0;
-
-        bestMoveThread = async(AI::BestMove, position, side, i, bestMoveEvaluation, ref(TransposTable));
-
-        updateBestMove = true;
-        while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
+        for (int i = 1; i < 10; i = i + 1)
         {
-            if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs)
+            std::cout << "I: " << i << '\n';
+            evaluated = 0;
+            maxDepth = 0;
+            cutOffs = 0;
+
+            bestMoveThread = async(AI::BestMove, position, side, i, bestMoveEvaluation, ref(TransposTable));
+
+            updateBestMove = true;
+            while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
             {
-                updateBestMove = false;
-                break;
+                if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs)
+                {
+                    updateBestMove = false;
+                    break;
+                }
+                usleep(20000);
             }
-            usleep(20000);
-        }
-        if (updateBestMove || i == 1)
-            tie(bestMoveEvaluation, bestMove) = bestMoveThread.get();
-        else
+            if (updateBestMove || i == 1)
+                tie(bestMoveEvaluation, bestMove) = bestMoveThread.get();
+            else
             {
                 stopSearch = true;
                 break;
-            }        
+            }
 
 #if DEBUG
-        cout << "Depth: "<< i << "\nEval: " << bestMoveEvaluation << '\n';
-        cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
+            cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
+            cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
 #endif
 
-        if (bestMoveEvaluation > AI::Infinity::Positive - 2000 || bestMoveEvaluation < AI::Infinity::Negative + 2000)
-            break;
+            if (bestMoveEvaluation > AI::Infinity::Positive - 2000 || bestMoveEvaluation < AI::Infinity::Negative + 2000)
+                break;
+        }
     }
+
+    //std::cout << bestMoveEvaluation << " eval\n";
 
     usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
 
@@ -194,7 +199,7 @@ tuple<int32_t, Move> AI::alphaBetaMin(Position position, int32_t alpha, int32_t 
                     beta = min(beta, tt_result.Score);
         }
     }
-    else 
+    else
         move = moves[i++];
 
     copy.move(move);
@@ -204,10 +209,10 @@ tuple<int32_t, Move> AI::alphaBetaMin(Position position, int32_t alpha, int32_t 
     {
         if (tt_result.Depth == -1 && !stopSearch)
             TransposTable.addEntry({ position.hash, move, depth_left, alpha, Entry::UBound });
-        
+
         return make_tuple(alpha, move);
     }
-    else 
+    else
         score = AI::Infinity::Positive;
 
     for (i; i < moves.size(); i = i + 1)
@@ -223,7 +228,7 @@ tuple<int32_t, Move> AI::alphaBetaMin(Position position, int32_t alpha, int32_t 
 
         if (evaluation <= alpha)
         {
-            if (!moveWasFound)  
+            if (!moveWasFound)
                 return make_tuple(AI::alphaBetaMinOnlyCaptures(position, alpha, beta, currentDepth), Move());
 
             if (!stopSearch)
@@ -241,7 +246,7 @@ tuple<int32_t, Move> AI::alphaBetaMin(Position position, int32_t alpha, int32_t 
         }
 
     }
-    if (!moveWasFound) 
+    if (!moveWasFound)
         return make_tuple(AI::alphaBetaMinOnlyCaptures(position, alpha, beta, currentDepth), Move());
 
     if (score > alpha && score < beta) {
@@ -305,7 +310,7 @@ tuple<int32_t, Move> AI::alphaBetaMax(Position position, int32_t alpha, int32_t 
                     beta = min(beta, tt_result.Score);
         }
     }
-    else 
+    else
         move = moves[i++];
 
     copy.move(move);
@@ -318,7 +323,7 @@ tuple<int32_t, Move> AI::alphaBetaMax(Position position, int32_t alpha, int32_t 
 
         return make_tuple(beta, move);
     }
-    else 
+    else
         score = AI::Infinity::Negative;
 
     for (i; i < moves.size(); i = i + 1)
@@ -333,12 +338,12 @@ tuple<int32_t, Move> AI::alphaBetaMax(Position position, int32_t alpha, int32_t 
 
         if (evaluation >= beta)
         {
-            if (!moveWasFound) 
+            if (!moveWasFound)
                 return make_tuple(AI::alphaBetaMaxOnlyCaptures(position, alpha, beta, currentDepth), Move());
 
             if (!stopSearch)
                 TransposTable.addEntry({ position.hash, bestMove, depth_left, beta, Entry::LBound });
-            
+
             return make_tuple(beta, bestMove);
         }
 
@@ -351,7 +356,7 @@ tuple<int32_t, Move> AI::alphaBetaMax(Position position, int32_t alpha, int32_t 
             alpha = evaluation;
         }
     }
-    if (!moveWasFound) 
+    if (!moveWasFound)
         return make_tuple(AI::alphaBetaMaxOnlyCaptures(position, alpha, beta, currentDepth), Move());
 
     if (score > alpha && score < beta) {
@@ -400,6 +405,11 @@ int32_t AI::alphaBetaMinOnlyCaptures(const Position& position, int32_t alpha, in
 
     for (uint8_t i = 0; i < moves.size(); i++)
     {
+        if ((evaluation - StaticEvaluator::Materials[moves[i].DefenderType] - 200) > beta &&
+            (StaticEvaluator::pieceMaterial(position.pieces, Pieces::Black) - StaticEvaluator::Materials[moves[i].DefenderType]) > StaticEvaluator::Material::EndgameMat &&
+            moves[i].Flag < 7)
+            continue;
+
         move = moves[i];
 
         copy = position;
@@ -422,7 +432,6 @@ int32_t AI::alphaBetaMinOnlyCaptures(const Position& position, int32_t alpha, in
 
     return beta;
 }
-
 int32_t AI::alphaBetaMaxOnlyCaptures(const Position& position, int32_t alpha, int32_t beta, int32_t currentDepth)
 {
     if (stopSearch)
@@ -452,7 +461,7 @@ int32_t AI::alphaBetaMaxOnlyCaptures(const Position& position, int32_t alpha, in
 
     MoveList moves = LegalMoveGen::generate(position, Pieces::White, true);
     moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
-    
+
     Move move;
     Position copy;
 
@@ -468,8 +477,13 @@ int32_t AI::alphaBetaMaxOnlyCaptures(const Position& position, int32_t alpha, in
         alpha = evaluation;
     }
 
-    for (uint8_t i = 1; i < moves.size(); i++)
+    for (uint8_t i = 0; i < moves.size(); i++)
     {
+        if ((evaluation + StaticEvaluator::Materials[moves[i].DefenderType] + 200) < alpha &&
+            (StaticEvaluator::pieceMaterial(position.pieces, Pieces::Black) - StaticEvaluator::Materials[moves[i].DefenderType]) > StaticEvaluator::Material::EndgameMat &&
+            moves[i].Flag < 7)
+            continue;
+
         move = moves[i];
 
         copy = position;

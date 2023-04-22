@@ -1,0 +1,26 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include <vector>
+#include "ZobristHash.h"
+#include "CoreMinimal.h"
+
+/**
+ * 
+ */
+class CHESSDEV_API RepetitionHistory
+{
+public:
+	RepetitionHistory();
+	~RepetitionHistory();
+
+    void addBoardPosition(ZobristHash hash);
+
+    void clear();
+
+    uint8_t getRepetionNumber(ZobristHash hash);
+
+private:
+    vector<ZobristHash> hashes;
+};

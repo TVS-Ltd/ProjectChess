@@ -6,12 +6,12 @@
 
     handsdeck::handsdeck(){}
         
-    void handsdeck::setFigure(char in)
+    void handsdeck::setFigure(std::string in)
     {
         figure = in;
     }
         
-    char handsdeck::getFigure()
+    std::string handsdeck::getFigure()
     {
         return figure;
     }
@@ -29,7 +29,7 @@
         deck[index] = in;
     }
 
-    char handsdeck::getCard(int index)
+    std::string handsdeck::getCard(int index)
     {
         deck.erase(deck.begin() + index);
 
@@ -39,4 +39,9 @@
     void handsdeck::addCard(card in)
     {
         deck.push_back(in);
+    }
+
+    void handsdeck::appendOnBoard(std::string piece)
+    {
+        
     }

@@ -1,19 +1,19 @@
 #include "card.h"
 #include <string>
 
-card::card(char fig, std::string icn, std::string pie) 
+card::card(std::string fig, std::string icn, std::string pie) 
 {
     this->figure = fig;
     this->icon = icn;
     this->piece = pie;
 }   
 
-void card::setFigure(char fig) 
+void card::setFigure(std::string fig) 
 { 
     this->figure = fig; 
 }
 
-char card::getFigure() 
+std::string card::getFigure() 
 { 
     return figure; 
 }

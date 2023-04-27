@@ -4,6 +4,8 @@
 #include "ai.h"
 #include "move.h"
 #include "timer.h"
+#include <sqlite3.h>
+#include <iostream>
 #include "deck.h"
 #pragma once
 

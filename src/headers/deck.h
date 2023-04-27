@@ -8,15 +8,18 @@
 class deck
 {
 private:
-    sqlite3* db;
+    //sqlite3* db;
     int points;
 public:
     deck();
     void setPoints(int value);
     static int callback(void* data, int argc, char** argv, char** azColName);
-    void appendToBD(const char* filename,std::string type_of_figure);
-    int size_of_BD(); 
-    void clear_Bd();
+    void appendToBD(const char* filename,std::string type_of_figure,sqlite3 *db);
+    int size_of_BD(sqlite3 *db); 
+    void clear_Bd(sqlite3* db);
+    void shuffle(sqlite3 *db);
+    void print_data_base(sqlite3_stmt *stmt);
+    std::string get_random_value(sqlite3* db);
     ~deck();
 };
 

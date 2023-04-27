@@ -8,16 +8,16 @@
 class card
 {
     private:
-        char figure;
+        std::string figure;
         std::string icon;
         std::string piece;
     public:
     // Constructor
-    card(char fig, std::string icn, std::string pie);
+    card(std::string fig, std::string icn, std::string pie);
     
     // Getters and setters
-    char getFigure();
-    void setFigure(char fig);
+    std::string getFigure();
+    void setFigure(std::string fig);
 
     std::string getIcon();
     void setIcon(std::string icn);

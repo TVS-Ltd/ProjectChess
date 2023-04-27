@@ -3,7 +3,7 @@ using namespace std;
 
     void Game::start()
     {
-        this->position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
+        this->position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};//Ставим, что никого нет, и потом меняем эту строку
 
         #if TEST_WHITE_WIN
             this->position = {"rnbqkbnr/pppppppp/8/8/2B5/5Q2/PPPPPPPP/RNB1K1NR", 255, true, true, true, true, 1};
@@ -632,9 +632,12 @@ using namespace std;
         return count;
     }
 
-    void Game::Gwent()
+    void Game::Gwent()// rm -f *.o 
     {
-        char* filename = "/DataBase/DB.db";
+        const char* filename = "/home/danila/CCG/ProjectChess/src/DataBase/DB.db";
+
+        sqlite3 *db;      
+        handsdeck coloda;
         
         std::cout << "Create your deck:" << endl;
 
@@ -646,13 +649,38 @@ using namespace std;
 
         std::cout << "You have a " << point << " points" << endl;
 
-        std::cout << "Choose a figure \n 1. Queen (50 points) \n 2. Rook(20 points) \n 3.Knight(30 points) \n 4.Bishop(25 points) \n 5.Pawn(10 points)";  
+        std::cout << "Choose a figure \n 1.Queen (50 points) \n 2.Rook(20 points) \n 3.Knight(30 points) \n 4.Bishop(25 points) \n 5.Pawn(10 points)";  
 
         int choice;
 
-        while (true) //Блок для формирования колоды
-        {
+        sqlite3_open("/home/danila/CCG/ProjectChess/src/DataBase/DB.db", &db);
 
+        int rc = sqlite3_open("/home/danila/CCG/ProjectChess/src/DataBase/DB.db", &db);
+        
+        if (rc != SQLITE_OK) 
+        {
+            std::cout << "\n" << "Cannot open database: " << sqlite3_errmsg(db) << std::endl;
+        }
+
+        bd.clear_Bd(db);
+
+        std::cout << std::endl << "test for bd clear:" << std::endl;
+
+        if (bd.size_of_BD(db) == 0)
+        {
+            std::cout << "BD is empty " << std::endl;
+        }else
+        {
+            std::cout << "BD is not empty " << std::endl;
+        }
+
+        std::cout << "Составление колоды:" << std::endl;
+
+        while (true) //Блок для формирования колоды
+        {    
+         
+            cout << endl;
+            
             cin >> choice;
 
             if((choice == 1 && point >= 50) || (choice == 2 && point >= 20) || (choice == 3 && point >= 30) || (choice == 4 && point >= 25) || (choice == 5 && point >= 10))
@@ -660,27 +688,32 @@ using namespace std;
                 switch (choice)
                 {
                 case 1:
-                    bd.appendToBD(filename, "Queen");
+                    bd.appendToBD(filename, "Queen", db);
+                    cout << "Queen has been added" << endl;
                     point -= 50;
                     break;
 
                 case 2:
-                    bd.appendToBD(filename, "Rook");
+                    bd.appendToBD(filename, "Rook", db);
+                    cout << "Rook has been added" << endl;
                     point -= 20;
                     break;
 
                 case 3:
-                    bd.appendToBD(filename, "Knight");
+                    bd.appendToBD(filename, "Knight", db);
+                    cout << "Knight has been added" << endl;
                     point -= 30;
                     break;
 
                 case 4:
-                    bd.appendToBD(filename, "Bishop");
+                    bd.appendToBD(filename, "Bishop", db);
+                    cout << "Bishop has been added" << endl;
                     point -= 25;
                     break;
 
                 case 5:
-                    bd.appendToBD(filename, "Pawn");
+                    bd.appendToBD(filename, "Pawn", db);
+                    cout << "Pawn has been added" << endl;
                     point -= 10;
                     break;
 
@@ -689,36 +722,63 @@ using namespace std;
                 }
             }else
             {
-                cout << "You have't so much points";
+                std::cout << "You have't so much points" << endl;
                 break;
             }
         }
         
-        std::string str = "prkbq";
+        sqlite3_stmt *stmt;
+        const char *query = "SELECT * FROM DECK;";
+        sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
 
-        std::string str_1 = "Queen";
-        std::string str_2 = "Rook";
-        std::string str_3 = "Knight";
-        std::string str_4 = "Bishop";
-        std::string str_5 = "Pawn";
+        std::cout << "Deck(main menu)" << std::endl;
+       
+        bd.print_data_base(stmt); 
+
+        std::cout << "Deck after shuffle:" << std::endl;
+
+        bd.shuffle(db);
     
+        sqlite3_stmt *stm;
+        const char *quer = "SELECT * FROM DECK;";
+        sqlite3_prepare_v2(db, quer, -1, &stm, NULL);
+
+        bd.print_data_base(stm);
+
+
+        std::vector<std::string> input;
+        sqlite3_stmt* s;
+        std::string sql = "SELECT * FROM DECK LIMIT 7;";
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &s, NULL) == SQLITE_OK)
+        {
+            while (sqlite3_step(s) == SQLITE_ROW)
+            {
+                input.push_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))));
+            }
+            sqlite3_finalize(s);
+        }
         //Реализовать рaндомное взятие кард из бд
 
-        std::cout << "Your deck" << endl;
+        // for (int i = 0;i < input.size(); i++)
+        // {
+        //     cout << input[i] << " ";
+        // }
 
-        card obj_1(str[RandFigure()], "test", " test_1");// Создаем 5 карт с рандомными фигурами 
-        card obj_2(str[RandFigure()], "test", " test_1");
-        card obj_3(str[RandFigure()], "test", " test_1");
-        card obj_4(str[RandFigure()], "test", " test_1");
-        card obj_5(str[RandFigure()], "test", " test_1");
+        std::cout << "Your deck: " << endl;
 
-        handsdeck coloda;
+        card obj_1(input[0], "test", " test_1");// Создаем 5 карт с рандомными фигурами 
+        card obj_2(input[1], "test", " test_1");
+        card obj_3(input[2], "test", " test_1");
+        card obj_4(input[3], "test", " test_1");
+        card obj_5(input[4], "test", " test_1");
+       
     
         coloda.push_b(obj_1); // Кладем их в вектор
         coloda.push_b(obj_2);
         coloda.push_b(obj_3);
         coloda.push_b(obj_4);
         coloda.push_b(obj_5);
+
 
         // Выводим на экран колоду для пользователя
         
@@ -729,8 +789,13 @@ using namespace std;
         std::cout << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << endl;
 
         int t = 2;
+        std::string temp = "sdfdsf ";
 
-        while (t != 0) // Две замены карты
+        std::cout << "test for rand from BD" << std::endl;
+
+        std::cout << bd.get_random_value(db) << std::endl;
+
+        while (t != 0) // Две замены карты (to do)
         {
             int choice;
 
@@ -742,43 +807,48 @@ using namespace std;
             }else 
             if (choice == 1)
             {
-                obj_1.setFigure(str[RandFigure()]);
+                temp = bd.get_random_value(db);
+               
+                obj_1.setFigure(temp);
 
                 coloda.CardChange(0, obj_1);
                 
-                // deck[0] = obj_1;
             }else 
             if (choice == 2)
             {
-                obj_2.setFigure(str[RandFigure()]);
+                temp = bd.get_random_value(db);
+               
+                obj_2.setFigure(temp);
 
                 coloda.CardChange(1, obj_2);
                 
-                // deck[1] = obj_2;
             }else
             if (choice == 3)
             {
-                obj_3.setFigure(str[RandFigure()]);
+              temp = bd.get_random_value(db);
+               
+                obj_3.setFigure(temp);
 
                 coloda.CardChange(2, obj_3);
 
-                // deck[2] = obj_3;
             }else 
             if (choice == 4)
             {
-                obj_4.setFigure(str[RandFigure()]);
+               temp = bd.get_random_value(db);
+               
+                obj_4.setFigure(temp);
 
                 coloda.CardChange(3, obj_4);
 
-                // deck[3] = obj_4;
             }else 
             if (choice == 5)
             {
-                obj_5.setFigure(str[RandFigure()]);
+               temp = bd.get_random_value(db);
+               
+                obj_5.setFigure(temp);
 
                 coloda.CardChange(4, obj_5);
 
-                // deck[4] = obj_5;
             }else 
             if (choice > 5 || choice < 0 || double(choice))
             {
@@ -796,8 +866,11 @@ using namespace std;
 
             t--;
         }	
-    }
 
+    sqlite3_close(db);
+}   
+
+   
     void Game::EvE()
     {
         playerSide = Pieces::White;

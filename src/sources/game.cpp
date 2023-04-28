@@ -645,7 +645,7 @@ using namespace std;
         
         //Реализовать заполнение бд с учетом доступных для игрока очков
      
-        int point = 200; //рандомное кол-во
+        int point = 250; //рандомное кол-во
 
         std::cout << "You have a " << point << " points" << endl;
 
@@ -789,13 +789,15 @@ using namespace std;
         std::cout << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << endl;
 
         int t = 2;
-        std::string temp = "sdfdsf ";
+        std::string temp = "";
 
-        std::cout << "test for rand from BD" << std::endl;
+   //     std::cout << "test for rand from BD" << std::endl;
 
-        std::cout << bd.get_random_value(db) << std::endl;
+      //  std::cout << temp << " " << bd.get_random_value(db) << std::endl;
+        
+        //std::cout << temp << std::endl;
 
-        while (t != 0) // Две замены карты (to do)
+       while (t != 0) // Две замены карты (to do)
         {
             int choice;
 
@@ -808,6 +810,8 @@ using namespace std;
             if (choice == 1)
             {
                 temp = bd.get_random_value(db);
+
+//                std::cout << temp << "\n";
                
                 obj_1.setFigure(temp);
 

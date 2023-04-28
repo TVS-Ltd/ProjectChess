@@ -187,8 +187,10 @@ std::string deck::get_random_value(sqlite3* db)
     // Получаем количество строк в таблице
     sqlite3_stmt* stmt;
     std::string sql = "SELECT COUNT(*) FROM DECK;";
+    
     int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
     int count = 0;
+    
     if (rc == SQLITE_OK)
     {
         rc = sqlite3_step(stmt);
@@ -197,28 +199,45 @@ std::string deck::get_random_value(sqlite3* db)
             count = sqlite3_column_int(stmt, 0);
         }
     }
+    
     sqlite3_finalize(stmt);
 
-    // Получаем значение случайной строки
+    // Получаем значение случайной строки начиная с 6-й строки
+    static std::vector<std::string> used_values;
     std::string value;
-    if (count > 0)
-    {
-        int random_index = rand() % count;
-        sql = "SELECT type_of_figure FROM DECK LIMIT 1 OFFSET " + std::to_string(random_index) + ";";
-        rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-        if (rc == SQLITE_OK)
-        {
-            rc = sqlite3_step(stmt);
-            if (rc == SQLITE_ROW)
+    if (count > 5)
+    {        
+    // Получаем значение случайной строки начиная с 6-й строки
+    
+        do {
+            int random_index = rand() % (count - 5) + 5; // вычитаем 5, чтобы начать со 6-й строки
+        
+            sql = "SELECT * FROM DECK LIMIT 1 OFFSET " + std::to_string(random_index) + ";";
+            rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+        
+            if (rc == SQLITE_OK)
             {
-                value = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+                rc = sqlite3_step(stmt);
+        
+                if (rc == SQLITE_ROW)
+                {
+                    value = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+                }
             }
-        }
-        sqlite3_finalize(stmt);
+         
+            sqlite3_finalize(stmt);
+        
+        } while (std::find(used_values.begin(), used_values.end(), value) != used_values.end());
+        
+        used_values.push_back(value);
     }
 
     return value;
 }
+
+    
+
+
 
 deck::~deck()
 {

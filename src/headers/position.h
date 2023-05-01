@@ -21,15 +21,17 @@ public:
     bool whiteCastlingHappened;
     bool blackCastlingHappened;
 
+    bool allowNullMove = true;
+
     float MoveCtr;
     ZobristHash hash;
     float fiftyMovesCtr;
     RepetitionHistory repetitionHistory;
 
     Position();
-    Position(const string &shortFen, uint8_t enPassant, bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, float moveCtr);
+    Position(const string& shortFen, uint8_t enPassant, bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, float moveCtr);
 
-    friend ostream &operator<<(ostream &ostream, Position position);
+    friend ostream& operator<<(ostream& ostream, Position position);
 
     void move(Move move);
 

@@ -1,27 +1,39 @@
 #include "transpositionTable.h"
+#include "constants.h"
+#include <future>
 
+using namespace std;
 
 TranspositionTable::TranspositionTable() = default;
 
 void TranspositionTable::addEntry(Entry entry)
 {
-    auto hashCopy = this->Set.find(entry);
-
-    if (hashCopy == this->Set.end())
+    if (Variables::threadsNumber > 1)
+        unique_lock<mutex> lock(Variables::mtx);
+#pragma omp critical
     {
-        this->Set.insert(entry);
-    }
-    else
-        if (hashCopy->Depth < entry.Depth)
+        auto hashCopy = this->Set.find(entry);
+
+        if (hashCopy == this->Set.end())
         {
-            this->Set.erase(hashCopy);
             this->Set.insert(entry);
         }
+        else
+            if (hashCopy->Depth < entry.Depth)
+            {
+                this->Set.erase(hashCopy);
+                this->Set.insert(entry);
+            }
+    }
 }
 
 Entry TranspositionTable::tryToFindBestMove(ZobristHash hash)
 {
-    auto entry = this->Set.find({ hash, Move(), 0, 0, 0 });
+    std::unordered_set<Entry, HashFunction>::iterator entry;
+#pragma omp critical
+    {
+        entry = this->Set.find({ hash, Move(), 0, 0, 0 });
+    }
     return ((entry == this->Set.end()) ? Entry() : *entry);
 }
 

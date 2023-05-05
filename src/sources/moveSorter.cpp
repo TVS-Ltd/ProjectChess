@@ -77,7 +77,7 @@ int32_t MoveSorter::evaluateMove(const Pieces& pieces, Move& move)
             break;
         }
 
-        switch (move.DefenderType)
+        switch (move.AttackerType)
         {
         case Pieces::Pawn:
             evaluation = evaluation - StaticEvaluator::Material::Pawn;

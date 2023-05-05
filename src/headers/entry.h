@@ -15,7 +15,8 @@ public:
     int32_t Depth, Score, Flag;
 
     static constexpr uint8_t LBound = 0;
-    static constexpr uint8_t RBound = 0;
+    static constexpr uint8_t UBound = 1;
+    static constexpr uint8_t Valid = 2;
 };
 
 /// Zobrist hash returned as hash function.

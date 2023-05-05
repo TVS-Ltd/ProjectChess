@@ -1,4 +1,5 @@
 #include "ai.h"
+#include <omp.h>
 
 #define WIN32_LEAN_AND_MEAN
 
@@ -7,6 +8,11 @@
 #define nsecs std::chrono::high_resolution_clock::now().time_since_epoch().count()
 
 using namespace std;
+
+
+double timex = 0;
+int64_t countx = 0;
+
 
 void usleep(__int64 usec)
 {
@@ -64,8 +70,9 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
 
     bool updateBestMove;
 
-    for (int i = 1; i < 10; i = i + 1)
+    for (int i = 1; i < 7; i = i + 1)
     {
+        cout << "I ::: " << i << '\n';
         evaluated = 0;
         maxDepth = 0;
         cutOffs = 0;
@@ -73,7 +80,7 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
         bestMoveThread = async(AI::aspirationSearch, position, side, i, bestMoveEvaluation, ref(TransposTable));
 
         updateBestMove = true;
-        while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
+        /*while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
         {
             if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs)
             {
@@ -81,7 +88,7 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
                 break;
             }
             usleep(20000);
-        }
+        }*/
         if (updateBestMove || i == 1) {
             auto score = bestMoveThread.get();
             if (get<1>(score) != Constants::UnknownMove)
@@ -93,6 +100,7 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
             break;
         }
 
+        std::cout << (int)bestMove.From << "->" << (int)bestMove.To << '\n';
 #if DEBUG
         cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
         cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
@@ -103,24 +111,29 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
 
     cout << "\033[92m" << "Search finished." << "\033[0m" << endl;
 
+    timex += (nsecs - timeStart);
+    countx++;
+
+    cout << "average time: " << (timex / countx) / 1e9 << '\n';
+
     return bestMove;
 }
 tuple<int32_t, Move> AI::aspirationSearch(const Position& position, uint8_t side, int32_t depth, int32_t evaluation, TranspositionTable& TransposTable) {
     tuple<int32_t, Move> score;
     int32_t L = evaluation - aspirationWindow, R = evaluation + aspirationWindow;
 
-    score = AI::searchRoot(position, side, L, R, depth, 0, TransposTable);
+    score = AI::alphaBetaRoot(position, side, L, R, depth, 0, TransposTable);
 
     if (get<0>(score) <= L)
-        score = AI::searchRoot(position, side, Constants::Infinity::Negative, R, depth, 0, TransposTable);
+        score = AI::alphaBetaRoot(position, side, Constants::Infinity::Negative, R, depth, 0, TransposTable);
     else
         if (get<0>(score) >= R)
-            score = AI::searchRoot(position, side, L, Constants::Infinity::Positive, depth, 0, TransposTable);
+            score = AI::alphaBetaRoot(position, side, L, Constants::Infinity::Positive, depth, 0, TransposTable);
 
     return score;
 }
 
-tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
+tuple<int32_t, Move> AI::alphaBetaRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
     MoveList moves = LegalMoveGen::generate(position, side);
     moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
 
@@ -130,30 +143,33 @@ tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alp
     Position copy;
     Move bestMove = Constants::UnknownMove;
 
-    for (uint8_t i = 0; i < moves.size(); i = i + 1)
+    int32_t sz = moves.size(), new_depth = depth_left - !in_check;
+
+#pragma omp parallel private(copy)
     {
-        copy = position;
-        copy.move(moves[i]);
+#pragma omp for schedule (dynamic)
+        for (int8_t i = 0; i < sz; i = i + 1)
+        {
+            copy = position;
+            copy.move(moves[i]);
 
-        int32_t new_depth = depth_left - !in_check;
-
-        if (i == 0) {
-            score = -AI::search<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
-        }
-        else {
-            score = -AI::search<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, currentDepth + 1, TransposTable);
-
-            if (score > alpha)
-                score = -AI::search<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
-        }
-
-        if (score > alpha) {
-            bestMove = moves[i];
-
-            if (score >= beta) {
-                return make_tuple(beta, bestMove);
+            if (i == 0) {
+                score = -AI::alphaBeta<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
             }
-            alpha = score;
+            else {
+                score = -AI::alphaBeta<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, currentDepth + 1, TransposTable);
+
+                if (score > alpha)
+                    score = -AI::alphaBeta<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
+            }
+#pragma omp critical
+            {
+                if (score > alpha) {
+                    bestMove = moves[i];
+
+                    alpha = score;
+                }
+            }
         }
     }
 

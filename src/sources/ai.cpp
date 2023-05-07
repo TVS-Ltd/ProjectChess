@@ -122,18 +122,18 @@ tuple<int32_t, Move> AI::aspirationSearch(const Position& position, uint8_t side
     tuple<int32_t, Move> score;
     int32_t L = evaluation - aspirationWindow, R = evaluation + aspirationWindow;
 
-    score = AI::alphaBetaRoot(position, side, L, R, depth, 0, TransposTable);
+    score = AI::searchRoot(position, side, L, R, depth, 0, TransposTable);
 
     if (get<0>(score) <= L)
-        score = AI::alphaBetaRoot(position, side, Constants::Infinity::Negative, R, depth, 0, TransposTable);
+        score = AI::searchRoot(position, side, Constants::Infinity::Negative, R, depth, 0, TransposTable);
     else
         if (get<0>(score) >= R)
-            score = AI::alphaBetaRoot(position, side, L, Constants::Infinity::Positive, depth, 0, TransposTable);
+            score = AI::searchRoot(position, side, L, Constants::Infinity::Positive, depth, 0, TransposTable);
 
     return score;
 }
 
-tuple<int32_t, Move> AI::alphaBetaRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
+tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
     MoveList moves = LegalMoveGen::generate(position, side);
     moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
 
@@ -154,13 +154,13 @@ tuple<int32_t, Move> AI::alphaBetaRoot(Position position, uint8_t side, int32_t 
             copy.move(moves[i]);
 
             if (i == 0) {
-                score = -AI::alphaBeta<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
+                score = -AI::search<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
             }
             else {
-                score = -AI::alphaBeta<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, currentDepth + 1, TransposTable);
+                score = -AI::search<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, currentDepth + 1, TransposTable);
 
                 if (score > alpha)
-                    score = -AI::alphaBeta<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
+                    score = -AI::search<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
             }
 #pragma omp critical
             {

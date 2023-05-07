@@ -14,7 +14,8 @@
 
 enum class NodeType
 {
-    PV, NONPV
+    PV,
+    NONPV
 };
 
 static atomic<bool> stopSearch;
@@ -49,10 +50,10 @@ private:
 
     static tuple<int32_t, Move> aspirationSearch(const Position& position, uint8_t side, int32_t depth, int32_t evaluation, TranspositionTable& TransposTable);
 
-    static tuple<int32_t, Move> alphaBetaRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable);
+    static tuple<int32_t, Move> searchRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable);
 
     template<NodeType node_type>
-    static int32_t alphaBeta(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
+    static int32_t search(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
         if (stopSearch)
             return alpha;
 
@@ -92,13 +93,13 @@ private:
         {
             position.allowNullMove = false;
             int32_t reductionDepth = (depth_left > 2) ? 3 : 2;
-            score = -alphaBeta<NodeType::NONPV>(position, Pieces::inverse(side), -beta, -beta + 1, depth_left - 1 - reductionDepth, currentDepth + 1, TransposTable);
+            score = -search<NodeType::NONPV>(position, Pieces::inverse(side), -beta, -beta + 1, depth_left - 1 - reductionDepth, currentDepth + 1, TransposTable);
             position.allowNullMove = true;
 
             if (score >= beta)
             {
                 if (depth_left > 4)
-                    score = alphaBeta<NodeType::NONPV>(position, side, beta - 1, beta, depth_left - reductionDepth, currentDepth + 1, TransposTable);
+                    score = search<NodeType::NONPV>(position, side, beta - 1, beta, depth_left - reductionDepth, currentDepth + 1, TransposTable);
 
                 if (score >= beta)
                     return beta;
@@ -131,7 +132,7 @@ private:
             bestMove = moves[i++];
 
         copy.move(bestMove);
-        score = -alphaBeta<node_type>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
+        score = -search<node_type>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
 
         if (score >= beta)
         {
@@ -150,10 +151,10 @@ private:
             copy = position;
             copy.move(moves[i]);
 
-            score = -alphaBeta<node_type>(copy, Pieces::inverse(side), -alpha - 1, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
+            score = -search<node_type>(copy, Pieces::inverse(side), -alpha - 1, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
 
             if (score > alpha)
-                score = -alphaBeta<NodeType::NONPV>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
+                score = -search<NodeType::NONPV>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
 
             if (score >= beta)
             {

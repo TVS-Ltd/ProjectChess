@@ -17,7 +17,7 @@ public:
     ~logToFile();
 
     template <typename T>
-    logToFile &operator<<(const T &value);
+    logToFile& operator<<(const T& value);
 
 private:
     std::ofstream file;

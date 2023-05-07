@@ -8,7 +8,7 @@
 #define TEST_THREEE_POS_RULE false
 #define YESNO_MENU false
 #define LOG_TO_FILE false
-#define LINUX true
+#define LINUX false
 
 void start()
 {
@@ -31,29 +31,29 @@ int main()
     {
         start();
 
-        #if LINUX && YESNO_MENU
-                system("printf \"\033[100m\"");
-                int statusCode = system("dialog --title \"Chess\" --colors --yesno \"\\Zb\\Z1Do you want to play again ?\" 0 0 --erase-on-exit");
-                system("printf \"\033[0m\"");
+#if LINUX && YESNO_MENU
+        system("printf \"\033[100m\"");
+        int statusCode = system("dialog --title \"Chess\" --colors --yesno \"\\Zb\\Z1Do you want to play again ?\" 0 0 --erase-on-exit");
+        system("printf \"\033[0m\"");
 
-                if (statusCode == 256)
-                {
-                    exit = true;
-                }
+        if (statusCode == 256)
+        {
+            exit = true;
+        }
 
-                system("clear");
-        #else
-                cout << "Do you want to play again ?" << endl;
-                cout << "Enter N to exit or any other key to continue." << endl;
+        system("clear");
+#else
+        cout << "Do you want to play again ?" << endl;
+        cout << "Enter N to exit or any other key to continue." << endl;
 
-                char answer;
-                cin >> answer;
+        char answer;
+        cin >> answer;
 
-                if (answer == 'N' || answer == 'n')
-                {
-                    exit = true;
-                }
-        #endif
+        if (answer == 'N' || answer == 'n')
+        {
+            exit = true;
+        }
+#endif
     }
 
     return 0;

@@ -11,7 +11,7 @@ private:
 public:
     MoveList();
 
-    Move &operator[](uint8_t index);
+    Move& operator[](uint8_t index);
 
     Move operator[](uint8_t index) const;
 

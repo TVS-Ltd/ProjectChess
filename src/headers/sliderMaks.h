@@ -26,40 +26,40 @@ namespace SlidersMasks
         {
             switch (direction)
             {
-                case SlidersMasks::Direction::North:
-                    y++;
+            case SlidersMasks::Direction::North:
+                y++;
                 break;
 
-                case SlidersMasks::Direction::South:
-                    y--;
+            case SlidersMasks::Direction::South:
+                y--;
                 break;
 
-                case SlidersMasks::Direction::West:
-                    x--;
+            case SlidersMasks::Direction::West:
+                x--;
                 break;
 
-                case SlidersMasks::Direction::East:
-                    x++;
+            case SlidersMasks::Direction::East:
+                x++;
                 break;
 
-                case SlidersMasks::Direction::NorthWest:
-                    y++;
-                    x--;
+            case SlidersMasks::Direction::NorthWest:
+                y++;
+                x--;
                 break;
 
-                case SlidersMasks::Direction::NorthEast:
-                    y++;
-                    x++;
+            case SlidersMasks::Direction::NorthEast:
+                y++;
+                x++;
                 break;
 
-                case SlidersMasks::Direction::SouthWest:
-                    y--;
-                    x--;
+            case SlidersMasks::Direction::SouthWest:
+                y--;
+                x--;
                 break;
 
-                case SlidersMasks::Direction::SouthEast:
-                    y--;
-                    x++;
+            case SlidersMasks::Direction::SouthEast:
+                y--;
+                x++;
                 break;
             }
 

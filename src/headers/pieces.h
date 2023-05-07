@@ -13,7 +13,7 @@ class Pieces
 {
 public:
     Pieces();
-    Pieces(const string &shortFen);
+    Pieces(const string& shortFen);
 
     array<array<Bitboard, 6>, 2> pieceBitboards{};
     array<Bitboard, 2> sideBitboards{};
@@ -31,7 +31,7 @@ public:
     static constexpr uint8_t White = 0;
     static constexpr uint8_t Black = 1;
 
-    friend ostream &operator<<(ostream &ostream, Pieces pieces);
+    friend ostream& operator<<(ostream& ostream, Pieces pieces);
 
     friend bool operator==(Pieces left, Pieces right);
 

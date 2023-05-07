@@ -2,8 +2,9 @@
 
 using namespace std;
 
-Move::Move() = default;
-
+Move::Move()
+{
+}
 Move::Move(uint8_t from, uint8_t to, uint8_t attackerType, uint8_t attackerSide, uint8_t defenderType, uint8_t defenderSide, uint8_t flag)
 {
     this->From = from;

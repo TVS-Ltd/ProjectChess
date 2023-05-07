@@ -21,7 +21,7 @@ typedef uint64_t Bitboard;
  *
  * @exception This function does not throw exceptions.
 */
-static constexpr void setOne(Bitboard &bitBoard, uint8_t square)
+static constexpr void setOne(Bitboard& bitBoard, uint8_t square)
 {
     bitBoard = bitBoard | (1ull << square);
 }
@@ -34,7 +34,7 @@ static constexpr void setOne(Bitboard &bitBoard, uint8_t square)
  *
  * @exception This function does not throw exceptions.
 */
-static constexpr void setZero(Bitboard &bitBoard, uint8_t square)
+static constexpr void setZero(Bitboard& bitBoard, uint8_t square)
 {
     bitBoard = bitBoard & (~(1ull << square));
 }
@@ -44,7 +44,7 @@ static constexpr void setZero(Bitboard &bitBoard, uint8_t square)
  *
  * @param bitBoard Bitboard you wanna get info about.
  * @param square Bitboard's square you wanna get value for.
- * 
+ *
  * @return Value (0/1) of the requested square.
  *
  * @exception This function does not throw exceptions.
@@ -58,7 +58,7 @@ static constexpr bool getBit(Bitboard bitBoard, uint8_t square)
  * Count the amount of ones in a bitboard.
  *
  * @param bitBoard Bitboard you wanna get info about.
- * 
+ *
  * @return Amount of squares with value 1.
  *
  * @exception This function does not throw exceptions.
@@ -77,7 +77,7 @@ static constexpr array<uint8_t, 64> BitScanTable = {
     46, 55, 26, 59, 40, 36, 15, 53,
     34, 51, 20, 43, 31, 22, 10, 45,
     25, 39, 14, 33, 19, 30, 9, 24,
-    13, 18, 8, 12, 7, 6, 5, 63};
+    13, 18, 8, 12, 7, 6, 5, 63 };
 
 static constexpr uint8_t bsf(Bitboard bitBoard)
 {

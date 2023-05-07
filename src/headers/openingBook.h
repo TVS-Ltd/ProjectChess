@@ -11,9 +11,9 @@ class OpeningBook
 {
 public:
     OpeningBook();
-    OpeningBook(const string &path);
+    OpeningBook(const string& path);
 
-    tuple<Move, int32_t> tryToFindMove(const Position &position);
+    tuple<Move, int32_t> tryToFindMove(const Position& position);
 
 private:
     vector<vector<Move>> moves;

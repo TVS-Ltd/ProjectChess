@@ -7,11 +7,11 @@
 #pragma once
 
 #if LINUX
-    // ONLY FOR LINUX
-    #define OpeningBookFile "/usr/bin/OpeningBook.txt"
+// ONLY FOR LINUX
+#define OpeningBookFile "/usr/bin/OpeningBook.txt"
 #else
-    // FOR WINDOWS
-    #define OpeningBookFile "./src/OpeningBook.txt"
+// FOR WINDOWS
+#define OpeningBookFile "./src/OpeningBook.txt"
 #endif
 
 using namespace std;
@@ -25,23 +25,23 @@ public:
     void start();
 
 private:
-    AI ai = {OpeningBookFile}; // The main AI object.
+    AI ai = { OpeningBookFile }; // The main AI object.
     Move move;
     MoveList moves;
     Position position; // Stores the current board position.
     uint8_t playerSide; // Stores player's side.
     uint8_t aiSide; // Stores AI's side.
     Move playerMove;
-    #if LOG_TO_FILE
-        logToFile log;
-    #endif
+#if LOG_TO_FILE
+    logToFile log;
+#endif
     uint32_t timerLose = 0;
     Timer timerWhite;
     Timer timerBlack;
 
     /**
      * Checks the white win conditions.
-     * 
+     *
      * @return Returns True if White wins, False otherwise.
      *
      * @exception This function does not throw exceptions.
@@ -50,7 +50,7 @@ private:
 
     /**
      * Checks the black win conditions.
-     * 
+     *
      * @return Returns True if Black wins, False otherwise.
      *
      * @exception This function does not throw exceptions.
@@ -59,7 +59,7 @@ private:
 
     /**
      * Checks the draw conditions.
-     * 
+     *
      * @return Returns True if game should end with draw, False otherwise.
      *
      * @exception This function does not throw exceptions.
@@ -68,7 +68,7 @@ private:
 
     /**
      * Checks the current board position for win/lose/draw.
-     * 
+     *
      * @return Returns True if game ends, False otherwise.
      *
      * @exception This function does not throw exceptions.
@@ -77,7 +77,7 @@ private:
 
     /**
      * Checks if the current turn is for White.
-     * 
+     *
      * @return Returns True if it is white's turn, False otherwise.
      *
      * @exception This function does not throw exceptions.
@@ -86,7 +86,7 @@ private:
 
     /**
      * Checks if the current turn is for Black.
-     * 
+     *
      * @return Returns True if it is black's turn, False otherwise.
      *
      * @exception This function does not throw exceptions.
@@ -95,7 +95,7 @@ private:
 
     /**
      * Gets move input from the terminal.
-     * 
+     *
      * @return Returns the move, which has been made.
      *
      * @exception This function does not throw exceptions.
@@ -118,7 +118,7 @@ private:
     void EvE();
 
     void PvPTime();
-    
+
     /**
      * Function for choosing the game mode with time limit using the terminal.
     */
@@ -130,19 +130,19 @@ private:
     void chooseGameMode();
 
     // ——————————————————Terminal colors——————————————————
-    const char * END = "\033[0m";
+    const char* END = "\033[0m";
 
     // Foreground colors
-    const char * RED = "\033[91m";
-    const char * GREEN = "\033[92m";
-    const char * YELLOW = "\033[93m";
-    const char * WHITE = "\033[97m";
-    const char * BLACK = "\033[90m";
+    const char* RED = "\033[91m";
+    const char* GREEN = "\033[92m";
+    const char* YELLOW = "\033[93m";
+    const char* WHITE = "\033[97m";
+    const char* BLACK = "\033[90m";
 
     // Background colors
-    const char * REDBG = "\033[101m";
-    const char * GREENBG = "\033[102m";
-    const char * YELLOWBG = "\033[103m";
-    const char * WHITEBG = "\033[107m";
-    const char * BLACKBG = "\033[100m";
+    const char* REDBG = "\033[101m";
+    const char* GREENBG = "\033[102m";
+    const char* YELLOWBG = "\033[103m";
+    const char* WHITEBG = "\033[107m";
+    const char* BLACKBG = "\033[100m";
 };

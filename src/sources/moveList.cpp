@@ -1,12 +1,12 @@
 #include "moveList.h"
-
+#include <iostream>
 
 MoveList::MoveList()
 {
     this->Size = 0;
 }
 
-Move &MoveList::operator[](uint8_t index)
+Move& MoveList::operator[](uint8_t index)
 {
     return this->moves[index];
 }
@@ -15,6 +15,7 @@ Move MoveList::operator[](uint8_t index) const
 {
     return this->moves[index];
 }
+
 
 void MoveList::push_back(Move move)
 {

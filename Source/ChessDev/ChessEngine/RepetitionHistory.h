@@ -19,7 +19,7 @@ public:
 
     void clear();
 
-    uint8_t getRepetionNumber(ZobristHash hash);
+    uint8_t getRepetionNumber(ZobristHash hash) const;
 
 private:
     vector<ZobristHash> hashes;

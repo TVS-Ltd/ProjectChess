@@ -17,7 +17,7 @@ void RepetitionHistory::clear()
     this->hashes.clear();
 }
 
-uint8_t RepetitionHistory::getRepetionNumber(ZobristHash hash)
+uint8_t RepetitionHistory::getRepetionNumber(ZobristHash hash) const
 {
     uint8_t ctr = 0;
 

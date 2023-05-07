@@ -8,4 +8,6 @@
 --   VALUES ("Pawn", 4, 5);
 
 
-SELECT * FROM DECK;
+--SELECT * FROM DECK;
+
+--CREATE TABLE BIGBLACKVADIMVLADYMTSEV(type, value, inndex);

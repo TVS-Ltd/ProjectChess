@@ -6,6 +6,8 @@
 #include "timer.h"
 #include <sqlite3.h>
 #include <iostream>
+#include <cstring>
+#include <regex>
 #include "deck.h"
 #pragma once
 

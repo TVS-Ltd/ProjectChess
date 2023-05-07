@@ -35,8 +35,11 @@ class handsdeck
 
         void addCard(card in);
 
-
         void appendOnBoard(std::string piece);        
+
+        bool checkIsEmpty();
+
+        void delete_card(char card_for_delete);
 
 };
     

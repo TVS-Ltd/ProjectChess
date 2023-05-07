@@ -231,7 +231,7 @@ using namespace std;
         return !isWhiteMove();
     }
 
-    Move Game::getMove()
+    Move Game::getMove()//
     {
         Move PlayerMove;
         string from, to;
@@ -239,7 +239,7 @@ using namespace std;
         cout << "\nEnter move (Example: e2 e4): ";
         cin >> from >> to;
 
-        PlayerMove.From = (from[0] - 'a') + (from[1] - '1') * 8;
+        PlayerMove.From = (from[0] - 'a') + (from[1] - '1') * 8;// в unt
         PlayerMove.To = (to[0] - 'a') + (to[1] - '1') * 8;
 
         return PlayerMove;
@@ -264,6 +264,7 @@ using namespace std;
 
                 cout << RED << "[ERROR] Invalid input. Please try again." << END << endl;
             }
+        
         } while (cin.fail() || choice < 1 || choice > 2);
 
         if (choice == 1)
@@ -395,7 +396,7 @@ using namespace std;
         }
 
         cout << "\nMove has been made!" << endl;
-        cout << position << endl;
+        cout << Game::position << endl;
 
         return true;
     }
@@ -623,13 +624,248 @@ using namespace std;
         }
     }
 
-    int RandFigure() // Генерирует индекс для фигуры, которую мы вызовем в колоду
+    std::string insert_piece(std::string fen, char piece_type, std::string position)
     {
-        int count = 0;
+        string temp;
+        string tt = " ";
+   
+        int Letter;
+            
+        char letter = position[0];
+        char number = position[1];
 
-        count = rand() % 6;
+        if (letter == 'e' && number == '1')
+        {
+            return "This position is already taken \n"; 
+        }
 
-        return count;
+        //if(fen[43])
+
+        if(letter == 'a') Letter = 1;
+        else if (letter == 'b') Letter = 2;
+        else if (letter == 'c') Letter = 3;
+        else if (letter == 'd') Letter = 4;
+        else if (letter == 'e') Letter = 5;
+        else if (letter == 'f') Letter = 6;
+        else if (letter == 'g') Letter = 7;
+        else if (letter == 'h') Letter = 8;
+
+        for (int i = 1; i <= 8; i++) 
+        {
+            std::string digits = std::to_string(i);
+            std::string dots(i, '.');
+            fen = std::regex_replace(fen, std::regex(digits), dots);
+        }
+
+        int choice = (int)number;
+
+        int left_counter = 0;
+        int count_of_dots = 0;
+
+        switch (choice)
+        {
+
+        case 49:
+
+            temp = fen.substr(fen.length() - 8, 8);            
+
+            temp[Letter - 1] = piece_type;
+
+            // for (int i = 0;i < Letter - 1; i++)
+            // {
+                
+            //     if(temp[i] != '.')
+            //     {
+            //         temp.replace(left_counter, count_of_dots, tt);
+            //         left_counter = i;
+            //         count_of_dots = 0;
+            //     }else
+            //     {
+            //         count_of_dots++;
+            //         tt = to_string(count_of_dots);
+            //     }
+            // }
+
+            fen.replace(fen.length() - 8, 8, temp);
+
+            break;
+        
+        case (50):
+            
+
+            temp = fen.substr(fen.length() - 8 - 9, 8);            
+
+            temp[Letter - 1] = piece_type;
+
+            // for (int i = 0;i < Letter - 1; i++)
+            // {
+                
+            //     if(temp[i] != '.')
+            //     {
+            //         temp.replace(left_counter, count_of_dots, tt);
+            //         left_counter = i;
+            //         count_of_dots = 0;
+            //     }else
+            //     {
+            //         count_of_dots++;
+            //         tt = to_string(count_of_dots);
+            //     }
+            // }
+
+            fen.replace(fen.length() - 8 - 9, 8, temp);
+
+            break;
+        case (51):
+            
+            temp = fen.substr(fen.length() - 8 - 9 - 9, 8);            
+
+            temp[Letter - 1] = piece_type;
+
+            // for (int i = 0;i < Letter - 1; i++)
+            // {
+                
+            //     if(temp[i] != '.')
+            //     {
+            //         temp.replace(left_counter, count_of_dots, tt);
+            //         left_counter = i;
+            //         count_of_dots = 0;
+            //     }else
+            //     {
+            //         count_of_dots++;
+            //         tt = to_string(count_of_dots);
+            //     }
+            // }
+
+            fen.replace(fen.length() - 8 - 9 - 9, 8, temp);
+            
+            break;
+        case 52:
+            
+            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9, 8);            
+
+            temp[Letter - 1] = piece_type;
+
+            // for (int i = 0;i < Letter - 1; i++)
+            // {
+                
+            //     if(temp[i] != '.')
+            //     {
+            //         temp.replace(left_counter, count_of_dots, tt);
+            //         left_counter = i;
+            //         count_of_dots = 0;
+            //     }else
+            //     {
+            //         count_of_dots++;
+            //         tt = to_string(count_of_dots);
+            //     }
+            // }
+
+            fen.replace(fen.length() - 8 - 9 - 9 - 9, 8, temp);
+
+            break;    
+        case 53:
+            
+            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9 - 9, 8);            
+
+            temp[Letter - 1] = piece_type;
+
+            // for (int i = 0;i < Letter - 1; i++)
+            // {
+                
+            //     if(temp[i] != '.')
+            //     {
+            //         temp.replace(left_counter, count_of_dots, tt);
+            //         left_counter = i;
+            //         count_of_dots = 0;
+            //     }else
+            //     {
+            //         count_of_dots++;
+            //         tt = to_string(count_of_dots);
+            //     }
+            // }
+
+            fen.replace(fen.length() - 8 - 9 - 9 - 9 - 9, 8, temp);
+
+            break;
+        case 54:
+            
+            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9 - 9 - 9, 8);            
+
+            temp[Letter - 1] = piece_type;
+
+            // for (int i = 0;i < Letter - 1; i++)
+            // {
+                
+            //     if(temp[i] != '.')
+            //     {
+            //         temp.replace(left_counter, count_of_dots, tt);
+            //         left_counter = i;
+            //         count_of_dots = 0;
+            //     }else
+            //     {
+            //         count_of_dots++;
+            //         tt = to_string(count_of_dots);
+            //     }
+            // }
+
+            fen.replace(fen.length() - 8 - 9 - 9 - 9 - 9 - 9, 8, temp);
+
+            break;
+        case 55:
+            
+            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9 - 9 - 9 - 9, 8);            
+
+            temp[Letter - 1] = piece_type;
+
+            // for (int i = 0;i < Letter - 1; i++)
+            // {
+                
+            //     if(temp[i] != '.')
+            //     {
+            //         temp.replace(left_counter, count_of_dots, tt);
+            //         left_counter = i;
+            //         count_of_dots = 0;
+            //     }else
+            //     {
+            //         count_of_dots++;
+            //         tt = to_string(count_of_dots);
+            //     }
+            // }
+
+            fen.replace(fen.length() - 8 - 9 - 9 - 9 - 9 - 9 - 9, 8, temp);
+
+            break;
+        case 56:
+
+            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9 - 9 - 9 - 9 - 9, 8);            
+
+            temp[Letter - 1] = piece_type;
+
+            // for (int i = 0;i < Letter - 1; i++)
+            // {
+                
+            //     if(temp[i] != '.')
+            //     {
+            //         temp.replace(left_counter, count_of_dots, tt);
+            //         left_counter = i;
+            //         count_of_dots = 0;
+            //     }else
+            //     {
+            //         count_of_dots++;
+            //         tt = to_string(count_of_dots);
+            //     }
+            // }
+
+            fen.replace(fen.length() - 8 - 9 - 9 - 9 - 9 - 9 - 9 - 9, 8, temp);
+
+            break;
+        
+            default:
+            cout << "Error" << endl;
+            break;
+        }
+
+        return fen;
     }
 
     void Game::Gwent()// rm -f *.o 
@@ -637,8 +873,9 @@ using namespace std;
         const char* filename = "/home/danila/CCG/ProjectChess/src/DataBase/DB.db";
 
         sqlite3 *db;      
-        handsdeck coloda;
-        
+        handsdeck coloda_white;
+        handsdeck coloda_black;
+
         std::cout << "Create your deck:" << endl;
 
         deck bd;
@@ -674,7 +911,7 @@ using namespace std;
             std::cout << "BD is not empty " << std::endl;
         }
 
-        std::cout << "Составление колоды:" << std::endl;
+        std::cout << "Составление колоды для белых:" << std::endl;
 
         while (true) //Блок для формирования колоды
         {    
@@ -745,10 +982,9 @@ using namespace std;
 
         bd.print_data_base(stm);
 
-
         std::vector<std::string> input;
         sqlite3_stmt* s;
-        std::string sql = "SELECT * FROM DECK LIMIT 7;";
+        std::string sql = "SELECT * FROM DECK LIMIT 5;";
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &s, NULL) == SQLITE_OK)
         {
             while (sqlite3_step(s) == SQLITE_ROW)
@@ -757,32 +993,17 @@ using namespace std;
             }
             sqlite3_finalize(s);
         }
-        //Реализовать рaндомное взятие кард из бд
-
-        // for (int i = 0;i < input.size(); i++)
-        // {
-        //     cout << input[i] << " ";
-        // }
 
         std::cout << "Your deck: " << endl;
-
-        card obj_1(input[0], "test", " test_1");// Создаем 5 карт с рандомными фигурами 
-        card obj_2(input[1], "test", " test_1");
-        card obj_3(input[2], "test", " test_1");
-        card obj_4(input[3], "test", " test_1");
-        card obj_5(input[4], "test", " test_1");
-       
-    
-        coloda.push_b(obj_1); // Кладем их в вектор
-        coloda.push_b(obj_2);
-        coloda.push_b(obj_3);
-        coloda.push_b(obj_4);
-        coloda.push_b(obj_5);
-
-
-        // Выводим на экран колоду для пользователя
         
-        coloda.print();        
+        // Создаем 5 карт с рандомными фигурами
+        card obj_1(input[0], "test", " test_1"); card obj_2(input[1], "test", " test_1"); card obj_3(input[2], "test", " test_1"); card obj_4(input[3], "test", " test_1"); card obj_5(input[4], "test", " test_1");       
+
+        // Кладем их в вектор
+        coloda_white.push_b(obj_1); coloda_white.push_b(obj_2); coloda_white.push_b(obj_3); coloda_white.push_b(obj_4); coloda_white.push_b(obj_5);
+
+        // Выводим на экран колоду для пользователя        
+        coloda_white.print();        
 
         std::cout << endl;
 
@@ -791,13 +1012,7 @@ using namespace std;
         int t = 2;
         std::string temp = "";
 
-   //     std::cout << "test for rand from BD" << std::endl;
-
-      //  std::cout << temp << " " << bd.get_random_value(db) << std::endl;
-        
-        //std::cout << temp << std::endl;
-
-       while (t != 0) // Две замены карты (to do)
+       while (t != 0) // Две замены карты(белые) 
         {
             int choice;
 
@@ -810,12 +1025,10 @@ using namespace std;
             if (choice == 1)
             {
                 temp = bd.get_random_value(db);
-
-//                std::cout << temp << "\n";
                
                 obj_1.setFigure(temp);
 
-                coloda.CardChange(0, obj_1);
+                coloda_white.CardChange(0, obj_1);
                 
             }else 
             if (choice == 2)
@@ -824,7 +1037,7 @@ using namespace std;
                
                 obj_2.setFigure(temp);
 
-                coloda.CardChange(1, obj_2);
+                coloda_white.CardChange(1, obj_2);
                 
             }else
             if (choice == 3)
@@ -833,7 +1046,7 @@ using namespace std;
                
                 obj_3.setFigure(temp);
 
-                coloda.CardChange(2, obj_3);
+                coloda_white.CardChange(2, obj_3);
 
             }else 
             if (choice == 4)
@@ -842,7 +1055,7 @@ using namespace std;
                
                 obj_4.setFigure(temp);
 
-                coloda.CardChange(3, obj_4);
+                coloda_white.CardChange(3, obj_4);
 
             }else 
             if (choice == 5)
@@ -851,7 +1064,7 @@ using namespace std;
                
                 obj_5.setFigure(temp);
 
-                coloda.CardChange(4, obj_5);
+                coloda_white.CardChange(4, obj_5);
 
             }else 
             if (choice > 5 || choice < 0 || double(choice))
@@ -864,17 +1077,436 @@ using namespace std;
 
             // Выводим на экран измененную колоду для пользователя
  
-            coloda.print();
+            coloda_white.print();
+
+            std::cout << endl;
+
+            t--;
+        }	
+        
+
+        //Граница
+
+        std::cout << "Составление колоды для черных:" << std::endl;
+
+        point = 250; //рандомное кол-во
+
+        std::cout << "You have a " << point << " points" << endl;
+
+        std::cout << "Choose a figure \n 1.Queen (50 points) \n 2.Rook(20 points) \n 3.Knight(30 points) \n 4.Bishop(25 points) \n 5.Pawn(10 points)";  
+    
+        while (true) //Блок для формирования колоды
+        {    
+         
+            cout << endl;
+            
+            cin >> choice;
+
+            if((choice == 1 && point >= 50) || (choice == 2 && point >= 20) || (choice == 3 && point >= 30) || (choice == 4 && point >= 25) || (choice == 5 && point >= 10))
+            {
+                switch (choice)
+                {
+                case 1:
+                    bd.appendToBlackBD(filename, "Queen", db);
+                    cout << "Queen has been added" << endl;
+                    point -= 50;
+                    break;
+
+                case 2:
+                    bd.appendToBlackBD(filename, "Rook", db);
+                    cout << "Rook has been added" << endl;
+                    point -= 20;
+                    break;
+
+                case 3:
+                    bd.appendToBlackBD(filename, "Knight", db);
+                    cout << "Knight has been added" << endl;
+                    point -= 30;
+                    break;
+
+                case 4:
+                    bd.appendToBlackBD(filename, "Bishop", db);
+                    cout << "Bishop has been added" << endl;
+                    point -= 25;
+                    break;
+
+                case 5:
+                    bd.appendToBlackBD(filename, "Pawn", db);
+                    cout << "Pawn has been added" << endl;
+                    point -= 10;
+                    break;
+
+                default:
+                    break;
+                }
+            }else
+            {
+                std::cout << "You have't so much points" << endl;
+                break;
+            }
+        }
+        
+        sqlite3_stmt *stmtmt;
+        const char *querrry = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV;";
+        sqlite3_prepare_v2(db, querrry, -1, &stmtmt, NULL);
+
+        std::cout << "Deck(main menu)" << std::endl;
+       
+        bd.print_data_base(stmtmt); 
+
+        std::cout << "Deck after shuffle:" << std::endl;
+
+        bd.shuffle(db);
+    
+        sqlite3_stmt *stttm;
+        const char *querrr = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV;";
+        sqlite3_prepare_v2(db, querrr, -1, &stttm, NULL);
+
+        bd.print_data_base(stttm);
+
+        std::vector<std::string> inputBlack;
+        sqlite3_stmt* sss;
+        std::string sssql = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV LIMIT 5;";
+        if (sqlite3_prepare_v2(db, sssql.c_str(), -1, &s, NULL) == SQLITE_OK)
+        {
+            while (sqlite3_step(sss) == SQLITE_ROW)
+            {
+                inputBlack.push_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))));
+            }
+            sqlite3_finalize(sss);
+        }
+
+        std::cout << "Your deck: " << endl;
+        
+        // Создаем 5 карт с рандомными фигурами
+        card obj_6(inputBlack[0], "test", " test_1"); card obj_7(inputBlack[1], "test", " test_1"); card obj_8(inputBlack[2], "test", " test_1"); card obj_9(inputBlack[3], "test", " test_1"); card obj_10(inputBlack[4], "test", " test_1");       
+
+        // Кладем их в вектор
+        coloda_white.push_b(obj_6); coloda_white.push_b(obj_7); coloda_white.push_b(obj_8); coloda_white.push_b(obj_9); coloda_white.push_b(obj_10);
+
+        // Выводим на экран колоду для пользователя        
+        coloda_white.print();        
+
+        std::cout << endl;
+
+        std::cout << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << endl;
+
+        t = 2;
+        temp = "";
+
+       while (t != 0) // Две замены карты(белые) 
+        {
+            int choice;
+
+            cin >> choice;
+
+            if (choice == 0)
+            {
+                break;
+            }else 
+            if (choice == 1)
+            {
+                temp = bd.get_random_BlackValue(db);
+               
+                obj_6.setFigure(temp);
+
+                coloda_white.CardChange(0, obj_6);
+                
+            }else 
+            if (choice == 2)
+            {
+                temp = bd.get_random_BlackValue(db);
+               
+                obj_7.setFigure(temp);
+
+                coloda_white.CardChange(1, obj_7);
+                
+            }else
+            if (choice == 3)
+            {
+              temp = bd.get_random_BlackValue(db);
+               
+                obj_8.setFigure(temp);
+
+                coloda_white.CardChange(2, obj_8);
+
+            }else 
+            if (choice == 4)
+            {
+               temp = bd.get_random_BlackValue(db);
+               
+                obj_9.setFigure(temp);
+
+                coloda_white.CardChange(3, obj_9);
+
+            }else 
+            if (choice == 5)
+            {
+               temp = bd.get_random_BlackValue(db);
+               
+                obj_10.setFigure(temp);
+
+                coloda_white.CardChange(4, obj_10);
+
+            }else 
+            if (choice > 5 || choice < 0 || double(choice))
+            {
+                std::cout << "Incorrect input. Please, try again" << endl;
+                t++;
+            }
+
+            std::cout << "Updated deck " << endl;
+
+            // Выводим на экран измененную колоду для пользователя
+ 
+            coloda_white.print();
 
             std::cout << endl;
 
             t--;
         }	
 
+        Game::position = {"....k.../......../8/8/8/8/......../....K...", 255, true, true, true, true, 1};
+        
+        sideChoose();
+
+        //cout << position << endl;
+
+                #if LOG_TO_FILE
+            log << position;
+        #endif
+
+        if(playerSide == Pieces::White)
+        {
+            string p;int count;
+
+            while (true)
+            {
+                cout << Game::position << endl;
+
+                // Player 1 move
+
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 1 move:" << END;
+                #endif
+
+                if(!coloda_white.checkIsEmpty())
+                {
+                    //Старт выставления фигуры на поле
+
+                    char choiceOfFigure;
+
+                    string placeOnBoard;
+
+                    cout << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
+
+                    coloda_white.print();
+
+                    cout << endl;
+
+                    cin >> choiceOfFigure;
+
+                    cout << "Enter the position when you want to put a figure(example e2)" << endl;
+
+                    cin >> placeOnBoard; // e4
+
+                    switch (choiceOfFigure)
+                    {
+                    case 'R':
+                        
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Rook, Pieces::White);
+
+                        break;
+                    
+                    case 'N':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Knight, Pieces::White);
+
+                        break;
+
+                    case 'B':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Bishop, Pieces::White);
+
+                        break;
+
+                    case 'Q':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Queen, Pieces::White);
+
+                        break;
+
+                    default:
+                        break;
+                    }
+
+                    coloda_white.delete_card(choiceOfFigure);   
+                }
+                //Конец
+                
+                cout << Game::position;
+                
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 2 move:" << END;
+                #endif
+
+                std::cout << Game::position << std::endl;
+                
+                if(!coloda_white.checkIsEmpty())
+                {
+                    //Старт выставления фигуры на поле
+
+                    char choiceOfFigure;
+
+                    string placeOnBoard;
+
+                    cout << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
+
+                    coloda_white.print();
+
+                    cout << endl;
+
+                    cin >> choiceOfFigure;
+
+                    cout << "Enter the position when you want to put a figure(example e2)" << endl;
+
+                    cin >> placeOnBoard; // e4
+
+                    switch (choiceOfFigure)
+                    {
+                    
+                    case 'r':
+                        
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Rook, Pieces::Black);
+
+                        break;
+                    
+                    case 'n':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Knight, Pieces::Black);
+
+                        break;
+
+                    case 'b':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Bishop, Pieces::Black);
+
+                        break;
+
+                    case 'q':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Queen, Pieces::Black);
+
+                        break;
+
+                    default:
+                        break;
+                    }
+
+                    std::cout << Game::position << std::endl;        
+                }
+
+                while (!movePlayer(aiSide))
+                {
+                    
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << Game::position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+            
+                count++;
+            }
+        }
+        else
+        {
+            while (true)
+            {
+
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 2 move:" << END;
+                #endif
+
+                while (!movePlayer(aiSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                // Player 1 move
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 1 move:" << END;
+                #endif
+
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+            }
+        }
+    
     sqlite3_close(db);
 }   
 
-   
     void Game::EvE()
     {
         playerSide = Pieces::White;

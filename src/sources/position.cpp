@@ -6,6 +6,8 @@ using namespace std;
 Position::Position() = default;
 Position::Position(const string &shortFen, uint8_t enPassant, bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, float moveCtr)
 {
+    //this->time_storage = shortFen;
+
     this->pieces = {shortFen};
     this->EnPassant = enPassant;
 
@@ -23,6 +25,11 @@ Position::Position(const string &shortFen, uint8_t enPassant, bool whiteLongCast
     this->repetitionHistory.addPosition(this->hash);
     this->fiftyMovesCtr = 0;
 }
+
+// string Position::getFen()
+// {
+//    //return time_storage;
+// }
 
 ostream &operator<<(ostream &ostream, Position position)
 {
@@ -47,7 +54,7 @@ ostream &operator<<(ostream &ostream, Position position)
 void Position::move(Move move)
 {
     this->removePiece(move.From, move.AttackerType, move.AttackerSide);
-    this->addPiece(move.To, move.AttackerType, move.AttackerSide);
+    this->addPiece(move.To, move.AttackerType, move.AttackerSide);//
 
     if (move.DefenderType != 255)
     {

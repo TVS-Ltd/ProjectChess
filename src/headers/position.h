@@ -33,9 +33,10 @@ public:
 
     void move(Move move);
 
-private:
     void addPiece(uint8_t square, uint8_t type, uint8_t side);
 
+private:
+    
     void removePiece(uint8_t square, uint8_t type, uint8_t side);
 
     void changeEnPassant(uint8_t enPassant);

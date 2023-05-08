@@ -147,7 +147,7 @@ bool AChessEngine::isBlackMove() const
 	return !this->isWhiteMove();
 }
 
-bool AChessEngine::makeMove(FIntPoint from, FIntPoint to, uint8 side)
+bool AChessEngine::makeMove(FIntPoint from, FIntPoint to, uint8 side, uint8 promotionPiece)
 {
 	this->moves = LegalMoveGen::generate(this->boardPosition, side);
 
@@ -167,54 +167,47 @@ bool AChessEngine::makeMove(FIntPoint from, FIntPoint to, uint8 side)
 			moveFound = true;
 
 			break;
+		} else 
+		if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
+		{
+			switch (promotionPiece)
+			{
+				case 1:
+					move = moves[i];
+					move.Flag = ChessMove::Flag::PromoteToKnight;
+					moveFound = true;
+				break;
+
+				case 2:
+					move = moves[i];
+					move.Flag = ChessMove::Flag::PromoteToBishop;
+					moveFound = true;
+				break;
+
+				case 3:
+					move = moves[i];
+					move.Flag = ChessMove::Flag::PromoteToRook;
+					moveFound = true;
+				break;
+
+				case 4:
+					move = moves[i];
+					move.Flag = ChessMove::Flag::PromoteToQueen;
+					moveFound = true;
+				break;
+
+				default:
+					if (GEngine)
+					{
+						GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("[ERROR] Invalid promotion piece!"));
+					}
+					
+					continue;
+				break;
+			}
+
+			break;
 		}
-		// else 
-		// if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
-		// {
-		// 	// Choose promotion piece
-		// 	cout << "\nChoose promotion piece: " << endl;
-		// 	cout << "1. Knight" << endl;
-		// 	cout << "2. Bishop" << endl;
-		// 	cout << "3. Rook" << endl;
-		// 	cout << "4. Queen" << endl;
-
-		// 	int promotionPiece = 0;
-		// 	cin >> promotionPiece;
-
-		// 	switch (promotionPiece)
-		// 	{
-		// 		case 1:
-		// 			move = moves[i];
-		// 			move.Flag = Move::Flag::PromoteToKnight;
-		// 			moveFound = true;
-		// 		break;
-
-		// 		case 2:
-		// 			move = moves[i];
-		// 			move.Flag = Move::Flag::PromoteToBishop;
-		// 			moveFound = true;
-		// 		break;
-
-		// 		case 3:
-		// 			move = moves[i];
-		// 			move.Flag = Move::Flag::PromoteToRook;
-		// 			moveFound = true;
-		// 		break;
-
-		// 		case 4:
-		// 			move = moves[i];
-		// 			move.Flag = Move::Flag::PromoteToQueen;
-		// 			moveFound = true;
-		// 		break;
-
-		// 		default:
-		// 			cout << RED << "\n[ERROR] Illegal move!" << END << endl;
-		// 			continue;
-		// 		break;
-		// 	}
-
-		// 	break;
-		// }
 	}
 
 	if (!moveFound)

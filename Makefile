@@ -2,7 +2,7 @@
 # *DO NOT EDIT*
 
 UNREALROOTPATH = /mnt/Samsung/UnrealEngine
-GAMEPROJECTFILE =/home/tyomavader/Documents/Unreal Projects/ChessDev 5.2/ChessDev.uproject
+GAMEPROJECTFILE =/home/tyomavader/Documents/Unreal Projects/ChessDev 5.2 5.2/ChessDev.uproject
 
 TARGETS = \
 	ChessDev-Linux-DebugGame  \

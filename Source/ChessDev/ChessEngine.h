@@ -52,7 +52,7 @@ public:
 	 * @return True if the move is legal and was made, false otherwise.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "ChessEngine")
-	bool makeMove(FIntPoint from, FIntPoint to, uint8 side);
+	bool makeMove(FIntPoint from, FIntPoint to, uint8 side, uint8 promotionPiece);
 
 protected:
 	bool whiteVictory() const;

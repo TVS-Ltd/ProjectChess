@@ -2,9 +2,6 @@
 
 #pragma once
 
-/**
- * Class for storing all required info about the move.
-*/
 class Move
 {
 public:
@@ -40,5 +37,7 @@ public:
         static constexpr uint8_t PromoteToBishop = 8;
         static constexpr uint8_t PromoteToRook = 9;
         static constexpr uint8_t PromoteToQueen = 10;
+
+        static constexpr uint8_t LayingOutCard = 11;
     };
 };

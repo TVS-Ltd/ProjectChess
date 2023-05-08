@@ -1,5 +1,6 @@
 #include "game.h"
-
+#include "card.h"
+#define TEST_CARD_MOVES 1
 using namespace std;
 
 void Game::start()
@@ -26,6 +27,9 @@ void Game::start()
     this->position = { "rnbqkbnr/8/8/8/8/8/8/RNBQKBNR", 255, true, true, true, true, 1 };
 #endif
 
+#if TEST_CARD_MOVES
+    this->position = { "4k3/r6q/8/8/8/8/P1Q3R1/1N2K3", 255, true, true, true, true, 1 };
+#endif
     cout << "Welcome to the chess engine!" << endl;
 
 #if LOG_TO_FILE
@@ -409,6 +413,19 @@ bool Game::movePlayer(uint8_t side) // Returns true if player move is valid
 void Game::PvE()
 {
     sideChoose();
+
+    position.cards[0].addCard(card("Pawn", "-", "-"));
+    position.cards[0].addCard(card("Pawn", "-", "-"));
+    position.cards[0].addCard(card("Pawn", "-", "-"));
+    position.cards[0].addCard(card("Queen", "-", "-"));
+    position.cards[0].addCard(card("Knight", "-", "-"));
+
+    position.cards[1].addCard(card("Pawn", "-", "-"));
+    position.cards[1].addCard(card("Pawn", "-", "-"));
+    position.cards[1].addCard(card("Rook", "-", "-"));
+    position.cards[1].addCard(card("Queen", "-", "-"));
+
+
 
     if (playerSide == Pieces::White)
     {

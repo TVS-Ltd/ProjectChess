@@ -46,9 +46,24 @@ ostream& operator<<(ostream& ostream, Position position)
 
 void Position::move(Move move)
 {
-    // std::cout << "final: " << (int)move.From << ' ' << (int)move.To << '\n';
+    std::string figureType;
 
-    this->removePiece(move.From, move.AttackerType, move.AttackerSide);
+    if (move.Flag != Move::Flag::LayingOutCard) {
+        this->removePiece(move.From, move.AttackerType, move.AttackerSide);
+    }
+    else {
+        if (move.AttackerType == Pieces::Pawn)
+            figureType = "Pawn";
+        else if (move.AttackerType == Pieces::Knight)
+            figureType = "Knight";
+        else if (move.AttackerType == Pieces::Bishop)
+            figureType = "Bishop";
+        else if (move.AttackerType == Pieces::Rook)
+            figureType = "Rook";
+        else if (move.AttackerType == Pieces::Queen)
+            figureType = "Queen";
+    }
+
     this->addPiece(move.To, move.AttackerType, move.AttackerSide);
 
     if (move.DefenderType != 255)
@@ -119,6 +134,8 @@ void Position::move(Move move)
         this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
         this->addPiece(move.To, Pieces::Queen, move.AttackerSide);
         break;
+    case Move::Flag::LayingOutCard:
+        cards[move.AttackerSide].delete_card(figureType[0]);
     }
 
     this->pieces.updateBitboards();
@@ -161,7 +178,7 @@ void Position::move(Move move)
 
     this->updateFiftyMovesCtr(move.AttackerType == Pieces::Pawn or move.DefenderType != 255);
 
-    if (move.AttackerType == Pieces::Pawn or move.DefenderType != 255)
+    if (move.AttackerType == Pieces::Pawn or move.DefenderType != 255 or move.Flag == Move::Flag::LayingOutCard)
     {
         this->repetitionHistory.clear();
     }

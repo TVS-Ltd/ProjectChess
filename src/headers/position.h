@@ -1,8 +1,11 @@
 #include <cmath>
+#include <vector>
 #include "pieces.h"
 #include "move.h"
 #include "zobristHash.h"
 #include "repetitionHistory.h"
+#include "card.h"
+#include "handsdeck.h"
 
 #pragma once
 
@@ -12,6 +15,8 @@ class Position
 public:
     Pieces pieces;
     uint8_t EnPassant;
+
+    handsdeck cards[2];
 
     bool WhiteLongCastling;
     bool WhiteShortCastling;
@@ -35,7 +40,6 @@ public:
 
     void move(Move move);
 
-private:
     void addPiece(uint8_t square, uint8_t type, uint8_t side);
 
     void removePiece(uint8_t square, uint8_t type, uint8_t side);

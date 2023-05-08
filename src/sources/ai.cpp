@@ -70,9 +70,8 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
 
     bool updateBestMove;
 
-    for (int i = 1; i < 7; i = i + 1)
+    for (int i = 1; i < 6; i = i + 1)
     {
-        cout << "I ::: " << i << '\n';
         evaluated = 0;
         maxDepth = 0;
         cutOffs = 0;
@@ -100,7 +99,6 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
             break;
         }
 
-        std::cout << (int)bestMove.From << "->" << (int)bestMove.To << '\n';
 #if DEBUG
         cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
         cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
@@ -110,6 +108,73 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
     usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
 
     cout << "\033[92m" << "Search finished." << "\033[0m" << endl;
+
+    timex += (nsecs - timeStart);
+    countx++;
+
+    handsdeck deck = position.cards[side];
+    Move cardMove;
+    int32_t score;
+    Bitboard pieces;
+    bool cardMoveWasFound = false;
+
+    Bitboard inversionRows = 0;
+    if (side == Pieces::White) {
+        for (int8_t row = 4; row < 8; row++) {
+            inversionRows |= BitboardRows::InversionRows[row];
+        }
+    }
+    else {
+        for (int8_t row = 0; row < 4; row++) {
+            inversionRows |= BitboardRows::InversionRows[row];
+        }
+    }
+
+    while (!deck.checkIsEmpty())
+    {
+        score = (side == Pieces::White) ? Constants::Infinity::Negative : Constants::Infinity::Positive;
+        pieces = position.pieces.empty & inversionRows;
+
+        uint8_t attackerType;
+        std::string figureType = deck.getCard(0);
+
+        if (figureType == "Pawn")
+            attackerType = Pieces::Pawn;
+        else if (figureType == "Knight")
+            attackerType = Pieces::Knight;
+        else if (figureType == "Bishop")
+            attackerType = Pieces::Bishop;
+        else if (figureType == "Rook")
+            attackerType = Pieces::Rook;
+        else if (figureType == "Queen")
+            attackerType = Pieces::Queen;
+
+        Position copy;
+        while (pieces)
+        {
+            uint8_t pos = bsf(pieces);
+            pieces ^= 1ull << pos;
+
+            Move move(255, pos, attackerType, side, 255, Pieces::inverse(side), Move::Flag::LayingOutCard);
+            copy = position;
+            copy.move(move);
+
+            if (PsLegalMoveMaskGen::inDanger(copy.pieces, bsf(copy.pieces.pieceBitboards[side][Pieces::King]), side))
+                continue;
+
+            int32_t evaluation = StaticEvaluator::evaluate(copy.pieces, 0, 0, 0, 0, 0, 0);
+            if ((side == Pieces::White && evaluation > score) || (side == Pieces::Black && evaluation < score)) {
+                score = evaluation;
+                cardMove = move;
+                cardMoveWasFound = true;
+            }
+        }
+    }
+
+    if (cardMoveWasFound && ((side == Pieces::White && score > bestMoveEvaluation) || (side == Pieces::Black && score < bestMoveEvaluation))) {
+        bestMove = cardMove;
+    }
+
 
     timex += (nsecs - timeStart);
     countx++;

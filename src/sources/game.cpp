@@ -624,250 +624,6 @@ using namespace std;
         }
     }
 
-    std::string insert_piece(std::string fen, char piece_type, std::string position)
-    {
-        string temp;
-        string tt = " ";
-   
-        int Letter;
-            
-        char letter = position[0];
-        char number = position[1];
-
-        if (letter == 'e' && number == '1')
-        {
-            return "This position is already taken \n"; 
-        }
-
-        //if(fen[43])
-
-        if(letter == 'a') Letter = 1;
-        else if (letter == 'b') Letter = 2;
-        else if (letter == 'c') Letter = 3;
-        else if (letter == 'd') Letter = 4;
-        else if (letter == 'e') Letter = 5;
-        else if (letter == 'f') Letter = 6;
-        else if (letter == 'g') Letter = 7;
-        else if (letter == 'h') Letter = 8;
-
-        for (int i = 1; i <= 8; i++) 
-        {
-            std::string digits = std::to_string(i);
-            std::string dots(i, '.');
-            fen = std::regex_replace(fen, std::regex(digits), dots);
-        }
-
-        int choice = (int)number;
-
-        int left_counter = 0;
-        int count_of_dots = 0;
-
-        switch (choice)
-        {
-
-        case 49:
-
-            temp = fen.substr(fen.length() - 8, 8);            
-
-            temp[Letter - 1] = piece_type;
-
-            // for (int i = 0;i < Letter - 1; i++)
-            // {
-                
-            //     if(temp[i] != '.')
-            //     {
-            //         temp.replace(left_counter, count_of_dots, tt);
-            //         left_counter = i;
-            //         count_of_dots = 0;
-            //     }else
-            //     {
-            //         count_of_dots++;
-            //         tt = to_string(count_of_dots);
-            //     }
-            // }
-
-            fen.replace(fen.length() - 8, 8, temp);
-
-            break;
-        
-        case (50):
-            
-
-            temp = fen.substr(fen.length() - 8 - 9, 8);            
-
-            temp[Letter - 1] = piece_type;
-
-            // for (int i = 0;i < Letter - 1; i++)
-            // {
-                
-            //     if(temp[i] != '.')
-            //     {
-            //         temp.replace(left_counter, count_of_dots, tt);
-            //         left_counter = i;
-            //         count_of_dots = 0;
-            //     }else
-            //     {
-            //         count_of_dots++;
-            //         tt = to_string(count_of_dots);
-            //     }
-            // }
-
-            fen.replace(fen.length() - 8 - 9, 8, temp);
-
-            break;
-        case (51):
-            
-            temp = fen.substr(fen.length() - 8 - 9 - 9, 8);            
-
-            temp[Letter - 1] = piece_type;
-
-            // for (int i = 0;i < Letter - 1; i++)
-            // {
-                
-            //     if(temp[i] != '.')
-            //     {
-            //         temp.replace(left_counter, count_of_dots, tt);
-            //         left_counter = i;
-            //         count_of_dots = 0;
-            //     }else
-            //     {
-            //         count_of_dots++;
-            //         tt = to_string(count_of_dots);
-            //     }
-            // }
-
-            fen.replace(fen.length() - 8 - 9 - 9, 8, temp);
-            
-            break;
-        case 52:
-            
-            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9, 8);            
-
-            temp[Letter - 1] = piece_type;
-
-            // for (int i = 0;i < Letter - 1; i++)
-            // {
-                
-            //     if(temp[i] != '.')
-            //     {
-            //         temp.replace(left_counter, count_of_dots, tt);
-            //         left_counter = i;
-            //         count_of_dots = 0;
-            //     }else
-            //     {
-            //         count_of_dots++;
-            //         tt = to_string(count_of_dots);
-            //     }
-            // }
-
-            fen.replace(fen.length() - 8 - 9 - 9 - 9, 8, temp);
-
-            break;    
-        case 53:
-            
-            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9 - 9, 8);            
-
-            temp[Letter - 1] = piece_type;
-
-            // for (int i = 0;i < Letter - 1; i++)
-            // {
-                
-            //     if(temp[i] != '.')
-            //     {
-            //         temp.replace(left_counter, count_of_dots, tt);
-            //         left_counter = i;
-            //         count_of_dots = 0;
-            //     }else
-            //     {
-            //         count_of_dots++;
-            //         tt = to_string(count_of_dots);
-            //     }
-            // }
-
-            fen.replace(fen.length() - 8 - 9 - 9 - 9 - 9, 8, temp);
-
-            break;
-        case 54:
-            
-            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9 - 9 - 9, 8);            
-
-            temp[Letter - 1] = piece_type;
-
-            // for (int i = 0;i < Letter - 1; i++)
-            // {
-                
-            //     if(temp[i] != '.')
-            //     {
-            //         temp.replace(left_counter, count_of_dots, tt);
-            //         left_counter = i;
-            //         count_of_dots = 0;
-            //     }else
-            //     {
-            //         count_of_dots++;
-            //         tt = to_string(count_of_dots);
-            //     }
-            // }
-
-            fen.replace(fen.length() - 8 - 9 - 9 - 9 - 9 - 9, 8, temp);
-
-            break;
-        case 55:
-            
-            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9 - 9 - 9 - 9, 8);            
-
-            temp[Letter - 1] = piece_type;
-
-            // for (int i = 0;i < Letter - 1; i++)
-            // {
-                
-            //     if(temp[i] != '.')
-            //     {
-            //         temp.replace(left_counter, count_of_dots, tt);
-            //         left_counter = i;
-            //         count_of_dots = 0;
-            //     }else
-            //     {
-            //         count_of_dots++;
-            //         tt = to_string(count_of_dots);
-            //     }
-            // }
-
-            fen.replace(fen.length() - 8 - 9 - 9 - 9 - 9 - 9 - 9, 8, temp);
-
-            break;
-        case 56:
-
-            temp = fen.substr(fen.length() - 8 - 9 - 9 - 9 - 9 - 9 - 9 - 9, 8);            
-
-            temp[Letter - 1] = piece_type;
-
-            // for (int i = 0;i < Letter - 1; i++)
-            // {
-                
-            //     if(temp[i] != '.')
-            //     {
-            //         temp.replace(left_counter, count_of_dots, tt);
-            //         left_counter = i;
-            //         count_of_dots = 0;
-            //     }else
-            //     {
-            //         count_of_dots++;
-            //         tt = to_string(count_of_dots);
-            //     }
-            // }
-
-            fen.replace(fen.length() - 8 - 9 - 9 - 9 - 9 - 9 - 9 - 9, 8, temp);
-
-            break;
-        
-            default:
-            cout << "Error" << endl;
-            break;
-        }
-
-        return fen;
-    }
-
     void Game::Gwent()// rm -f *.o 
     {
         const char* filename = "/home/danila/CCG/ProjectChess/src/DataBase/DB.db";
@@ -984,7 +740,7 @@ using namespace std;
 
         std::vector<std::string> input;
         sqlite3_stmt* s;
-        std::string sql = "SELECT * FROM DECK LIMIT 5;";
+        std::string sql = "SELECT * FROM DECK;";
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &s, NULL) == SQLITE_OK)
         {
             while (sqlite3_step(s) == SQLITE_ROW)
@@ -1087,7 +843,7 @@ using namespace std;
 
         //Граница
 
-        std::cout << "Составление колоды для черных:" << std::endl;
+        std::cout << std::endl << "Составление колоды для черных:" << std::endl;
 
         point = 250; //рандомное кол-во
 
@@ -1137,6 +893,7 @@ using namespace std;
                     break;
 
                 default:
+                    continue;
                     break;
                 }
             }else
@@ -1156,7 +913,7 @@ using namespace std;
 
         std::cout << "Deck after shuffle:" << std::endl;
 
-        bd.shuffle(db);
+        bd.blackShuffle(db);
     
         sqlite3_stmt *stttm;
         const char *querrr = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV;";
@@ -1166,8 +923,8 @@ using namespace std;
 
         std::vector<std::string> inputBlack;
         sqlite3_stmt* sss;
-        std::string sssql = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV LIMIT 5;";
-        if (sqlite3_prepare_v2(db, sssql.c_str(), -1, &s, NULL) == SQLITE_OK)
+        std::string sssql = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV;";
+        if (sqlite3_prepare_v2(db, sssql.c_str(), -1, &sss, NULL) == SQLITE_OK)
         {
             while (sqlite3_step(sss) == SQLITE_ROW)
             {
@@ -1182,19 +939,18 @@ using namespace std;
         card obj_6(inputBlack[0], "test", " test_1"); card obj_7(inputBlack[1], "test", " test_1"); card obj_8(inputBlack[2], "test", " test_1"); card obj_9(inputBlack[3], "test", " test_1"); card obj_10(inputBlack[4], "test", " test_1");       
 
         // Кладем их в вектор
-        coloda_white.push_b(obj_6); coloda_white.push_b(obj_7); coloda_white.push_b(obj_8); coloda_white.push_b(obj_9); coloda_white.push_b(obj_10);
+
+        coloda_black.push_b(obj_6); coloda_black.push_b(obj_7); coloda_black.push_b(obj_8); coloda_black.push_b(obj_9); coloda_black.push_b(obj_10);
 
         // Выводим на экран колоду для пользователя        
-        coloda_white.print();        
+        coloda_black.print();        
 
-        std::cout << endl;
-
-        std::cout << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << endl;
+        std::cout << std::endl << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << std::endl;
 
         t = 2;
         temp = "";
 
-       while (t != 0) // Две замены карты(белые) 
+       while (t != 0) // Две замены карты(черные) 
         {
             int choice;
 
@@ -1210,7 +966,7 @@ using namespace std;
                
                 obj_6.setFigure(temp);
 
-                coloda_white.CardChange(0, obj_6);
+                coloda_black.CardChange(0, obj_6);
                 
             }else 
             if (choice == 2)
@@ -1219,7 +975,7 @@ using namespace std;
                
                 obj_7.setFigure(temp);
 
-                coloda_white.CardChange(1, obj_7);
+                coloda_black.CardChange(1, obj_7);
                 
             }else
             if (choice == 3)
@@ -1228,7 +984,7 @@ using namespace std;
                
                 obj_8.setFigure(temp);
 
-                coloda_white.CardChange(2, obj_8);
+                coloda_black.CardChange(2, obj_8);
 
             }else 
             if (choice == 4)
@@ -1237,7 +993,7 @@ using namespace std;
                
                 obj_9.setFigure(temp);
 
-                coloda_white.CardChange(3, obj_9);
+                coloda_black.CardChange(3, obj_9);
 
             }else 
             if (choice == 5)
@@ -1246,7 +1002,7 @@ using namespace std;
                
                 obj_10.setFigure(temp);
 
-                coloda_white.CardChange(4, obj_10);
+                coloda_black.CardChange(4, obj_10);
 
             }else 
             if (choice > 5 || choice < 0 || double(choice))
@@ -1259,7 +1015,7 @@ using namespace std;
 
             // Выводим на экран измененную колоду для пользователя
  
-            coloda_white.print();
+            coloda_black.print();
 
             std::cout << endl;
 
@@ -1270,18 +1026,22 @@ using namespace std;
         
         sideChoose();
 
-        //cout << position << endl;
-
                 #if LOG_TO_FILE
             log << position;
         #endif
 
+        int counterOfMoves = 0;
+
         if(playerSide == Pieces::White)
         {
-            string p;int count;
+            int count = 4;
 
             while (true)
             {
+                counterOfMoves++;
+
+                count++;
+                
                 cout << Game::position << endl;
 
                 // Player 1 move
@@ -1298,25 +1058,57 @@ using namespace std;
 
                     char choiceOfFigure;
 
-                    string placeOnBoard;
+                    string placeOnBoard, typeOfCard;
 
-                    cout << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
+                    while(true)
+                    {
+                        cout << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
 
-                    coloda_white.print();
+                        if(counterOfMoves >= 2 && input.size() != 0)
+                        {
+                            std::cout << "Карта. которая должна быть добавлена: " << input[count] << std::endl;
+                            
+                            card temp(input[count], "test", " test_1");
 
-                    cout << endl;
+                            coloda_white.addCard(temp); 
+                        }
 
-                    cin >> choiceOfFigure;
+                        coloda_white.print();
 
-                    cout << "Enter the position when you want to put a figure(example e2)" << endl;
+                        cout << endl;
 
-                    cin >> placeOnBoard; // e4
+                        cin >> choiceOfFigure;
 
+                        cout << "Enter the position when you want to put a figure(example e2)" << endl;
+
+                        cin >> placeOnBoard; // e4
+
+                        if(coloda_white.checkForCard(choiceOfFigure))
+                        { 
+                            break;
+                        }   
+                        else
+                        { 
+                            std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
+                            continue;
+                        }
+                    }
+                    
                     switch (choiceOfFigure)
                     {
+                    case 'P':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Pawn, Pieces::White);
+
+                        typeOfCard = "Pawn";
+                        
+                        break;
+
                     case 'R':
                         
                         this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Rook, Pieces::White);
+
+                        typeOfCard = "Rook";
 
                         break;
                     
@@ -1324,11 +1116,15 @@ using namespace std;
 
                         this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Knight, Pieces::White);
 
+                        typeOfCard = "Knight";
+
                         break;
 
                     case 'B':
 
                         this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Bishop, Pieces::White);
+
+                        typeOfCard = "Bishop";
 
                         break;
 
@@ -1336,13 +1132,16 @@ using namespace std;
 
                         this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Queen, Pieces::White);
 
+                        typeOfCard = "Queen";
+
                         break;
 
                     default:
                         break;
                     }
 
-                    coloda_white.delete_card(choiceOfFigure);   
+                    coloda_white.delete_card(choiceOfFigure);  
+
                 }
                 //Конец
                 
@@ -1382,23 +1181,50 @@ using namespace std;
 
                     string placeOnBoard;
 
-                    cout << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
+                    while(true)
+                    {
+                        cout << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
 
-                    coloda_white.print();
+                        if(counterOfMoves >= 2 && inputBlack.size() != 0)
+                        {
+                            std::cout << "Карта. которая должна быть добавлена: " << inputBlack[count] << std::endl;
+                            
+                            card temp(inputBlack[count], "test", " test_1");
 
-                    cout << endl;
+                            coloda_black.addCard(temp);  
+                        }
 
-                    cin >> choiceOfFigure;
+                        coloda_black.print();
 
-                    cout << "Enter the position when you want to put a figure(example e2)" << endl;
+                        cout << endl;
 
-                    cin >> placeOnBoard; // e4
+                        cin >> choiceOfFigure;
+
+                        cout << "Enter the position when you want to put a figure(example e2)" << endl;
+
+                        cin >> placeOnBoard; // e4
+
+                        if(coloda_black.checkForCard(choiceOfFigure))
+                        { 
+                            break;
+                        }   
+                        else
+                        { 
+                            std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
+                            continue;
+                        }
+                    }
 
                     switch (choiceOfFigure)
                     {
-                    
-                    case 'r':
+                    case 'p':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Pawn, Pieces::Black);
                         
+                        break;
+
+                    case 'r':
+    
                         this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Rook, Pieces::Black);
 
                         break;
@@ -1425,7 +1251,7 @@ using namespace std;
                         break;
                     }
 
-                    std::cout << Game::position << std::endl;        
+                    //std::cout << Game::position << std::endl;        
                 }
 
                 while (!movePlayer(aiSide))

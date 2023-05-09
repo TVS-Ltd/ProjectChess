@@ -1,6 +1,6 @@
 #include "game.h"
 #include "card.h"
-#define TEST_CARD_MOVES 1
+#define TEST_CARD_MOVES 0
 using namespace std;
 
 void Game::start()
@@ -414,7 +414,7 @@ void Game::PvE()
 {
     sideChoose();
 
-    position.cards[0].addCard(card("Pawn", "-", "-"));
+    /*position.cards[0].addCard(card("Pawn", "-", "-"));
     position.cards[0].addCard(card("Pawn", "-", "-"));
     position.cards[0].addCard(card("Pawn", "-", "-"));
     position.cards[0].addCard(card("Queen", "-", "-"));
@@ -425,7 +425,7 @@ void Game::PvE()
     position.cards[1].addCard(card("Rook", "-", "-"));
     position.cards[1].addCard(card("Queen", "-", "-"));
 
-
+*/
 
     if (playerSide == Pieces::White)
     {

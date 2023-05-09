@@ -23,6 +23,15 @@ public:
         static constexpr int32_t Queen = 950;
         static constexpr int32_t EndgameMat = 1300;
     };
+
+    struct Mobility
+    {
+        static constexpr int32_t Knight = 9;
+        static constexpr int32_t Bishop = 4;
+        static constexpr int32_t Rook = 3;
+        static constexpr int32_t Queen = 3;
+    };
+
 private:
     static int32_t material(Pieces pieces);
     static int32_t mobility(Pieces pieces);
@@ -33,14 +42,6 @@ private:
     static int32_t kingSafetyPawnShield(Pieces pieces, bool whiteCastlingHappened, bool blackCastlingHappened);
     static int32_t twoBishops(Pieces pieces);
     static int32_t endgame(Pieces pieces, bool whiteLeading);
-
-    struct Mobility
-    {
-        static constexpr int32_t Knight = 9;
-        static constexpr int32_t Bishop = 4;
-        static constexpr int32_t Rook = 3;
-        static constexpr int32_t Queen = 3;
-    };
 
     struct PawnStructure
     {

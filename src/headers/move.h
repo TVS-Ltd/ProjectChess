@@ -38,6 +38,6 @@ public:
         static constexpr uint8_t PromoteToRook = 9;
         static constexpr uint8_t PromoteToQueen = 10;
 
-        static constexpr uint8_t LayingOutCard = 11;
+        static constexpr uint8_t LayOutCard = 11;
     };
 };

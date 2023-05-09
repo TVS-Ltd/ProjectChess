@@ -108,6 +108,36 @@ MoveList LegalMoveGen::generate(Position position, uint8_t side, bool onlyCaptur
     return moves;
 }
 
+MoveList LegalMoveGen::generateCards(Position position, uint8_t side)
+{
+    Bitboard pieces;
+    MoveList moves;
+
+    while (!position.cards[side].checkIsEmpty()) {
+        std::string figureType = position.cards[side].getCard(0);
+        uint8_t attackerType = typeByFigure[figureType];
+
+        Position copy;
+        pieces = position.pieces.empty & BitboardRows::SideRows[side];
+        while (pieces)
+        {
+            uint8_t pos = bsf(pieces);
+            setZero(pieces, pos);
+
+            Move move(255, pos, attackerType, side, 255, Pieces::inverse(side), Move::Flag::LayOutCard);
+            copy = position;
+            copy.move(move);
+
+            if (PsLegalMoveMaskGen::inDanger(copy.pieces, bsf(copy.pieces.pieceBitboards[side][Pieces::King]), side))
+                continue;
+
+            moves.push_back(move);
+        }
+    }
+
+    return moves;
+}
+
 void LegalMoveGen::pieceMaskToMoves(Pieces pieces, Bitboard mask, uint8_t attackerPos, uint8_t attackerType, uint8_t attackerSide, MoveList& moves)
 {
     uint8_t defenderPos;

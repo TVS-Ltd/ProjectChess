@@ -25,6 +25,8 @@ static atomic<int32_t> maxDepth;
 static int32_t cutOffs;
 static int32_t aspirationWindow = 100;
 
+static int node_count = 0;
+
 class AI
 {
 public:
@@ -42,7 +44,7 @@ public:
     *
     * @exception This function does not throw exceptions.
     */
-    Move bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t maxMs);
+    Move bestMove(Position position, uint8_t side, int32_t minMs, int32_t maxMs);
 private:
     OpeningBook openingBook;
 
@@ -54,6 +56,8 @@ private:
 
     template<NodeType node_type>
     static int32_t search(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
+        node_count++;
+        
         if (stopSearch)
             return alpha;
 
@@ -68,9 +72,12 @@ private:
         if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
             return 0;
 
-        MoveList moves = LegalMoveGen::generate(position, side);
+        MoveList moves = LegalMoveGen::generate(position, side),
+            cardMoves = LegalMoveGen::generateCards(position, side);
         moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+        cardMoves = MoveSorter::quickSort(position.pieces, cardMoves, 0, cardMoves.size() - 1);
 
+        moves.unite(cardMoves);
         Move move, bestMove = Constants::UnknownMove;
 
         bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[side][Pieces::King]), side);
@@ -105,6 +112,56 @@ private:
                     return beta;
             }
         }
+
+        bool invalidNode = false;
+
+        //
+        int8_t points = 0;
+        if (position.cardsNumber[side] > 0)
+        {
+            points = position.points[side] / position.cardsNumber[side];
+
+            if (side == position.AIside)
+            {
+                std::vector<card> deck = position.AIdeck;
+
+                uint8_t i = 0;
+                while (pointsByFigure[deck[i].getFigure()] < points)
+                    i++;
+
+                position.cards[side].addCard(deck[i]);
+                position.AIdeck.erase(position.AIdeck.begin() + i);
+            }
+            else
+            {
+                std::string figureType;
+                if (points >= 50) {
+                    figureType = "Queen";
+                }
+                else if (points >= 30) {
+                    figureType = "Knight";
+                }
+                else if (points >= 25) {
+                    figureType = "Bishop";
+                }
+                else if (points >= 20) {
+                    figureType = "Rook";
+                }
+                else if (points >= 10) {
+                    figureType = "Pawn";
+                }
+                else {
+                    invalidNode = true;
+
+                    return ((side == Pieces::White) ? Constants::Infinity::Negative : Constants::Infinity::Positive);
+                }
+
+                position.cards[side].addCard(card(figureType, "-", "-"));
+            }
+            position.cardsNumber[side]--;
+
+        }
+        //
 
         Position copy = position;
 

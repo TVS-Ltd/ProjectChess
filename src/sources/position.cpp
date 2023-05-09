@@ -48,7 +48,7 @@ void Position::move(Move move)
 {
     std::string figureType;
 
-    if (move.Flag != Move::Flag::LayingOutCard) {
+    if (move.Flag != Move::Flag::LayOutCard) {
         this->removePiece(move.From, move.AttackerType, move.AttackerSide);
     }
     else {
@@ -62,6 +62,8 @@ void Position::move(Move move)
             figureType = "Rook";
         else if (move.AttackerType == Pieces::Queen)
             figureType = "Queen";
+
+        cards[move.AttackerSide].delete_card(figureType[0]);
     }
 
     this->addPiece(move.To, move.AttackerType, move.AttackerSide);
@@ -134,7 +136,7 @@ void Position::move(Move move)
         this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
         this->addPiece(move.To, Pieces::Queen, move.AttackerSide);
         break;
-    case Move::Flag::LayingOutCard:
+    case Move::Flag::LayOutCard:
         cards[move.AttackerSide].delete_card(figureType[0]);
     }
 
@@ -178,7 +180,7 @@ void Position::move(Move move)
 
     this->updateFiftyMovesCtr(move.AttackerType == Pieces::Pawn or move.DefenderType != 255);
 
-    if (move.AttackerType == Pieces::Pawn or move.DefenderType != 255 or move.Flag == Move::Flag::LayingOutCard)
+    if (move.AttackerType == Pieces::Pawn or move.DefenderType != 255 or move.Flag == Move::Flag::LayOutCard)
     {
         this->repetitionHistory.clear();
     }

@@ -1,4 +1,5 @@
 #include "moveSorter.h"
+#include "position.h"
 
 MoveList MoveSorter::quickSort(const Pieces& pieces, MoveList& moves, int start, int end)
 {
@@ -50,6 +51,36 @@ int32_t MoveSorter::evaluateMove(const Pieces& pieces, Move& move)
                 break;
             }
         }
+    }
+
+    if (move.From == 255) {
+        // mobility
+
+        if (move.AttackerType == Pieces::Pawn) {
+        }
+        else if (move.AttackerType == Pieces::Knight) {
+            evaluation += StaticEvaluator::Mobility::Knight * countOnes(PsLegalMoveMaskGen::generateKnightMask(pieces, move.To, move.AttackerSide, false));
+        }
+        else if (move.AttackerType == Pieces::Bishop) {
+            evaluation += StaticEvaluator::Mobility::Bishop * countOnes(PsLegalMoveMaskGen::generateBishopMask(pieces, move.To, move.AttackerSide, false));
+        }
+        else if (move.AttackerType == Pieces::Queen) {
+            evaluation += StaticEvaluator::Mobility::Queen * countOnes(PsLegalMoveMaskGen::generateQueenMask(pieces, move.To, move.AttackerSide, false));
+        }
+        else if (move.AttackerType == Pieces::Rook) {
+            evaluation += StaticEvaluator::Mobility::Rook * countOnes(PsLegalMoveMaskGen::generateRookMask(pieces, move.To, move.AttackerSide, false));
+        }
+
+        // danger for opponent
+
+        Pieces copy = pieces;
+        setOne(copy.pieceBitboards[move.AttackerSide][move.AttackerType], move.To);
+
+        bool in_check = PsLegalMoveMaskGen::inDanger(copy, bsf(pieces.pieceBitboards[Pieces::inverse(move.AttackerSide)][Pieces::King]), Pieces::inverse(move.AttackerSide));
+        if (in_check)
+            evaluation += 300;
+
+        return evaluation;
     }
 
     if (move.DefenderType != 255)

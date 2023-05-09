@@ -33,8 +33,9 @@ AI::AI(const string& openingBookPath)
     this->openingBook = { openingBookPath };
 }
 
-Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t maxMs)
+Move AI::bestMove(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
 {
+    node_count  = 0;
     std::cout << endl;
 
     std::cout << "Thinking..." << endl;
@@ -69,8 +70,9 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
     future<tuple<int32_t, Move>> bestMoveThread;
 
     bool updateBestMove;
+    position.AIside = side;
 
-    for (int i = 1; i < 6; i = i + 1)
+    for (int i = 1; i < 5; i = i + 1)
     {
         evaluated = 0;
         maxDepth = 0;
@@ -112,74 +114,7 @@ Move AI::bestMove(const Position& position, uint8_t side, int32_t minMs, int32_t
     timex += (nsecs - timeStart);
     countx++;
 
-    handsdeck deck = position.cards[side];
-    Move cardMove;
-    int32_t score;
-    Bitboard pieces;
-    bool cardMoveWasFound = false;
-
-    Bitboard inversionRows = 0;
-    if (side == Pieces::White) {
-        for (int8_t row = 4; row < 8; row++) {
-            inversionRows |= BitboardRows::InversionRows[row];
-        }
-    }
-    else {
-        for (int8_t row = 0; row < 4; row++) {
-            inversionRows |= BitboardRows::InversionRows[row];
-        }
-    }
-
-    while (!deck.checkIsEmpty())
-    {
-        score = (side == Pieces::White) ? Constants::Infinity::Negative : Constants::Infinity::Positive;
-        pieces = position.pieces.empty & inversionRows;
-
-        uint8_t attackerType;
-        std::string figureType = deck.getCard(0);
-
-        if (figureType == "Pawn")
-            attackerType = Pieces::Pawn;
-        else if (figureType == "Knight")
-            attackerType = Pieces::Knight;
-        else if (figureType == "Bishop")
-            attackerType = Pieces::Bishop;
-        else if (figureType == "Rook")
-            attackerType = Pieces::Rook;
-        else if (figureType == "Queen")
-            attackerType = Pieces::Queen;
-
-        Position copy;
-        while (pieces)
-        {
-            uint8_t pos = bsf(pieces);
-            pieces ^= 1ull << pos;
-
-            Move move(255, pos, attackerType, side, 255, Pieces::inverse(side), Move::Flag::LayingOutCard);
-            copy = position;
-            copy.move(move);
-
-            if (PsLegalMoveMaskGen::inDanger(copy.pieces, bsf(copy.pieces.pieceBitboards[side][Pieces::King]), side))
-                continue;
-
-            int32_t evaluation = StaticEvaluator::evaluate(copy.pieces, 0, 0, 0, 0, 0, 0);
-            if ((side == Pieces::White && evaluation > score) || (side == Pieces::Black && evaluation < score)) {
-                score = evaluation;
-                cardMove = move;
-                cardMoveWasFound = true;
-            }
-        }
-    }
-
-    if (cardMoveWasFound && ((side == Pieces::White && score > bestMoveEvaluation) || (side == Pieces::Black && score < bestMoveEvaluation))) {
-        bestMove = cardMove;
-    }
-
-
-    timex += (nsecs - timeStart);
-    countx++;
-
-    cout << "average time: " << (timex / countx) / 1e9 << '\n';
+   // cout << "average time: " << (timex / countx) / 1e9 << ' ' << node_count << '\n';
 
     return bestMove;
 }
@@ -199,8 +134,12 @@ tuple<int32_t, Move> AI::aspirationSearch(const Position& position, uint8_t side
 }
 
 tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
-    MoveList moves = LegalMoveGen::generate(position, side);
+    MoveList moves = LegalMoveGen::generate(position, side),
+        cardMoves = LegalMoveGen::generateCards(position, side);
     moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+    cardMoves = MoveSorter::quickSort(position.pieces, cardMoves, 0, cardMoves.size() - 1);
+
+    moves.unite(cardMoves);
 
     bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[side][Pieces::King]), side);
 
@@ -244,6 +183,9 @@ tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alp
 }
 
 int32_t AI::quiescence(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t currentDepth) {
+    
+    node_count++;
+
     if (stopSearch)
     {
         return alpha;

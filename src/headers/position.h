@@ -6,8 +6,18 @@
 #include "repetitionHistory.h"
 #include "card.h"
 #include "handsdeck.h"
+#include <map>
 
 #pragma once
+
+static map<int8_t, std::string>
+figureByPoins
+= { {10, "Pawn"}, {20, "Rook"}, {25, "Bishop"}, {30, "Knight"}, {50, "Queen"} };
+static map<std::string, int8_t>
+pointsByFigure
+= { {"Pawn", 10}, {"Rook", 20}, {"Bishop", 25}, {"Knight", 30}, {"Queen", 50} };
+static map<std::string, uint8_t> typeByFigure
+= { {"Pawn", Pieces::Pawn}, {"Rook", Pieces::Rook}, {"Bishop", Pieces::Bishop}, {"Knight", Pieces::Knight}, {"Queen", Pieces::Queen} };
 
 // —————————————————— Position ——————————————————
 class Position
@@ -17,6 +27,9 @@ public:
     uint8_t EnPassant;
 
     handsdeck cards[2];
+    std::vector<card> AIdeck;
+    uint8_t AIside;
+    int8_t points[2]{}, cardsNumber[2]{};
 
     bool WhiteLongCastling;
     bool WhiteShortCastling;
@@ -57,4 +70,14 @@ public:
     void updateMoveCtr();
 
     void updateFiftyMovesCtr(bool breakEvent);
+
+    void setPoints(int8_t whitePoints, int8_t blackPoints) {
+        points[Pieces::White] = whitePoints;
+        points[Pieces::Black] = blackPoints;
+    }
+
+    void setNumberOfCards(int8_t whiteNumber, int8_t blackNumber) {
+        cardsNumber[Pieces::White] = whiteNumber;
+        cardsNumber[Pieces::Black] = blackNumber;
+    }
 };

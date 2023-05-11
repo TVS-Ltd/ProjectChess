@@ -41,5 +41,7 @@ class handsdeck
 
         void delete_card(char card_for_delete);
 
+        bool checkForCard(char type);
+
 };
     

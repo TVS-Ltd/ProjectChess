@@ -287,7 +287,7 @@ void deck::blackShuffle(sqlite3 *db)
     sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
 }
 
-void deck::print_data_base(sqlite3_stmt *stmt) //Возможно нужно будет переделать 
+void deck::print_data_base(sqlite3_stmt *stmt)  
 {
     while (sqlite3_step(stmt) == SQLITE_ROW) 
     {

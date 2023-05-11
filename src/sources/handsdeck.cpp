@@ -62,15 +62,22 @@
             {
                 deck.erase(deck.begin() + i);
                 
-                std::cout << "Карта для удаления из колоды " << card_for_delete << std::endl;
-                std::cout << "Карта, которой она типо равна " << deck[i].getFigure()[0] << std::endl;
-
                 break;
             }
         }    
     }
 
-    void handsdeck::appendOnBoard(std::string piece)
+    bool handsdeck::checkForCard(char type)
     {
+        if (type == 'N') type = 'K';
         
+        for (int i = 0;i < deck.size();i++)
+        {
+            if(toupper(type) == deck[i].getFigure()[0])
+            {
+                return true;
+            }
+        }
+
+        return false;
     }

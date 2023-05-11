@@ -1333,6 +1333,232 @@ using namespace std;
     sqlite3_close(db);
 }   
 
+    void Game::RoyalChess()
+    {
+        Game::position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};//Ставим, что никого нет, и потом меняем эту строку
+
+        char choice;
+
+        int j = 4;
+
+        std::vector<string>whiteDeck;
+        std::vector<string>whiteHandsdeck(5);
+        std::vector<string>blackDeck;
+        std::vector<string>blackHandsdeck(5);
+
+        std::string p = "Pawn", q = "Queen", k = "King", n = "Knight", r = "Rook", b = "Bishop", joker = "joker"; 
+
+        whiteDeck.push_back(p);whiteDeck.push_back(q);whiteDeck.push_back(k);whiteDeck.push_back(n);whiteDeck.push_back(r);whiteDeck.push_back(b);whiteDeck.push_back(joker);
+
+        blackDeck.push_back(joker);blackDeck.push_back(b);blackDeck.push_back(r);blackDeck.push_back(n);blackDeck.push_back(k);blackDeck.push_back(q);blackDeck.push_back(p);
+
+        for(int i = 0;i < 5;i++)
+        {
+            whiteHandsdeck[i] = whiteDeck[i];
+
+            blackHandsdeck[i] = blackDeck[i];
+        }
+
+        sideChoose();
+
+        cout << position << endl;
+
+        #if LOG_TO_FILE
+            log << position;
+        #endif
+
+        if(playerSide == Pieces::White)
+        {
+            while (true)
+            {
+                j++;
+                
+                // Player 1 move
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 1 move:" << END;
+                #endif
+
+                std::cout << "Your deck: " << endl;
+
+                for (int i = 0;i < 5;i++) //Вывод, потом нужно в класс запихнуть
+                {
+                    std::cout << whiteDeck[i] << " ";
+                }
+
+                while(true)
+                {
+                    bool flag = false;
+                    
+                    std::cout << "Введите фигуру, которой вы хотите походить (Q, N, K) :" << std::endl;
+
+                    cin >> choice;
+
+                    for (int i = 0;i < 5;i++)
+                    {
+                        if(choice == whiteHandsdeck[i][0])
+                        {
+                            whiteDeck.erase(whiteDeck.begin() + i);//
+
+                            whiteHandsdeck[i] = whiteDeck[j];
+
+                            flag = true;
+
+                            break;
+                        }
+                    }
+                
+                    if(flag)
+                    {
+                        break;
+                    }else
+                    {
+                        cout << RED << "Try again" << END << std::endl;
+
+                        continue;
+                    }
+                }
+                
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 2 move:" << END;
+                #endif
+
+                std::cout << "Your deck: " << endl;
+
+                for (int i = 0;i < 5;i++) //Вывод, потом нужно в класс запихнуть
+                {
+                    std::cout << whiteDeck[i] << " ";
+                }
+
+                while(true)
+                {
+                    bool flag = false;
+                    
+                    std::cout << "Введите фигуру, которой вы хотите походить (Q, N, K) :" << std::endl;
+
+                    cin >> choice;
+
+                    for (int i = 0;i < 5;i++)
+                    {
+                        if(choice == blackHandsdeck[i][0])
+                        {
+                            blackDeck.erase(blackDeck.begin() + i);//
+
+                            blackHandsdeck[i] = blackDeck[j];
+
+                            flag = true;
+
+                            break;
+                        }
+                    }
+                
+                    if(flag)
+                    {
+                        break;
+                    }else
+                    {
+                        cout << RED << "Try again" << END << std::endl;
+
+                        continue;
+                    }
+                }
+
+                while (!movePlayer(aiSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+            }
+        }
+        else
+        {
+            while (true)
+            {
+
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 2 move:" << END;
+                #endif
+
+                while (!movePlayer(aiSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                // Player 1 move
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 1 move:" << END;
+                #endif
+
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+            }
+        }        
+
+    }
+
     void Game::EvE()
     {
         playerSide = Pieces::White;
@@ -1602,6 +1828,7 @@ using namespace std;
         cout << "3. AI vs AI" << endl;
         cout << "4. Player vs Player (10 min limit)" << endl;
         cout << "5. Gwent" << endl; // Gwent mode
+        cout << "6. Royal Chess" << endl; // Royal Chess mode
         int gameMode = 0;
         cin >> gameMode;
 
@@ -1647,6 +1874,16 @@ using namespace std;
                 #endif
 
                 Gwent();
+            break;
+
+            case 6:
+                #if LOG_TO_FILE
+                    log << "Game mode: Player vs Player with time";
+                #endif
+
+                RoyalChess();
+            break;
+
             default:
                 cout << RED << "\n[ERROR] Illegal game mode!\n" << END << endl;
                 this->chooseGameMode();

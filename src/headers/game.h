@@ -69,6 +69,8 @@ private:
 
     void Gwent();
     
+    void RoyalChess();
+
     void chooseLimitedTimeMode();
 
     void chooseGameMode();

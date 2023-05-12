@@ -5,7 +5,7 @@
 class MoveList
 {
 private:
-    array<Move, 500> moves{};
+    array<Move, 380> moves{};
     uint8_t Size;
 
 public:
@@ -19,5 +19,7 @@ public:
 
     [[nodiscard]] uint8_t size() const;
 
-    void unite(MoveList& other);
+    void unite(MoveList other);
+
+    //void clear();
 };

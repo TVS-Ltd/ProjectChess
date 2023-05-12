@@ -27,6 +27,7 @@ static int32_t aspirationWindow = 100;
 
 static int node_count = 0;
 
+
 class AI
 {
 public:
@@ -45,14 +46,21 @@ public:
     * @exception This function does not throw exceptions.
     */
     Move bestMove(Position position, uint8_t side, int32_t minMs, int32_t maxMs);
+
+    Move bestMoveCCG(Position position, uint8_t side, int32_t minMs, int32_t maxMs);
+
 private:
     OpeningBook openingBook;
 
-    TranspositionTable TransposTable;
+    //TranspositionTable TransposTable;
 
     static tuple<int32_t, Move> aspirationSearch(const Position& position, uint8_t side, int32_t depth, int32_t evaluation, TranspositionTable& TransposTable);
 
+    static tuple<int32_t, Move> aspirationSearchCCG(const Position& position, uint8_t side, int32_t depth, int32_t evaluation, TranspositionTable& TransposTable);
+
     static tuple<int32_t, Move> searchRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable);
+
+    static tuple<int32_t, Move> searchRootCCG(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable);
 
     template<NodeType node_type>
     static int32_t search(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
@@ -72,12 +80,18 @@ private:
         if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
             return 0;
 
-        MoveList moves = LegalMoveGen::generate(position, side),
-            cardMoves = LegalMoveGen::generateCards(position, side);
-        moves = MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
-        cardMoves = MoveSorter::quickSort(position.pieces, cardMoves, 0, cardMoves.size() - 1);
+        MoveList moves = LegalMoveGen::generate(position, side);
 
-        moves.unite(cardMoves);
+        for (uint8_t i = 0; i < moves.size(); i++)
+        {
+            if (moves[i] == Variables::killers[currentDepth][0] || moves[i] == Variables::killers[currentDepth][1])
+            {
+                moves[i].type = MoveType::Killer;
+            }
+        }
+
+        MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+
         Move move, bestMove = Constants::UnknownMove;
 
         bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[side][Pieces::King]), side);
@@ -112,10 +126,171 @@ private:
                     return beta;
             }
         }
+        
+        Entry tt_result = TransposTable.tryToFindBestMove(position.hash);
 
-        bool invalidNode = false;
+        uint8_t i = 0;
+        int32_t scoreType = Entry::UBound;
 
-        //
+        Position copy = position;
+
+        if (tt_result.Depth != -1)
+        {
+            bestMove = tt_result.BestMove;
+
+            if (tt_result.Depth >= depth_left)
+            {
+                if (tt_result.Flag == Entry::Valid)
+                    return tt_result.Score;
+                else
+                    if (tt_result.Flag == Entry::LBound)
+                        alpha = max(alpha, tt_result.Score);
+                    else
+                        beta = min(beta, tt_result.Score);
+            }
+        }
+        else
+            bestMove = moves[i++];
+
+        copy.move(bestMove);
+        score = -search<node_type>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
+
+        if (score >= beta)
+        {
+#pragma omp critical
+            {
+                if (bestMove.type == MoveType::Quiet && Variables::killers[currentDepth][0] != moves[i])
+                {
+                    Variables::killers[currentDepth][1] = Variables::killers[currentDepth][0];
+                    Variables::killers[currentDepth][0] = bestMove;
+                }
+            }
+
+            if (tt_result.Depth == -1 && !stopSearch)
+                TransposTable.addEntry({ position.hash, bestMove, depth_left, beta, Entry::LBound });
+
+            return beta;
+        }
+        if (score > alpha) {
+            alpha = score;
+            scoreType = Entry::Valid;
+        }
+
+        std::vector<int32_t> scores(moves.size(), -1);
+
+        for (i; i < moves.size(); i = i + 1)
+        {
+            copy = position;
+            copy.move(moves[i]);
+
+            score = -search<node_type>(copy, Pieces::inverse(side), -alpha - 1, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
+
+            if (score > alpha)
+                score = -search<NodeType::NONPV>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
+
+            if (score >= beta)
+            {
+#pragma omp critical
+                {
+                    if (moves[i].type == MoveType::Quiet && Variables::killers[currentDepth][0] != moves[i])
+                    {
+                        Variables::killers[currentDepth][1] = Variables::killers[currentDepth][0];
+                        Variables::killers[currentDepth][0] = moves[i];
+                    }
+                }
+
+                if (!stopSearch && bestMove.type != MoveType::Unknown)
+                    TransposTable.addEntry({ position.hash, bestMove, depth_left, beta, Entry::LBound });
+
+                return beta;
+            }
+
+            if (score > alpha)
+            {
+                bestMove = moves[i];
+                alpha = score;
+                scoreType = Entry::Valid;
+            }
+
+            scores[i] = score;
+        }
+
+        if (!stopSearch && bestMove.type != MoveType::Unknown)
+            TransposTable.addEntry({ position.hash, bestMove, depth_left, alpha, Entry::UBound });
+        return alpha;
+    }
+
+    template<NodeType node_type>
+    static int32_t searchCCG(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
+        node_count++;
+
+        if (stopSearch)
+            return alpha;
+
+        if (currentDepth > maxDepth)
+            maxDepth = currentDepth;
+
+        if (depth_left <= 0)
+        {
+            return AI::quiescence(position, side, alpha, beta, currentDepth);
+        }
+
+        if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
+            return 0;
+
+        MoveList moves = LegalMoveGen::generate(position, side);
+        {
+            MoveList cardMoves = LegalMoveGen::generateCardMoves(position, side);
+
+            for (uint8_t i = 0; i < moves.size(); i++)
+            {
+                if (moves[i].type != MoveType::LayOutCard && (moves[i] == Variables::killers[currentDepth][0] || moves[i] == Variables::killers[currentDepth][1]))
+                {
+                    moves[i].type = MoveType::Killer;
+                }
+            }
+
+            MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+            MoveSorter::quickSort(position.pieces, cardMoves, 0, cardMoves.size() - 1);
+
+            moves.unite(cardMoves);
+        }
+
+        Move move, bestMove = Constants::UnknownMove;
+
+        bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[side][Pieces::King]), side);
+
+        if (moves.size() == 0)
+        {
+            if (in_check)
+            {
+                int32_t score = Constants::Infinity::Positive - currentDepth;
+                return (side == Pieces::White) ? -score : score;
+            }
+            return 0;
+        }
+
+        // null move pruning with verified search
+
+        int32_t score;
+
+        if (!in_check && position.allowNullMove)
+        {
+            position.allowNullMove = false;
+            int32_t reductionDepth = (depth_left > 2) ? 3 : 2;
+            score = -searchCCG<NodeType::NONPV>(position, Pieces::inverse(side), -beta, -beta + 1, depth_left - 1 - reductionDepth, currentDepth + 1, TransposTable);
+            position.allowNullMove = true;
+
+            if (score >= beta)
+            {
+                if (depth_left > 4)
+                    score = searchCCG<NodeType::NONPV>(position, side, beta - 1, beta, depth_left - reductionDepth, currentDepth + 1, TransposTable);
+
+                if (score >= beta)
+                    return beta;
+            }
+        }
+
         int8_t points = 0;
         if (position.cardsNumber[side] > 0)
         {
@@ -127,9 +302,16 @@ private:
 
                 uint8_t i = 0;
                 while (pointsByFigure[deck[i].getFigure()] < points)
+                {
                     i++;
+                    if (i == deck.size())
+                    {
+                        cout << "error\n";
+                    }
+                }
 
                 position.cards[side].addCard(deck[i]);
+                position.points[side] -= pointsByFigure[deck[i].getFigure()];
                 position.AIdeck.erase(position.AIdeck.begin() + i);
             }
             else
@@ -151,17 +333,15 @@ private:
                     figureType = "Pawn";
                 }
                 else {
-                    invalidNode = true;
-
                     return ((side == Pieces::White) ? Constants::Infinity::Negative : Constants::Infinity::Positive);
                 }
 
+                position.points[side] -= pointsByFigure[figureType];
                 position.cards[side].addCard(card(figureType, "-", "-"));
             }
             position.cardsNumber[side]--;
 
         }
-        //
 
         Position copy = position;
 
@@ -189,11 +369,20 @@ private:
             bestMove = moves[i++];
 
         copy.move(bestMove);
-        score = -search<node_type>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
+        score = -searchCCG<node_type>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
 
         if (score >= beta)
         {
-            if (tt_result.Depth == -1 && !stopSearch)
+#pragma omp critical
+            {
+                if (bestMove.type == MoveType::Quiet && Variables::killers[currentDepth][0] != moves[i])
+                {
+                    Variables::killers[currentDepth][1] = Variables::killers[currentDepth][0];
+                    Variables::killers[currentDepth][0] = bestMove;
+                }
+            }
+
+            if (bestMove.type != MoveType::LayOutCard && tt_result.Depth == -1 && !stopSearch)
                 TransposTable.addEntry({ position.hash, bestMove, depth_left, beta, Entry::LBound });
 
             return beta;
@@ -203,19 +392,30 @@ private:
             scoreType = Entry::Valid;
         }
 
+        std::vector<int32_t> scores(moves.size(), -1);
+
         for (i; i < moves.size(); i = i + 1)
         {
             copy = position;
             copy.move(moves[i]);
 
-            score = -search<node_type>(copy, Pieces::inverse(side), -alpha - 1, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
+            score = -searchCCG<node_type>(copy, Pieces::inverse(side), -alpha - 1, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
 
             if (score > alpha)
-                score = -search<NodeType::NONPV>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
+                score = -searchCCG<NodeType::NONPV>(copy, Pieces::inverse(side), -beta, -alpha, depth_left - !in_check, currentDepth + 1, TransposTable);
 
             if (score >= beta)
             {
-                if (!stopSearch && bestMove != Constants::UnknownMove)
+#pragma omp critical
+                {
+                    if (moves[i].type == MoveType::Quiet && Variables::killers[currentDepth][0] != moves[i])
+                    {
+                        Variables::killers[currentDepth][1] = Variables::killers[currentDepth][0];
+                        Variables::killers[currentDepth][0] = moves[i];
+                    }
+                }
+
+                if (bestMove.type != MoveType::LayOutCard && bestMove.type != MoveType::Unknown && !stopSearch)
                     TransposTable.addEntry({ position.hash, bestMove, depth_left, beta, Entry::LBound });
 
                 return beta;
@@ -227,12 +427,14 @@ private:
                 alpha = score;
                 scoreType = Entry::Valid;
             }
+
+            scores[i] = score;
         }
 
-        if (!stopSearch && bestMove != Constants::UnknownMove)
+        if (bestMove.type != MoveType::LayOutCard && bestMove.type != MoveType::Unknown && !stopSearch)
             TransposTable.addEntry({ position.hash, bestMove, depth_left, alpha, Entry::UBound });
         return alpha;
     }
-
+    
     static int32_t quiescence(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t currentDepth);
 };

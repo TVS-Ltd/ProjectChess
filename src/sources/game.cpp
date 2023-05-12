@@ -28,7 +28,7 @@ void Game::start()
 #endif
 
 #if TEST_CARD_MOVES
-    this->position = { "4k3/r6q/8/8/8/8/P1Q3R1/1N2K3", 255, true, true, true, true, 1 };
+    this->position = { "4k3/8/8/8/8/8/P1Q3R1/1N2K3", 255, true, true, true, true, 1 };
 #endif
     cout << "Welcome to the chess engine!" << endl;
 
@@ -417,15 +417,24 @@ void Game::PvE()
     /*position.cards[0].addCard(card("Pawn", "-", "-"));
     position.cards[0].addCard(card("Pawn", "-", "-"));
     position.cards[0].addCard(card("Pawn", "-", "-"));
-    position.cards[0].addCard(card("Queen", "-", "-"));
     position.cards[0].addCard(card("Knight", "-", "-"));
+    position.cards[0].addCard(card("Queen", "-", "-"));
+
 
     position.cards[1].addCard(card("Pawn", "-", "-"));
     position.cards[1].addCard(card("Pawn", "-", "-"));
     position.cards[1].addCard(card("Rook", "-", "-"));
     position.cards[1].addCard(card("Queen", "-", "-"));
 
-*/
+    position.AIdeck.push_back(card("Pawn", "-", "-"));
+    position.AIdeck.push_back(card("Pawn", "-", "-"));
+    position.AIdeck.push_back(card("Bishop", "-", "-"));
+    position.AIdeck.push_back(card("Knight", "-", "-"));
+
+
+    position.setNumberOfCards(3, 4);
+    position.setPoints(110, 75);*/
+
 
     if (playerSide == Pieces::White)
     {

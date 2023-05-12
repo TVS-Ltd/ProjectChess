@@ -8,7 +8,7 @@ class LegalMoveGen
 public:
     static MoveList generate(Position position, uint8_t side, bool onlyCaptures = false);
 
-    static MoveList generateCards(Position position, uint8_t side);
+    static MoveList generateCardMoves(Position position, uint8_t side);
 private:
     static void pieceMaskToMoves(Pieces pieces, Bitboard mask, uint8_t attackerPos, uint8_t attackerType, uint8_t attackerSide, MoveList& moves);
 

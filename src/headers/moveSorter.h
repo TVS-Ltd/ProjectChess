@@ -7,7 +7,7 @@
 class MoveSorter
 {
 public:
-    static MoveList quickSort(const Pieces& pieces, MoveList& moves, int start, int end);
+    static void quickSort(const Pieces& pieces, MoveList& moves, int start, int end);
 
 private:
     static int32_t evaluateMove(const Pieces& pieces, Move& move);

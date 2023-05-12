@@ -24,7 +24,7 @@ class Position
 {
 public:
     Pieces pieces;
-    uint8_t EnPassant;
+    uint8_t EnPassant, oldEnPassant;
 
     handsdeck cards[2];
     std::vector<card> AIdeck;

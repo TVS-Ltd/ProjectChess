@@ -9,12 +9,11 @@ namespace Constants {
         static constexpr int32_t Positive = 1e+9;
     };
 
-	const Move UnknownMove = Move(0, 0, 0, 0, 0, 0, 0);
+    const Move UnknownMove = Move(0, 0, 0, 0, 0, 0, MoveType::Unknown);
     const int32_t UnknownScore = 2e9;
+    const int32_t MaximalDepth = 12;
 }
 
 namespace Variables {
-    static mutex mtx;
-    static condition_variable parallel;
-    static int32_t threadsNumber = 4;
+    static Move killers[15][2];
 }

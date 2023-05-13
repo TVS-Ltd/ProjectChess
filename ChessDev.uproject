@@ -30,6 +30,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "OnlineServicesEOSGS",
+			"Enabled": true
+		},
+		{
 			"Name": "OnlineSubsystemEOS",
 			"Enabled": true
 		},

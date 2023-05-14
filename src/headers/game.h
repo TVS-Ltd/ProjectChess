@@ -43,6 +43,8 @@ private:
 
     bool whiteVictory();
 
+    bool whiteRoyalVictory();
+
     bool blackVictory();
 
     bool draw();

@@ -116,7 +116,7 @@
 
         Move move;
 
-        while (mask)
+        while (mask) 
         {
             defenderPos = bsf(mask);
             setZero(mask, defenderPos);
@@ -224,7 +224,7 @@
         Move move;
 
         if (side == Pieces::White)
-        {
+        {            
             if (enPassant % 8 != 7 and getBit(pieces.pieceBitboards[Pieces::White][Pieces::Pawn], enPassant - 7))
             {
                 move = {(uint8_t)(enPassant - 7), enPassant, Pieces::Pawn, Pieces::White, 255, 255, Move::Flag::EnPassantCapture};

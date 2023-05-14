@@ -34,6 +34,8 @@ using namespace std;
         chooseGameMode();
     }
 
+    
+
     bool Game::whiteVictory()
     {
         bool blackHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::Black).size() == 0);
@@ -1187,7 +1189,7 @@ using namespace std;
 
                         if(counterOfMoves >= 2 && inputBlack.size() != 0)
                         {
-                            std::cout << "Карта. которая должна быть добавлена: " << inputBlack[count] << std::endl;
+                            std::cout << "Карта, которая должна быть добавлена: " << inputBlack[count] << std::endl;
                             
                             card temp(inputBlack[count], "test", " test_1");
 
@@ -1215,7 +1217,7 @@ using namespace std;
                         }
                     }
 
-                    switch (choiceOfFigure)
+                    switch (tolower(choiceOfFigure))
                     {
                     case 'p':
 
@@ -1251,7 +1253,7 @@ using namespace std;
                         break;
                     }
 
-                    //std::cout << Game::position << std::endl;        
+                    std::cout << Game::position << std::endl;        
                 }
 
                 while (!movePlayer(aiSide))
@@ -1337,6 +1339,8 @@ using namespace std;
     {
         Game::position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};//Ставим, что никого нет, и потом меняем эту строку
 
+        //Game::position = {"...qk.../...QQ.../8/8/8/8/......../RNBQKBNR", 255, true, true, true, true, 1};
+
         char choice;
 
         int j = 4;
@@ -1391,7 +1395,7 @@ using namespace std;
                 {
                     bool flag = false;
                     
-                    std::cout << "Введите фигуру, которой вы хотите походить (Q, N, K) :" << std::endl;
+                    std::cout << std::endl << "Введите фигуру, которой вы хотите походить (Q, N, K) :" << std::endl;
 
                     cin >> choice;
 
@@ -1413,28 +1417,34 @@ using namespace std;
                     {
                         break;
                     }else
+                    if(!flag)
                     {
                         cout << RED << "Try again" << END << std::endl;
 
                         continue;
                     }
+
                 }
                 
-                while (!movePlayer(playerSide))
+                    while (!movePlayer(playerSide))
+                    {
+                        continue;
+                    }
+               
+                
+                if(!position.pieces.pieceBitboards[Pieces::Black][Pieces::Queen])
                 {
-                    continue;
-                }
+                    // Check if game is finished
+                    if (this->gameFinished())
+                    {
+                        cout << position << endl;
 
-                // Check if game is finished
-                if (this->gameFinished())
-                {
-                    cout << position << endl;
+                        #if LOG_TO_FILE
+                            log << position;
+                        #endif
 
-                    #if LOG_TO_FILE
-                        log << position;
-                    #endif
-
-                    break;
+                        break;
+                    } 
                 }
 
                 // Player 2 move
@@ -1455,7 +1465,7 @@ using namespace std;
                 {
                     bool flag = false;
                     
-                    std::cout << "Введите фигуру, которой вы хотите походить (Q, N, K) :" << std::endl;
+                    std::cout << std::endl << "Введите фигуру, которой вы хотите походить (Q, N, K) :" << std::endl;
 
                     cin >> choice;
 
@@ -1489,16 +1499,20 @@ using namespace std;
                     continue;
                 }
 
-                // Check if game is finished
-                if (this->gameFinished())
+
+                if(!position.pieces.pieceBitboards[Pieces::White][Pieces::Queen])
                 {
-                    cout << position << endl;
+                    // Check if game is finished
+                    if (this->gameFinished())
+                    {
+                        cout << position << endl;
 
-                    #if LOG_TO_FILE
-                        log << position;
-                    #endif
+                        #if LOG_TO_FILE
+                            log << position;
+                        #endif
 
-                    break;
+                        break;
+                    }
                 }
             }
         }
@@ -1519,18 +1533,20 @@ using namespace std;
                     continue;
                 }
 
-                // Check if game is finished
-                if (this->gameFinished())
+                if(!position.pieces.pieceBitboards[Pieces::White][Pieces::Queen])
                 {
-                    cout << position << endl;
+                    // Check if game is finished
+                    if (this->gameFinished())
+                    {
+                        cout << position << endl;
 
-                    #if LOG_TO_FILE
-                        log << position;
-                    #endif
+                        #if LOG_TO_FILE
+                            log << position;
+                        #endif
 
-                    break;
+                        break;
+                    }
                 }
-
                 // Player 1 move
                 cout << GREEN << "\nPlayer 1 move:" << END << endl;
 
@@ -1543,16 +1559,19 @@ using namespace std;
                     continue;
                 }
 
-                // Check if game is finished
-                if (this->gameFinished())
+                if(!position.pieces.pieceBitboards[Pieces::Black][Pieces::Queen])
                 {
-                    cout << position << endl;
+                    // Check if game is finished
+                    if (this->gameFinished())
+                    {
+                        cout << position << endl;
 
-                    #if LOG_TO_FILE
-                        log << position;
-                    #endif
+                        #if LOG_TO_FILE
+                            log << position;
+                        #endif
 
-                    break;
+                        break;
+                    }
                 }
             }
         }        
@@ -1819,6 +1838,8 @@ using namespace std;
         }
     }
 
+    
+
     void Game::chooseGameMode()
     {
         // Choose game mode
@@ -1829,6 +1850,7 @@ using namespace std;
         cout << "4. Player vs Player (10 min limit)" << endl;
         cout << "5. Gwent" << endl; // Gwent mode
         cout << "6. Royal Chess" << endl; // Royal Chess mode
+        cout << "7. Tests" << endl;
         int gameMode = 0;
         cin >> gameMode;
 

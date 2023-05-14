@@ -51,17 +51,21 @@ bool handsdeck::checkIsEmpty()
     }
 }
 
-void handsdeck::delete_card(char card_for_delete)
+card handsdeck::delete_card(char card_for_delete)
 {
     if (card_for_delete == 'N')
     {
         card_for_delete = 'K';
     }
 
+    card result;
+
     for (int i = 0; i < deck.size(); i++)
     {
         if (card_for_delete == deck[i].getFigure()[0])
         {
+            result = deck[i];
+
             deck.erase(deck.begin() + i);
 
             /*std::cout << "Карта для удаления из колоды " << card_for_delete << std::endl;
@@ -70,6 +74,8 @@ void handsdeck::delete_card(char card_for_delete)
             break;
         }
     }
+
+    return result;
 }
 
 void handsdeck::appendOnBoard(std::string piece)

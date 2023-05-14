@@ -24,11 +24,10 @@ class Position
 {
 public:
     Pieces pieces;
-    uint8_t EnPassant, oldEnPassant;
+    uint8_t EnPassant;
 
     handsdeck cards[2];
     std::vector<card> AIdeck;
-    uint8_t AIside;
     int8_t points[2]{}, cardsNumber[2]{};
 
     bool WhiteLongCastling;
@@ -52,6 +51,8 @@ public:
     friend ostream& operator<<(ostream& ostream, Position position);
 
     void move(Move move);
+
+    void moveRoyal(Move move);
 
     void addPiece(uint8_t square, uint8_t type, uint8_t side);
 

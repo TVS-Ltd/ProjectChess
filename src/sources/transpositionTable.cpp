@@ -1,6 +1,4 @@
 #include "transpositionTable.h"
-#include "constants.h"
-#include <future>
 
 using namespace std;
 
@@ -8,8 +6,6 @@ TranspositionTable::TranspositionTable() = default;
 
 void TranspositionTable::addEntry(Entry entry)
 {
-    if (Variables::threadsNumber > 1)
-        unique_lock<mutex> lock(Variables::mtx);
 #pragma omp critical
     {
         auto hashCopy = this->Set.find(entry);

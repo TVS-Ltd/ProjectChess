@@ -1,9 +1,26 @@
 #include "legalMoveGen.h"
 
-MoveList LegalMoveGen::generate(Position position, uint8_t side, bool onlyCaptures)
+MoveList LegalMoveGen::generate(const Position& position, uint8_t side, bool onlyCaptures)
 {
     MoveList moves;
 
+    LegalMoveGen::generatePawnMoves(position, side, moves, onlyCaptures);
+
+    LegalMoveGen::generateKnightMoves(position, side, moves, onlyCaptures);
+
+    LegalMoveGen::generateBishopMoves(position, side, moves, onlyCaptures);
+
+    LegalMoveGen::generateRookMoves(position, side, moves, onlyCaptures);
+
+    LegalMoveGen::generateQueenMoves(position, side, moves, onlyCaptures);
+
+    LegalMoveGen::generateKingMoves(position, side, moves, onlyCaptures);
+
+    return moves;
+}
+
+void LegalMoveGen::generatePawnMoves(const Position& position, uint8_t side, MoveList& moves, bool onlyCaptures)
+{
     Bitboard pawnLeftCaptureMask = PsLegalMoveMaskGen::generatePawnLeftCapturesMask(position.pieces, side, false);
     Bitboard pawnRightCapturesMask = PsLegalMoveMaskGen::generatePawnRightCapturesMask(position.pieces, side, false);
 
@@ -47,10 +64,12 @@ MoveList LegalMoveGen::generate(Position position, uint8_t side, bool onlyCaptur
         LegalMoveGen::pawnMaskToMoves(position.pieces, pawnLongMask, side, pawnLongMove, false, Move::Flag::PawnLongMove, moves);
     }
 
+    LegalMoveGen::addEnPassantCaptures(position.pieces, side, position.EnPassant, moves);
+}
+
+void LegalMoveGen::generateKnightMoves(const Position& position, uint8_t side, MoveList& moves, bool onlyCaptures)
+{
     Bitboard allKnights = position.pieces.pieceBitboards[side][Pieces::Knight];
-    Bitboard allBishops = position.pieces.pieceBitboards[side][Pieces::Bishop];
-    Bitboard allRooks = position.pieces.pieceBitboards[side][Pieces::Rook];
-    Bitboard allQueens = position.pieces.pieceBitboards[side][Pieces::Queen];
 
     uint8_t attackerPos;
     Bitboard mask;
@@ -62,6 +81,14 @@ MoveList LegalMoveGen::generate(Position position, uint8_t side, bool onlyCaptur
         mask = PsLegalMoveMaskGen::generateKnightMask(position.pieces, attackerPos, side, onlyCaptures);
         LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Knight, side, moves);
     }
+}
+
+void LegalMoveGen::generateBishopMoves(const Position& position, uint8_t side, MoveList& moves, bool onlyCaptures)
+{
+    Bitboard allBishops = position.pieces.pieceBitboards[side][Pieces::Bishop];
+
+    uint8_t attackerPos;
+    Bitboard mask;
 
     while (allBishops)
     {
@@ -70,6 +97,14 @@ MoveList LegalMoveGen::generate(Position position, uint8_t side, bool onlyCaptur
         mask = PsLegalMoveMaskGen::generateBishopMask(position.pieces, attackerPos, side, onlyCaptures);
         LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Bishop, side, moves);
     }
+}
+
+void LegalMoveGen::generateRookMoves(const Position& position, uint8_t side, MoveList& moves, bool onlyCaptures)
+{
+    Bitboard allRooks = position.pieces.pieceBitboards[side][Pieces::Rook];
+
+    uint8_t attackerPos;
+    Bitboard mask;
 
     while (allRooks)
     {
@@ -78,6 +113,14 @@ MoveList LegalMoveGen::generate(Position position, uint8_t side, bool onlyCaptur
         mask = PsLegalMoveMaskGen::generateRookMask(position.pieces, attackerPos, side, onlyCaptures);
         LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Rook, side, moves);
     }
+}
+
+void LegalMoveGen::generateQueenMoves(const Position& position, uint8_t side, MoveList& moves, bool onlyCaptures)
+{
+    Bitboard allQueens = position.pieces.pieceBitboards[side][Pieces::Queen];
+
+    uint8_t attackerPos;
+    Bitboard mask;
 
     while (allQueens)
     {
@@ -86,12 +129,16 @@ MoveList LegalMoveGen::generate(Position position, uint8_t side, bool onlyCaptur
         mask = PsLegalMoveMaskGen::generateQueenMask(position.pieces, attackerPos, side, onlyCaptures);
         LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::Queen, side, moves);
     }
+}
+
+void LegalMoveGen::generateKingMoves(const Position& position, uint8_t side, MoveList& moves, bool onlyCaptures)
+{
+    uint8_t attackerPos;
+    Bitboard mask;
 
     attackerPos = bsf(position.pieces.pieceBitboards[side][Pieces::King]);
     mask = PsLegalMoveMaskGen::generateKingMask(position.pieces, attackerPos, side, onlyCaptures);
     LegalMoveGen::pieceMaskToMoves(position.pieces, mask, attackerPos, Pieces::King, side, moves);
-
-    LegalMoveGen::addEnPassantCaptures(position.pieces, side, position.EnPassant, moves);
 
     if (!onlyCaptures)
     {
@@ -104,41 +151,9 @@ MoveList LegalMoveGen::generate(Position position, uint8_t side, bool onlyCaptur
             LegalMoveGen::addCastlingMoves(position.pieces, Pieces::Black, position.BlackLongCastling, position.BlackShortCastling, moves);
         }
     }
-
-    return moves;
 }
 
-MoveList LegalMoveGen::generateCardMoves(Position position, uint8_t side)
-{
-    Bitboard pieces;
-    MoveList moves;
-
-    while (!position.cards[side].checkIsEmpty()) {
-        std::string figureType = position.cards[side].getCard(0);
-        uint8_t attackerType = typeByFigure[figureType];
-
-        Position copy;
-        pieces = position.pieces.empty & BitboardRows::SideRows[side];
-        while (pieces)
-        {
-            uint8_t pos = bsf(pieces);
-            setZero(pieces, pos);
-
-            Move move(255, pos, attackerType, side, 255, Pieces::inverse(side), MoveType::LayOutCard);
-            copy = position;
-            copy.move(move);
-
-            if (PsLegalMoveMaskGen::inDanger(copy.pieces, bsf(copy.pieces.pieceBitboards[side][Pieces::King]), side))
-                continue;
-
-            moves.push_back(move);
-        }
-    }
-
-    return moves;
-}
-
-void LegalMoveGen::pieceMaskToMoves(Pieces pieces, Bitboard mask, uint8_t attackerPos, uint8_t attackerType, uint8_t attackerSide, MoveList& moves)
+void LegalMoveGen::pieceMaskToMoves(const Pieces& pieces, Bitboard mask, uint8_t attackerPos, uint8_t attackerType, uint8_t attackerSide, MoveList& moves)
 {
     uint8_t defenderPos;
     uint8_t defenderType;
@@ -170,7 +185,104 @@ void LegalMoveGen::pieceMaskToMoves(Pieces pieces, Bitboard mask, uint8_t attack
     }
 }
 
-void LegalMoveGen::pawnMaskToMoves(Pieces pieces, Bitboard mask, uint8_t attackerSide, int8_t attackerIndex, bool lookForDefender, uint8_t flag, MoveList& moves)
+MoveList LegalMoveGen::generateCardMoves(const Position& position, uint8_t side)
+{
+    MoveList moves;
+
+    std::map<std::string, bool> used;
+
+    handsdeck deck = position.cards[side];
+    while (!deck.checkIsEmpty()) {
+        std::string figureType = deck.getCard(0);
+
+        if (used[figureType])
+            continue;
+
+        used[figureType] = 1;
+
+        uint8_t attackerType = typeByFigure[figureType];
+
+        LegalMoveGen::generateMovesByCard(position, position.pieces.empty & BitboardRows::SideRows[side], side, attackerType, moves);
+    }
+
+    return moves;
+}
+
+MoveList LegalMoveGen::generateMovesRoyal(const Position& position, uint8_t side, bool onlyCaptures)
+{
+    MoveList moves;
+
+    handsdeck deck = position.cards[side];
+    std::map<std::string, bool> used;
+    while (!deck.checkIsEmpty())
+    {
+        std::string figureType = deck.getCard(0);
+        
+        if (used[figureType])
+            continue;
+
+        used[figureType] = 1;
+
+        if (figureType == "Pawn")
+        {
+            LegalMoveGen::generatePawnMoves(position, side, moves, onlyCaptures);
+        }
+        else if (figureType == "Knight")
+        {
+            LegalMoveGen::generateKnightMoves(position, side, moves, onlyCaptures);
+        }
+        else if (figureType == "Bishop")
+        {
+            LegalMoveGen::generateBishopMoves(position, side, moves, onlyCaptures);
+        }
+        else if (figureType == "Rook")
+        {
+            LegalMoveGen::generateRookMoves(position, side, moves, onlyCaptures);
+        }
+        else if (figureType == "Queen")
+        {
+            LegalMoveGen::generateQueenMoves(position, side, moves, onlyCaptures);
+        }
+        else if (figureType == "King")
+        {
+            LegalMoveGen::generateKingMoves(position, side, moves, onlyCaptures);
+        }
+        else
+        {
+            moves = generate(position, side, onlyCaptures);
+
+            for (auto figure : figures)
+            {
+                uint8_t amount = countOnes(position.pieces.pieceBitboards[side][figure]);
+                if (amount < figuresCount[figure])
+                    generateMovesByCard(position, position.pieces.empty, side, figure, moves);
+            }
+        }
+    }
+
+    return moves;
+}
+
+void LegalMoveGen::generateMovesByCard(const Position& position, Bitboard freePieces, const uint8_t& side, const uint8_t& figureType, MoveList& moves)
+{
+    Position copy;
+    while (freePieces)
+    {
+        uint8_t pos = bsf(freePieces);
+        setZero(freePieces, pos);
+
+        Move move(255, pos, figureType, side, 255, Pieces::inverse(side), MoveType::LayOutCard);
+        copy = position;
+        copy.move(move);
+
+        if (PsLegalMoveMaskGen::inDanger(copy.pieces, bsf(copy.pieces.pieceBitboards[side][Pieces::King]), side))
+            continue;
+
+        moves.push_back(move);
+    }
+}
+
+void LegalMoveGen::pawnMaskToMoves(const Pieces& pieces, Bitboard mask, uint8_t attackerSide, int8_t attackerIndex, bool lookForDefender, uint8_t flag, MoveList& moves)
 {
     uint8_t defenderPos;
     uint8_t defenderType = 255;
@@ -247,7 +359,7 @@ bool LegalMoveGen::isLegal(Pieces pieces, Move move, bool enPassantCapture)
     return true;
 }
 
-void LegalMoveGen::addEnPassantCaptures(Pieces pieces, uint8_t side, uint8_t enPassant, MoveList& moves)
+void LegalMoveGen::addEnPassantCaptures(const Pieces& pieces, uint8_t side, uint8_t enPassant, MoveList& moves)
 {
     if (enPassant == 255)
         return;
@@ -300,7 +412,7 @@ void LegalMoveGen::addEnPassantCaptures(Pieces pieces, uint8_t side, uint8_t enP
     }
 }
 
-void LegalMoveGen::addCastlingMoves(Pieces pieces, uint8_t side, bool longCastling, bool shortCastling, MoveList& moves)
+void LegalMoveGen::addCastlingMoves(const Pieces& pieces, uint8_t side, bool longCastling, bool shortCastling, MoveList& moves)
 {
     uint8_t index;
     uint8_t longCastlingFlag;

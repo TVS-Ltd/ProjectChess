@@ -414,26 +414,26 @@ void Game::PvE()
 {
     sideChoose();
 
-    /*position.cards[0].addCard(card("Pawn", "-", "-"));
-    position.cards[0].addCard(card("Pawn", "-", "-"));
-    position.cards[0].addCard(card("Pawn", "-", "-"));
-    position.cards[0].addCard(card("Knight", "-", "-"));
-    position.cards[0].addCard(card("Queen", "-", "-"));
+    ///*position.cards[0].addCard(card("Pawn", "-", "-"));
+    //position.cards[0].addCard(card("Pawn", "-", "-"));
+    //position.cards[0].addCard(card("Pawn", "-", "-"));
+    //position.cards[0].addCard(card("Knight", "-", "-"));
+    //position.cards[0].addCard(card("Queen", "-", "-"));
 
 
-    position.cards[1].addCard(card("Pawn", "-", "-"));
-    position.cards[1].addCard(card("Pawn", "-", "-"));
-    position.cards[1].addCard(card("Rook", "-", "-"));
-    position.cards[1].addCard(card("Queen", "-", "-"));
+    //position.cards[1].addCard(card("Pawn", "-", "-"));
+    //position.cards[1].addCard(card("Pawn", "-", "-"));
+    //position.cards[1].addCard(card("Rook", "-", "-"));
+    //position.cards[1].addCard(card("Queen", "-", "-"));
 
-    position.AIdeck.push_back(card("Pawn", "-", "-"));
-    position.AIdeck.push_back(card("Pawn", "-", "-"));
-    position.AIdeck.push_back(card("Bishop", "-", "-"));
-    position.AIdeck.push_back(card("Knight", "-", "-"));
+    //position.AIdeck.push_back(card("Pawn", "-", "-"));
+    //position.AIdeck.push_back(card("Pawn", "-", "-"));
+    //position.AIdeck.push_back(card("Bishop", "-", "-"));
+    //position.AIdeck.push_back(card("Knight", "-", "-"));
 
 
-    position.setNumberOfCards(3, 4);
-    position.setPoints(110, 75);*/
+    //position.setNumberOfCards(3, 4);
+    //position.setPoints(110, 75);*/
 
 
     if (playerSide == Pieces::White)

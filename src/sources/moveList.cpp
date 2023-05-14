@@ -30,7 +30,7 @@ void MoveList::push_back(Move move)
 
 void MoveList::unite(MoveList other)
 {
-    uint8_t otherSize = min((uint8_t)5, other.size());
+    uint8_t otherSize = min((uint8_t)8, other.size());
     for (uint8_t i = 0; i < this->Size; i++) {
         this->moves[i + otherSize] = this->moves[i];
     }
@@ -38,13 +38,4 @@ void MoveList::unite(MoveList other)
         this->moves[i] = other[i];
     }
     this->Size += otherSize;
-    
-    
-
-    /*for (int i = 0; i < this->Size; i++)
-        std::cout << i << " : " << (int)this->moves[i].From << ' ' << (int)this->moves[i].To << " \n";*/
 }
-//
-//void MoveList::clear() {
-//    this->Size = 0;
-//}

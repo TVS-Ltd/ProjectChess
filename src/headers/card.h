@@ -12,6 +12,8 @@ private:
     std::string icon;
     std::string piece;
 public:
+    card() = default;
+
     // Constructor
     card(std::string fig, std::string icn, std::string pie);
 

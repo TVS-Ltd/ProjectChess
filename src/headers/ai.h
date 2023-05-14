@@ -21,12 +21,11 @@ enum class NodeType
 static atomic<bool> stopSearch;
 
 static int64_t evaluated;
-static atomic<int32_t> maxDepth;
 static int32_t cutOffs;
 static int32_t aspirationWindow = 100;
 
 static int node_count = 0;
-
+static uint8_t AIside;
 
 class AI
 {
@@ -52,8 +51,6 @@ public:
 private:
     OpeningBook openingBook;
 
-    //TranspositionTable TransposTable;
-
     static tuple<int32_t, Move> aspirationSearch(const Position& position, uint8_t side, int32_t depth, int32_t evaluation, TranspositionTable& TransposTable);
 
     static tuple<int32_t, Move> aspirationSearchCCG(const Position& position, uint8_t side, int32_t depth, int32_t evaluation, TranspositionTable& TransposTable);
@@ -68,9 +65,6 @@ private:
         
         if (stopSearch)
             return alpha;
-
-        if (currentDepth > maxDepth)
-            maxDepth = currentDepth;
 
         if (depth_left <= 0)
         {
@@ -227,9 +221,6 @@ private:
         if (stopSearch)
             return alpha;
 
-        if (currentDepth > maxDepth)
-            maxDepth = currentDepth;
-
         if (depth_left <= 0)
         {
             return AI::quiescence(position, side, alpha, beta, currentDepth);
@@ -296,19 +287,13 @@ private:
         {
             points = position.points[side] / position.cardsNumber[side];
 
-            if (side == position.AIside)
+            if (side == AIside)
             {
                 std::vector<card> deck = position.AIdeck;
 
                 uint8_t i = 0;
                 while (pointsByFigure[deck[i].getFigure()] < points)
-                {
                     i++;
-                    if (i == deck.size())
-                    {
-                        cout << "error\n";
-                    }
-                }
 
                 position.cards[side].addCard(deck[i]);
                 position.points[side] -= pointsByFigure[deck[i].getFigure()];

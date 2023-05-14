@@ -1,12 +1,12 @@
 #include <string>
 #include <iostream>
+#include <vector>
 #include "bitboards.h"
 
 
 #pragma once
 
 using namespace std;
-
 
 // ——————————————————  Pieces  ——————————————————
 class Pieces
@@ -39,3 +39,6 @@ public:
 
     static uint8_t inverse(uint8_t side);
 };
+
+static std::vector<uint8_t> figures = { 0, 1, 2, 3, 4, 5 };
+static std::vector<uint8_t> figuresCount = { 8, 2, 2, 2, 1, 1 };

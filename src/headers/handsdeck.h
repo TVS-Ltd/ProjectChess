@@ -40,10 +40,9 @@ public:
 
     bool checkIsEmpty();
 
-    void delete_card(char card_for_delete);
+    card delete_card(char card_for_delete);
 
     int32_t size() const {
         return deck.size();
     }
-
 };

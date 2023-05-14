@@ -48,7 +48,7 @@ void Position::move(Move move)
 {
     std::string figureType;
 
-    if (move.Flag != Move::Flag::LayOutCard) {
+    if (move.type != MoveType::LayOutCard) {
         this->removePiece(move.From, move.AttackerType, move.AttackerSide);
     }
     else {
@@ -65,6 +65,154 @@ void Position::move(Move move)
 
         cards[move.AttackerSide].delete_card(figureType[0]);
     }
+
+    this->addPiece(move.To, move.AttackerType, move.AttackerSide);
+
+    if (move.DefenderType != 255)
+    {
+        this->removePiece(move.To, move.DefenderType, move.DefenderSide);
+    }
+
+    switch (move.Flag)
+    {
+    case Move::Flag::Default:
+        break;
+
+    case Move::Flag::PawnLongMove:
+        this->changeEnPassant((move.From + move.To) / 2);
+        break;
+
+    case Move::Flag::EnPassantCapture:
+        
+        if (move.AttackerSide == Pieces::White)
+        {
+            this->removePiece(move.To - 8, Pieces::Pawn, Pieces::Black);
+        }
+        else
+        {
+            this->removePiece(move.To + 8, Pieces::Pawn, Pieces::White);
+        }
+        break;
+
+    case Move::Flag::WhiteLongCastling:
+        this->removePiece(0, Pieces::Rook, Pieces::White);
+        this->addPiece(3, Pieces::Rook, Pieces::White);
+        this->whiteCastlingHappened = true;
+        break;
+
+    case Move::Flag::WhiteShortCastling:
+        this->removePiece(7, Pieces::Rook, Pieces::White);
+        this->addPiece(5, Pieces::Rook, Pieces::White);
+        this->whiteCastlingHappened = true;
+        break;
+
+    case Move::Flag::BlackLongCastling:
+        this->removePiece(56, Pieces::Rook, Pieces::Black);
+        this->addPiece(59, Pieces::Rook, Pieces::Black);
+        this->blackCastlingHappened = true;
+        break;
+
+    case Move::Flag::BlackShortCastling:
+        this->removePiece(63, Pieces::Rook, Pieces::Black);
+        this->addPiece(61, Pieces::Rook, Pieces::Black);
+        this->blackCastlingHappened = true;
+        break;
+
+    case Move::Flag::PromoteToKnight:
+        this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+        this->addPiece(move.To, Pieces::Knight, move.AttackerSide);
+        break;
+
+    case Move::Flag::PromoteToBishop:
+        this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+        this->addPiece(move.To, Pieces::Bishop, move.AttackerSide);
+        break;
+
+    case Move::Flag::PromoteToRook:
+        this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+        this->addPiece(move.To, Pieces::Rook, move.AttackerSide);
+        break;
+
+    case Move::Flag::PromoteToQueen:
+        this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
+        this->addPiece(move.To, Pieces::Queen, move.AttackerSide);
+        break;
+    }
+
+    this->pieces.updateBitboards();
+
+    if (move.Flag != Move::Flag::PawnLongMove)
+    {
+        this->changeEnPassant(255);
+    }
+
+    switch (move.From)
+    {
+    case 0:
+        this->removeWhiteLongCastling();
+        break;
+
+    case 4:
+        this->removeWhiteLongCastling();
+        this->removeWhiteShortCastling();
+        break;
+
+    case 7:
+        this->removeWhiteShortCastling();
+        break;
+
+    case 56:
+        this->removeBlackLongCastling();
+        break;
+
+    case 60:
+        this->removeBlackLongCastling();
+        this->removeBlackShortCastling();
+        break;
+
+    case 63:
+        this->removeBlackShortCastling();
+        break;
+    }
+
+    this->updateMoveCtr();
+
+    this->updateFiftyMovesCtr(move.AttackerType == Pieces::Pawn or move.DefenderType != 255);
+
+    if (move.AttackerType == Pieces::Pawn or move.DefenderType != 255 or move.type == MoveType::LayOutCard)
+    {
+        this->repetitionHistory.clear();
+    }
+
+    this->repetitionHistory.addPosition(this->hash);
+}
+
+
+void Position::moveRoyal(Move move)
+{
+    std::string figureType;
+
+    if (move.AttackerType == Pieces::Pawn)
+        figureType = "Pawn";
+    else if (move.AttackerType == Pieces::Knight)
+        figureType = "Knight";
+    else if (move.AttackerType == Pieces::Bishop)
+        figureType = "Bishop";
+    else if (move.AttackerType == Pieces::Rook)
+        figureType = "Rook";
+    else if (move.AttackerType == Pieces::Queen)
+        figureType = "Queen";
+    else if (move.AttackerType == Pieces::King)
+        figureType = "King";
+    else
+        figureType = "Joker";
+
+    if (figureType != "Joker")
+    {
+        this->removePiece(move.From, move.AttackerType, move.AttackerSide);
+    }
+
+    cards[move.AttackerSide].delete_card(figureType[0]);
 
     this->addPiece(move.To, move.AttackerType, move.AttackerSide);
 
@@ -136,8 +284,6 @@ void Position::move(Move move)
         this->removePiece(move.To, Pieces::Pawn, move.AttackerSide);
         this->addPiece(move.To, Pieces::Queen, move.AttackerSide);
         break;
-    case Move::Flag::LayOutCard:
-        cards[move.AttackerSide].delete_card(figureType[0]);
     }
 
     this->pieces.updateBitboards();
@@ -180,7 +326,7 @@ void Position::move(Move move)
 
     this->updateFiftyMovesCtr(move.AttackerType == Pieces::Pawn or move.DefenderType != 255);
 
-    if (move.AttackerType == Pieces::Pawn or move.DefenderType != 255 or move.Flag == Move::Flag::LayOutCard)
+    if (move.AttackerType == Pieces::Pawn or move.DefenderType != 255)
     {
         this->repetitionHistory.clear();
     }

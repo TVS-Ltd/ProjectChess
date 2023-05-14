@@ -31,105 +31,12 @@ AI::AI() = default;
 AI::AI(const string& openingBookPath)
 {
     this->openingBook = { openingBookPath };
-}
 
-Move AI::bestMove(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
-{
     for (int8_t i = 0; i < Constants::MaximalDepth; i++) {
         Variables::killers[i][0] = Variables::killers[i][1] = Constants::UnknownMove;
     }
-
-    node_count  = 0;
-    std::cout << endl;
-
-    std::cout << "Thinking..." << endl;
-
-    bool debug = false;
-
-#if DEBUG
-    debug = true;
-#endif
-
-    int64_t timeStart = nsecs;
-    stopSearch = false;
-
-    tuple<Move, int32_t> openingBookResult = this->openingBook.tryToFindMove(position);
-
-#if DEBUG
-    cout << "\033[103m" << "Number of available moves in the opening book: " << get<1>(openingBookResult) << "." << "\033[0m" << endl;
-#endif
-
-    if (get<1>(openingBookResult))
-    {
-        usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
-
-        return get<0>(openingBookResult);
-    }
-
-    std::cout << "\033[93m" << "Search started." << "\033[0m" << endl;
-
-    int32_t bestMoveEvaluation = 0;
-    Move bestMove;
-
-    future<tuple<int32_t, Move>> bestMoveThread;
-    TranspositionTable TransposTable;
-
-    bool updateBestMove;
-
-    for (int i = 1; i < 7; i = i + 1)
-    {
-        evaluated = 0;
-        maxDepth = 0;
-        cutOffs = 0;
-
-        bestMoveThread = async(AI::aspirationSearch, position, side, i, bestMoveEvaluation, ref(TransposTable));
-
-        //updateBestMove = true;
-        /*while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
-        {
-            if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs)
-            {
-                updateBestMove = false;
-                break;
-            }
-            usleep(20000);
-        }*/
-        //if (updateBestMove || i == 1)
-        {
-            auto score = bestMoveThread.get();
-            if (get<1>(score) != Constants::UnknownMove)
-                tie(bestMoveEvaluation, bestMove) = score;
-        }
-        /*else
-        {
-            stopSearch = true;
-            break;
-        }*/
-
-
-        //cout << (int)bestMove.From << "->" << (int)bestMove.To << '\n';
-#if DEBUG
-        cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
-        cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
-#endif
-    }
-
-    usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
-
-    cout << "\033[92m" << "Search finished." << "\033[0m" << endl;
-
-    double duration = nsecs - timeStart;
-    timex += duration;
-    countx++;
-
-    //cout << "average time: " << (timex / countx) / 1e9 << ' ' << node_count << '\n';
-    //cout << "time: " << duration / 1e9 << '\n';
-
-    return bestMove;
 }
-
-
-Move AI::bestMoveCCG(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
+Move AI::bestMove(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
 {
     for (int8_t i = 0; i < Constants::MaximalDepth; i++) {
         Variables::killers[i][0] = Variables::killers[i][1] = Constants::UnknownMove;
@@ -171,12 +78,82 @@ Move AI::bestMoveCCG(Position position, uint8_t side, int32_t minMs, int32_t max
     TranspositionTable TransposTable;
 
     bool updateBestMove;
-    position.AIside = side;
+
+    for (int i = 1; i < 7; i = i + 1)
+    {
+        evaluated = 0;
+        cutOffs = 0;
+
+        bestMoveThread = async(AI::aspirationSearch, position, side, i, bestMoveEvaluation, ref(TransposTable));
+
+        //updateBestMove = true;
+        /*while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
+        {
+            if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs)
+            {
+                updateBestMove = false;
+                break;
+            }
+            usleep(20000);
+        }*/
+        //if (updateBestMove || i == 1)
+        {
+            auto score = bestMoveThread.get();
+            if (get<1>(score) != Constants::UnknownMove)
+                tie(bestMoveEvaluation, bestMove) = score;
+        }
+        /*else
+        {
+            stopSearch = true;
+            break;
+        }*/
+
+
+        //cout << (int)bestMove.From << "->" << (int)bestMove.To << '\n';
+#if DEBUG
+        cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
+        cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
+#endif
+    }
+
+    usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
+
+    cout << "\033[92m" << "Search finished." << "\033[0m" << endl;
+
+    return bestMove;
+}
+
+
+Move AI::bestMoveCCG(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
+{
+    node_count = 0;
+    std::cout << endl;
+
+    std::cout << "Thinking..." << endl;
+
+    bool debug = false;
+
+#if DEBUG
+    debug = true;
+#endif
+
+    int64_t timeStart = nsecs;
+    stopSearch = false;
+
+    std::cout << "\033[93m" << "Search started." << "\033[0m" << endl;
+
+    int32_t bestMoveEvaluation = 0;
+    Move bestMove;
+
+    future<tuple<int32_t, Move>> bestMoveThread;
+    TranspositionTable TransposTable;
+
+    bool updateBestMove;
+    AIside = side;
 
     for (int i = 1; i < 5; i = i + 1)
     {
         evaluated = 0;
-        maxDepth = 0;
         cutOffs = 0;
 
         bestMoveThread = async(AI::aspirationSearchCCG, position, side, i, bestMoveEvaluation, ref(TransposTable));
@@ -214,13 +191,6 @@ Move AI::bestMoveCCG(Position position, uint8_t side, int32_t minMs, int32_t max
     usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
 
     cout << "\033[92m" << "Search finished." << "\033[0m" << endl;
-
-    double duration = nsecs - timeStart;
-    timex += duration;
-    countx++;
-
-    //cout << "average time: " << (timex / countx) / 1e9 << ' ' << node_count << '\n';
-    //cout << "time: " << duration / 1e9 << '\n';
 
     return bestMove;
 }
@@ -307,8 +277,6 @@ tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alp
                     alpha = score;
                 }
             }
-
-            //cout << score << " score\n";
         }
     }
 
@@ -393,11 +361,6 @@ int32_t AI::quiescence(Position position, uint8_t side, int32_t alpha, int32_t b
         return alpha;
     }
 
-    if (currentDepth > maxDepth)
-    {
-        maxDepth = currentDepth;
-    }
-
     int32_t stand_pat = 0, evaluation;
 
     evaluated++;
@@ -428,7 +391,7 @@ int32_t AI::quiescence(Position position, uint8_t side, int32_t alpha, int32_t b
 
     MoveList moves;
     LegalMoveGen::generate(position, side, true);
-    /*moves = */MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+    MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
 
     Position copy;
 

@@ -1,12 +1,12 @@
 #include "moveSorter.h"
 #include "position.h"
 
-MoveList MoveSorter::quickSort(const Pieces& pieces, MoveList& moves, int start, int end)
+void MoveSorter::quickSort(const Pieces& pieces, MoveList& moves, int start, int end)
 {
     // base case
     if (start >= end)
     {
-        return moves;
+        return;
     }
 
     // partitioning the array
@@ -17,8 +17,6 @@ MoveList MoveSorter::quickSort(const Pieces& pieces, MoveList& moves, int start,
 
     // Sorting the right part
     quickSort(pieces, moves, pivot + 1, end);
-
-    return moves;
 }
 
 
@@ -144,7 +142,7 @@ size_t MoveSorter::partition(const Pieces& pieces, MoveList& moves, int start, i
 
     for (int i = start + 1; i <= end; i++)
     {
-        if (MoveSorter::evaluateMove(pieces, moves[i]) <= MoveSorter::evaluateMove(pieces, pivot))
+        if ((moves[i].type == MoveType::Quiet && pivot.type == MoveType::Killer) || (MoveSorter::evaluateMove(pieces, moves[i]) <= MoveSorter::evaluateMove(pieces, pivot)))
         {
             count++;
         }

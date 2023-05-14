@@ -20,6 +20,4 @@ public:
     [[nodiscard]] uint8_t size() const;
 
     void unite(MoveList other);
-
-    //void clear();
 };

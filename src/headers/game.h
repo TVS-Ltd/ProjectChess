@@ -61,6 +61,8 @@ private:
 
     bool movePlayer(uint8_t side);
 
+    bool movePlayerForRoyalChess(uint8_t side, uint8_t playerTypeOfFigure);
+
     void PvE();
 
     void PvP();

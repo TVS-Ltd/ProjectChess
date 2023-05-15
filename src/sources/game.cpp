@@ -133,8 +133,6 @@ using namespace std;
             return true;
         } 
         
-        
-
         return (whiteHaventGotMoves && whiteInCheck);
     }
 
@@ -355,6 +353,126 @@ using namespace std;
 
                 break;
             }
+        }
+
+        if (!moveFound)
+        {
+            cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+            return false;
+        }
+
+        this->position.move(move);
+
+        if (move.DefenderType != 255)
+        {
+            cout << "\n";
+
+            switch (move.DefenderType)
+            {
+            case 0:
+                cout << YELLOW << "Pawn has been captured!" << END << endl;
+                break;
+
+            case 1:
+                cout << YELLOW << "Knight has been captured!" << END << endl;
+                break;
+
+            case 2:
+                cout << YELLOW << "Bishop has been captured!" << END << endl;
+                break;
+
+            case 3:
+                cout << YELLOW << "Rook has been captured!" << END << endl;
+                break;
+
+            case 4:
+                cout << YELLOW << "Queen has been captured!" << END << endl;
+                break;
+
+            default:
+                cout << RED << "[ERROR] Unknown piece type!" << END << endl;
+                break;
+            }
+        }
+
+        cout << "\nMove has been made!" << endl;
+        cout << Game::position << endl;
+
+        return true;
+    }
+
+    bool Game::movePlayerForRoyalChess(uint8_t side, uint8_t playerTypeOfFigure)
+    {
+        this->moves = LegalMoveGen::generate(this->position, side);
+
+        this->playerMove = getMove();
+        bool moveFound = false;
+
+        for (uint8_t i = 0; i < moves.size(); i++)
+        {
+            if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
+            {
+                move = moves[i];
+                moveFound = true;
+
+                break;
+            }
+            else if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
+            {
+                // Choose promotion piece
+                cout << "\nChoose promotion piece: " << endl;
+                cout << "1. Knight" << endl;
+                cout << "2. Bishop" << endl;
+                cout << "3. Rook" << endl;
+                cout << "4. Queen" << endl;
+
+                int promotionPiece = 0;
+                cin >> promotionPiece;
+
+                switch (promotionPiece)
+                {
+                    case 1:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToKnight;
+                        moveFound = true;
+                    break;
+
+                    case 2:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToBishop;
+                        moveFound = true;
+                    break;
+
+                    case 3:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToRook;
+                        moveFound = true;
+                    break;
+
+                    case 4:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToQueen;
+                        moveFound = true;
+                    break;
+
+                    default:
+                        cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                        continue;
+                    break;
+                }
+
+                break;
+            }
+        }
+
+        if(playerTypeOfFigure == 69)
+        {
+            return true;
+        }
+
+        if(move.AttackerType != playerTypeOfFigure)
+        {
+            return false;
         }
 
         if (!moveFound)
@@ -1085,6 +1203,12 @@ using namespace std;
 
                         cin >> placeOnBoard; // e4
 
+                        if((int)placeOnBoard[1] < 5)
+                        {
+                            std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
+                            continue;
+                        }
+
                         if(coloda_white.checkForCard(choiceOfFigure))
                         { 
                             break;
@@ -1205,6 +1329,12 @@ using namespace std;
                         cout << "Enter the position when you want to put a figure(example e2)" << endl;
 
                         cin >> placeOnBoard; // e4
+
+                        if((int)placeOnBoard[1] < 5)
+                        {
+                            std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
+                            continue;
+                        }
 
                         if(coloda_black.checkForCard(choiceOfFigure))
                         { 
@@ -1337,31 +1467,135 @@ using namespace std;
 
     void Game::RoyalChess()
     {
-        Game::position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};//Ставим, что никого нет, и потом меняем эту строку
-
-        //Game::position = {"...qk.../...QQ.../8/8/8/8/......../RNBQKBNR", 255, true, true, true, true, 1};
+        Game::position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
 
         char choice;
 
-        int j = 4;
+        int counterForJocker = 0;
+    
+        std::stack <uint8_t> whiteDeck;
+        std::stack <uint8_t> blackDeck;
 
-        std::vector<string>whiteDeck;
-        std::vector<string>whiteHandsdeck(5);
-        std::vector<string>blackDeck;
-        std::vector<string>blackHandsdeck(5);
-
-        std::string p = "Pawn", q = "Queen", k = "King", n = "Knight", r = "Rook", b = "Bishop", joker = "joker"; 
-
-        whiteDeck.push_back(p);whiteDeck.push_back(q);whiteDeck.push_back(k);whiteDeck.push_back(n);whiteDeck.push_back(r);whiteDeck.push_back(b);whiteDeck.push_back(joker);
-
-        blackDeck.push_back(joker);blackDeck.push_back(b);blackDeck.push_back(r);blackDeck.push_back(n);blackDeck.push_back(k);blackDeck.push_back(q);blackDeck.push_back(p);
-
-        for(int i = 0;i < 5;i++)
+        for(int i = 0;i < 50; i++) //white deck
         {
-            whiteHandsdeck[i] = whiteDeck[i];
+            int ch = rand() % 5 +1;
+            
+            switch (ch)
+            {
+            case 1:
+                
+                whiteDeck.push(Pieces::Pawn);
 
-            blackHandsdeck[i] = blackDeck[i];
+                break;
+            
+            case 2:
+
+                whiteDeck.push(Pieces::Rook);
+
+                break;
+
+            case 3:
+
+                whiteDeck.push(Pieces::Knight);
+
+                break;
+
+            case 4:
+
+                whiteDeck.push(Pieces::Bishop);
+
+                break;
+
+            case 5:
+
+                whiteDeck.push(Pieces::Queen);
+
+                break;
+
+            case 6:
+
+                if(counterForJocker < 2)
+                {
+                    whiteDeck.push(69);
+                }else
+                {
+                    i--;
+
+                    continue;
+                }
+                
+                break;
+            
+            default:
+                break;
+            }
+
         }
+
+        counterForJocker = 0;
+
+        for(int i = 0;i < 50; i++) //black deck
+        {
+            int ch = rand() % 5 +1;
+            
+            switch (ch)
+            {
+            case 1:
+                
+                blackDeck.push(Pieces::Pawn);
+
+                break;
+            
+            case 2:
+
+                blackDeck.push(Pieces::Rook);
+
+                break;
+
+            case 3:
+
+                blackDeck.push(Pieces::Knight);
+
+                break;
+
+            case 4:
+
+                blackDeck.push(Pieces::Bishop);
+
+                break;
+
+            case 5:
+
+                blackDeck.push(Pieces::Queen);
+
+                break;
+
+            case 6:
+
+                if(counterForJocker < 2)
+                {
+                    blackDeck.push(69);
+                }else
+                {
+                    i--;
+
+                    continue;
+                }
+                
+                break;
+            
+            default:
+                break;
+            }
+
+        }
+
+        std::vector <uint8_t> handsdeckWhite;
+        std::vector <uint8_t> handsdeckBlack;
+
+        for (int i = 0;i < 5;i++) handsdeckWhite.push_back(i);
+
+        for (int i = 0;i < 5;i++) handsdeckBlack.push_back(i);
 
         sideChoose();
 
@@ -1375,7 +1609,6 @@ using namespace std;
         {
             while (true)
             {
-                j++;
                 
                 // Player 1 move
                 cout << GREEN << "\nPlayer 1 move:" << END << endl;
@@ -1386,52 +1619,124 @@ using namespace std;
 
                 std::cout << "Your deck: " << endl;
 
-                for (int i = 0;i < 5;i++) //Вывод, потом нужно в класс запихнуть
+                for (int i = 0;i < 5;i++) // print deck
                 {
-                    std::cout << whiteDeck[i] << " ";
-                }
-
-                while(true)
-                {
-                    bool flag = false;
-                    
-                    std::cout << std::endl << "Введите фигуру, которой вы хотите походить (Q, N, K) :" << std::endl;
-
-                    cin >> choice;
-
-                    for (int i = 0;i < 5;i++)
+                    switch (handsdeckWhite[i])
                     {
-                        if(choice == whiteHandsdeck[i][0])
-                        {
-                            whiteDeck.erase(whiteDeck.begin() + i);//
+                    case Pieces::Pawn:
+                        
+                        cout << "Pawn ";
 
-                            whiteHandsdeck[i] = whiteDeck[j];
-
-                            flag = true;
-
-                            break;
-                        }
-                    }
-                
-                    if(flag)
-                    {
                         break;
-                    }else
-                    if(!flag)
-                    {
-                        cout << RED << "Try again" << END << std::endl;
+                    case Pieces::Rook:
+                        
+                        cout << "Rook ";
 
-                        continue;
+                        break;
+
+                    case Pieces::King:
+
+                        cout << "King ";
+
+                        break;
+
+                    case Pieces::Queen:
+                       
+                        cout << "Queen ";
+
+                        break;
+
+                    case Pieces::Bishop:
+                        
+                        cout << "Bishop ";
+
+                        break;
+
+                    case Pieces::Knight:
+                        
+                        cout << "Knight ";
+
+                        break;
+
+                    case 69:
+
+                        cout << "Jocker ";
+
+                        break;
+
+                    default:
+                        break;
                     }
-
                 }
                 
-                    while (!movePlayer(playerSide))
-                    {
-                        continue;
-                    }
-               
+                cout << endl;
                 
+                cin >> choice;
+
+                uint8_t temp;
+
+                switch(choice) // user choice
+                {
+                    case 'Q':
+                        
+                        temp = Pieces::Queen;
+
+                        break;
+
+                    case 'K':
+
+                        temp = Pieces::King;
+
+                        break;
+
+                    case 'R':
+
+                        temp = Pieces::Rook;
+
+                        break;
+
+                    case 'N':
+
+                        temp = Pieces::Knight;
+
+                        break;
+
+                    case 'B': 
+
+                        temp = Pieces::Bishop;
+
+                        break;
+
+                    case 'P':
+
+                        temp = Pieces::Pawn;
+
+                        break;
+
+                    case 'J':
+
+                        temp = 69;
+
+                        break;
+                }
+                
+                for (int i = 0; i < 5; i++) // replace cards
+                {
+                    if(temp == handsdeckWhite[i])
+                    {
+                        handsdeckWhite[i] = whiteDeck.top();
+
+                        whiteDeck.pop();
+                    }
+                }
+
+                while (!movePlayerForRoyalChess(playerSide, temp))// check for legal move
+                {                     
+                    cout << RED << "Wrong figure, try again" << END << endl;
+
+                    continue;
+                }
+
                 if(!position.pieces.pieceBitboards[Pieces::Black][Pieces::Queen])
                 {
                     // Check if game is finished
@@ -1456,50 +1761,122 @@ using namespace std;
 
                 std::cout << "Your deck: " << endl;
 
-                for (int i = 0;i < 5;i++) //Вывод, потом нужно в класс запихнуть
+                for (int i = 0;i < 5;i++) // print deck
                 {
-                    std::cout << whiteDeck[i] << " ";
-                }
-
-                while(true)
-                {
-                    bool flag = false;
-                    
-                    std::cout << std::endl << "Введите фигуру, которой вы хотите походить (Q, N, K) :" << std::endl;
-
-                    cin >> choice;
-
-                    for (int i = 0;i < 5;i++)
+                    switch (handsdeckBlack[i])
                     {
-                        if(choice == blackHandsdeck[i][0])
-                        {
-                            blackDeck.erase(blackDeck.begin() + i);//
+                    case Pieces::Pawn:
+                        
+                        cout << "Pawn ";
 
-                            blackHandsdeck[i] = blackDeck[j];
-
-                            flag = true;
-
-                            break;
-                        }
-                    }
-                
-                    if(flag)
-                    {
                         break;
-                    }else
-                    {
-                        cout << RED << "Try again" << END << std::endl;
+                    case Pieces::Rook:
+                        
+                        cout << "Rook ";
 
-                        continue;
+                        break;
+
+                    case Pieces::King:
+
+                        cout << "King ";
+
+                        break;
+
+                    case Pieces::Queen:
+                       
+                        cout << "Queen ";
+
+                        break;
+
+                    case Pieces::Bishop:
+                        
+                        cout << "Bishop ";
+
+                        break;
+
+                    case Pieces::Knight:
+                        
+                        cout << "Knight ";
+
+                        break;
+
+                    case 69:
+
+                        cout << "Jocker ";
+
+                        break;
+
+                    default:
+                        break;
                     }
                 }
 
-                while (!movePlayer(aiSide))
+                cout << endl;
+                
+                cin >> choice;
+
+                switch(choice) // user choice
                 {
+                    case 'Q':
+                        
+                        temp = Pieces::Queen;
+
+                        break;
+
+                    case 'K':
+
+                        temp = Pieces::King;
+
+                        break;
+
+                    case 'R':
+
+                        temp = Pieces::Rook;
+
+                        break;
+
+                    case 'N':
+
+                        temp = Pieces::Knight;
+
+                        break;
+
+                    case 'B': 
+
+                        temp = Pieces::Bishop;
+
+                        break;
+
+                    case 'P':
+
+                        temp = Pieces::Pawn;
+
+                        break;
+
+                    case 'J':
+
+                        temp = 69;
+
+                        break;
+                }
+
+                for (int i = 0; i < 5; i++) // replace cards
+                {
+                    if(temp == handsdeckBlack[i])
+                    {
+                        handsdeckBlack[i] = blackDeck.top();
+
+                        blackDeck.pop();
+                    }
+                }
+
+                while (!movePlayerForRoyalChess(aiSide, temp))// check for legal move
+                {                     
+                    cout << RED << "Wrong figure, try again" << END << endl;
+
                     continue;
                 }
-
-
+                
                 if(!position.pieces.pieceBitboards[Pieces::White][Pieces::Queen])
                 {
                     // Check if game is finished
@@ -1520,6 +1897,7 @@ using namespace std;
         {
             while (true)
             {
+                uint8_t temp;
 
                 // Player 2 move
                 cout << YELLOW << "\nPlayer 2 move:" << END << endl;
@@ -1528,11 +1906,124 @@ using namespace std;
                     log << YELLOW << "\nPlayer 2 move:" << END;
                 #endif
 
-                while (!movePlayer(aiSide))
+                std::cout << "Your deck: " << endl;
+
+                for (int i = 0;i < 5;i++) // print deck
                 {
-                    continue;
+                    switch (handsdeckBlack[i])
+                    {
+                    case Pieces::Pawn:
+                        
+                        cout << "Pawn ";
+
+                        break;
+                    case Pieces::Rook:
+                        
+                        cout << "Rook ";
+
+                        break;
+
+                    case Pieces::King:
+
+                        cout << "King ";
+
+                        break;
+
+                    case Pieces::Queen:
+                       
+                        cout << "Queen ";
+
+                        break;
+
+                    case Pieces::Bishop:
+                        
+                        cout << "Bishop ";
+
+                        break;
+
+                    case Pieces::Knight:
+                        
+                        cout << "Knight ";
+
+                        break;
+
+                    case 69:
+
+                        cout << "Jocker ";
+
+                        break;
+
+                    default:
+                        break;
+                    }
                 }
 
+                cout << endl;
+                
+                cin >> choice;
+
+                switch(choice) // user choice
+                {
+                    case 'Q':
+                        
+                        temp = Pieces::Queen;
+
+                        break;
+
+                    case 'K':
+
+                        temp = Pieces::King;
+
+                        break;
+
+                    case 'R':
+
+                        temp = Pieces::Rook;
+
+                        break;
+
+                    case 'N':
+
+                        temp = Pieces::Knight;
+
+                        break;
+
+                    case 'B': 
+
+                        temp = Pieces::Bishop;
+
+                        break;
+
+                    case 'P':
+
+                        temp = Pieces::Pawn;
+
+                        break;
+
+                    case 'J':
+
+                        temp = 69;
+
+                        break;
+                }
+
+                for (int i = 0; i < 5; i++) // replace cards
+                {
+                    if(temp == handsdeckBlack[i])
+                    {
+                        handsdeckBlack[i] = blackDeck.top();
+
+                        blackDeck.pop();
+                    }
+                }
+
+                while (!movePlayerForRoyalChess(aiSide, temp))// check for legal move
+                {                     
+                    cout << RED << "Wrong figure, try again" << END << endl;
+
+                    continue;
+                }
+                
                 if(!position.pieces.pieceBitboards[Pieces::White][Pieces::Queen])
                 {
                     // Check if game is finished
@@ -1547,6 +2038,7 @@ using namespace std;
                         break;
                     }
                 }
+                
                 // Player 1 move
                 cout << GREEN << "\nPlayer 1 move:" << END << endl;
 
@@ -1554,8 +2046,121 @@ using namespace std;
                     log << GREEN << "\nPlayer 1 move:" << END;
                 #endif
 
-                while (!movePlayer(playerSide))
+                std::cout << "Your deck: " << endl;
+
+                for (int i = 0;i < 5;i++) // print deck
                 {
+                    switch (handsdeckWhite[i])
+                    {
+                    case Pieces::Pawn:
+                        
+                        cout << "Pawn ";
+
+                        break;
+                    case Pieces::Rook:
+                        
+                        cout << "Rook ";
+
+                        break;
+
+                    case Pieces::King:
+
+                        cout << "King ";
+
+                        break;
+
+                    case Pieces::Queen:
+                       
+                        cout << "Queen ";
+
+                        break;
+
+                    case Pieces::Bishop:
+                        
+                        cout << "Bishop ";
+
+                        break;
+
+                    case Pieces::Knight:
+                        
+                        cout << "Knight ";
+
+                        break;
+
+                    case 69:
+
+                        cout << "Jocker ";
+
+                        break;
+
+                    default:
+                        break;
+                    }
+                }
+                
+                cout << endl;
+                
+                cin >> choice;
+
+                switch(choice) // user choice
+                {
+                    case 'Q':
+                        
+                        temp = Pieces::Queen;
+
+                        break;
+
+                    case 'K':
+
+                        temp = Pieces::King;
+
+                        break;
+
+                    case 'R':
+
+                        temp = Pieces::Rook;
+
+                        break;
+
+                    case 'N':
+
+                        temp = Pieces::Knight;
+
+                        break;
+
+                    case 'B': 
+
+                        temp = Pieces::Bishop;
+
+                        break;
+
+                    case 'P':
+
+                        temp = Pieces::Pawn;
+
+                        break;
+
+                    case 'J':
+
+                        temp = 69;
+
+                        break;
+                }
+                
+                for (int i = 0; i < 5; i++) // replace cards
+                {
+                    if(temp == handsdeckWhite[i])
+                    {
+                        handsdeckWhite[i] = whiteDeck.top();
+
+                        whiteDeck.pop();
+                    }
+                }
+
+                while (!movePlayerForRoyalChess(playerSide, temp))// check for legal move
+                {                     
+                    cout << RED << "Wrong figure, try again" << END << endl;
+
                     continue;
                 }
 
@@ -1571,7 +2176,7 @@ using namespace std;
                         #endif
 
                         break;
-                    }
+                    } 
                 }
             }
         }        

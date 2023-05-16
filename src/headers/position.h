@@ -27,7 +27,7 @@ public:
     uint8_t EnPassant;
 
     handsdeck cards[2];
-    std::vector<card> AIdeck;
+    std::vector<card> AIdeck, playerDeck;
     int8_t points[2]{}, cardsNumber[2]{};
 
     bool WhiteLongCastling;

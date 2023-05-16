@@ -2,6 +2,7 @@
 
 using namespace std;
 
+bool royalMode;
 
 Position::Position() = default;
 Position::Position(const string& shortFen, uint8_t enPassant, bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, float moveCtr)

@@ -1,4 +1,5 @@
 #include "legalMoveGen.h"
+#include "MoveSorter.h"
 
 MoveList LegalMoveGen::generate(const Position& position, uint8_t side, bool onlyCaptures)
 {
@@ -214,6 +215,9 @@ MoveList LegalMoveGen::generateMovesRoyal(const Position& position, uint8_t side
 
     handsdeck deck = position.cards[side];
     std::map<std::string, bool> used;
+
+    bool joker = false;
+
     while (!deck.checkIsEmpty())
     {
         std::string figureType = deck.getCard(0);
@@ -249,8 +253,19 @@ MoveList LegalMoveGen::generateMovesRoyal(const Position& position, uint8_t side
         }
         else
         {
-            moves = generate(position, side, onlyCaptures);
+            joker = true;
+            break;
+        }
+    }
 
+    if (joker)
+    {
+        moves = generate(position, side, onlyCaptures);
+
+        MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+
+        if (!onlyCaptures)
+        {
             for (auto figure : figures)
             {
                 uint8_t amount = countOnes(position.pieces.pieceBitboards[side][figure]);
@@ -259,6 +274,8 @@ MoveList LegalMoveGen::generateMovesRoyal(const Position& position, uint8_t side
             }
         }
     }
+    else
+        MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
 
     return moves;
 }

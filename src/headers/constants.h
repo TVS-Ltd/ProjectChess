@@ -16,4 +16,5 @@ namespace Constants {
 
 namespace Variables {
     static Move killers[15][2];
+    static Move killersRoyal[15][2][6];
 }

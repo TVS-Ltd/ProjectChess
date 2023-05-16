@@ -11,6 +11,14 @@ void Game::start()
     this->position = { "rnbqkbnr/pppppppp/8/8/2B5/5Q2/PPPPPPPP/RNB1K1NR", 255, true, true, true, true, 1 };
 #endif
 
+#if TEST_BLACK_WIN
+    this->position = { "2k5/8/8/8/8/8/7f/l2K4", 255, true, true, true, true, 1 };
+#endif
+
+#if TEST_DRAW
+    this->position = { "k7/8/8/8/8/8/8/K", 255, true, true, true, true, 1 };
+#endif
+
 #if TEST_PROMOTION
     this->position = { "rnbqkbnr/11111111/8/8/8/8/K111111p/11111111", 255, true, true, true, true, 1 };
 #endif
@@ -414,26 +422,36 @@ void Game::PvE()
 {
     sideChoose();
 
-    ///*position.cards[0].addCard(card("Pawn", "-", "-"));
-    //position.cards[0].addCard(card("Pawn", "-", "-"));
-    //position.cards[0].addCard(card("Pawn", "-", "-"));
-    //position.cards[0].addCard(card("Knight", "-", "-"));
-    //position.cards[0].addCard(card("Queen", "-", "-"));
+    position.cards[0].addCard(card("Pawn", "-", "-")); //
+    position.cards[0].addCard(card("Pawn", "-", "-")); //
+    position.cards[0].addCard(card("Pawn", "-", "-")); //
+    position.cards[0].addCard(card("Knight", "-", "-"));
+    position.cards[0].addCard(card("Queen", "-", "-"));
+
+    position.cards[1].addCard(card("Pawn", "-", "-"));
+    position.cards[1].addCard(card("Knight", "-", "-"));
+    position.cards[1].addCard(card("Pawn", "-", "-")); 
+    position.cards[1].addCard(card("Queen", "-", "-"));
+    position.cards[1].addCard(card("Bishop", "-", "-"));
 
 
-    //position.cards[1].addCard(card("Pawn", "-", "-"));
-    //position.cards[1].addCard(card("Pawn", "-", "-"));
-    //position.cards[1].addCard(card("Rook", "-", "-"));
-    //position.cards[1].addCard(card("Queen", "-", "-"));
+    position.AIdeck.push_back(card("Pawn", "-", "-"));
+    position.AIdeck.push_back(card("Bishop", "-", "-"));
+    position.AIdeck.push_back(card("Pawn", "-", "-"));
+    position.AIdeck.push_back(card("Bishop", "-", "-"));
+    position.AIdeck.push_back(card("Knight", "-", "-"));
 
-    //position.AIdeck.push_back(card("Pawn", "-", "-"));
-    //position.AIdeck.push_back(card("Pawn", "-", "-"));
-    //position.AIdeck.push_back(card("Bishop", "-", "-"));
-    //position.AIdeck.push_back(card("Knight", "-", "-"));
+    position.playerDeck.push_back(card("Pawn", "-", "-"));
+    position.playerDeck.push_back(card("Bishop", "-", "-"));
+    position.playerDeck.push_back(card("Bishop", "-", "-"));
+    position.playerDeck.push_back(card("Rook", "-", "-"));
+    position.playerDeck.push_back(card("Pawn", "-", "-"));
+    position.playerDeck.push_back(card("Bishop", "-", "-"));
+    position.playerDeck.push_back(card("Bishop", "-", "-"));
+    position.playerDeck.push_back(card("Rook", "-", "-"));
 
-
-    //position.setNumberOfCards(3, 4);
-    //position.setPoints(110, 75);*/
+    position.setNumberOfCards(3, 4);
+    position.setPoints(110, 75);
 
 
     if (playerSide == Pieces::White)
@@ -465,9 +483,9 @@ void Game::PvE()
             }
 
             // AI move
-            move = ai.bestMove(position, aiSide, 0, 10000);
+            move = ai.bestMoveRoyal(position, aiSide, 0, 10000);
 
-            position.move(move);
+            position.moveRoyal(move);
 
             // Check if game is finished
             if (this->gameFinished())
@@ -494,8 +512,8 @@ void Game::PvE()
         {
 
             // AI move
-            move = ai.bestMove(position, aiSide, 0, 10000);
-            position.move(move);
+            move = ai.bestMoveRoyal(position, aiSide, 0, 10000);
+            position.moveRoyal(move);
 
             cout << position << endl;
 

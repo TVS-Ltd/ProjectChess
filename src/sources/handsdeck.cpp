@@ -3,7 +3,7 @@
 #include <vector>
 #include <iterator>
 #include <algorithm>
-
+#include <stack>
     handsdeck::handsdeck(){}
         
     void handsdeck::setFigure(std::string in)
@@ -49,7 +49,7 @@
         }
     }
 
-    void handsdeck::delete_card(char card_for_delete)
+    void handsdeck::delete_card(char card_for_delete,std::stack<std::string>&input)
     {
         if(card_for_delete == 'N')
         {
@@ -60,8 +60,10 @@
         {
             if(card_for_delete == deck[i].getFigure()[0])
             {
-                deck.erase(deck.begin() + i);
+                deck[i].setFigure(input.top()); 
                 
+                input.pop();
+
                 break;
             }
         }    
@@ -73,11 +75,16 @@
         
         for (int i = 0;i < deck.size();i++)
         {
-            if(toupper(type) == deck[i].getFigure()[0])
+            if(toupper(type) == toupper(deck[i].getFigure()[0]))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    int handsdeck::getSize()
+    {
+        return deck.size();
     }

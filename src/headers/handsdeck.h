@@ -3,6 +3,9 @@
 #include <iterator>
 #include <algorithm>
 #include "position.h"
+#include <stack>
+#pragma once
+using namespace std;
 
 class handsdeck
 {
@@ -39,9 +42,11 @@ class handsdeck
 
         bool checkIsEmpty();
 
-        void delete_card(char card_for_delete);
+        void delete_card(char card_for_delete, std::stack<std::string>&input);
 
         bool checkForCard(char type);
+
+        int getSize();
 
 };
     

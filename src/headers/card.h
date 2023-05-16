@@ -25,8 +25,6 @@ class card
     std::string getPiece();
     void setPiece(std::string pie);
 
-    
-
 };
 
 #endif // CARD_H

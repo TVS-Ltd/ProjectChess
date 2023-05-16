@@ -1,21 +1,15 @@
 #include <limits.h>
+#include "game.h"
 #include "deck.h"
+#include "card.h"
+#include "position.h"
+#include "handsdeck.h"
 #include <sqlite3.h>
 #include "gtest/gtest.h"
 namespace
 {
-    
-
     sqlite3 *db;    
     
-    // TEST(deckTest, setPointsTest)
-    // {
-    //     deck myDeck;
-    //     myDeck.setPoints(42);
-    //     EXPECT_EQ(42, myDeck.getPoints());
-    // }
-
-
     TEST(deckTest, callbackTest)
     {
         deck myDeck;
@@ -56,9 +50,39 @@ namespace
         EXPECT_EQ(4, size);
         myDeck.clear_Bd(db);
     }
+    
+    TEST(fig__Test, appendOnBoardTEST)
+    {
 
+    }
+   
+    TEST(HandsdeckTest, TestCheckForCard) 
+    {
+        handsdeck deck;
+        card Bis("bishop","sdf","dsf");
+        card Que("queen","sdf","dsf");
+        deck.addCard(Bis);
+        deck.addCard(Que);
 
+        EXPECT_EQ(deck.checkForCard('b'), true);
+        EXPECT_EQ(deck.checkForCard('q'), true);
+        EXPECT_EQ(deck.checkForCard('r'), false);
+    }
+
+    TEST(HandsdeckTest2, TestCheckForCard2) 
+    {
+        handsdeck deck;
+        card Paw("pawn","sdf","dsf");
+        card Kni("Knight","sdf","dsf");
+        deck.addCard(Paw);
+        deck.addCard(Kni);
+
+        EXPECT_EQ(deck.checkForCard('K'), true);
+        EXPECT_EQ(deck.checkForCard('P'), true);
+        EXPECT_EQ(deck.checkForCard('r'), false);
+    }
 }
+
 
 
 

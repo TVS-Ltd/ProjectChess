@@ -34,8 +34,6 @@ using namespace std;
         chooseGameMode();
     }
 
-    
-
     bool Game::whiteVictory()
     {
         bool blackHaventGotMoves = (LegalMoveGen::generate(this->position, Pieces::Black).size() == 0);
@@ -746,11 +744,13 @@ using namespace std;
 
     void Game::Gwent()// rm -f *.o 
     {
+        //                                                     Creating a deck of cards
+        //---------------------------------------------------------------------------------------------------------------------------------------------------
         const char* filename = "/home/danila/CCG/ProjectChess/src/DataBase/DB.db";
 
         sqlite3 *db;      
-        handsdeck coloda_white;
-        handsdeck coloda_black;
+        handsdeck colodaWhite;
+        handsdeck colodaBlack;
 
         std::cout << "Create your deck:" << endl;
 
@@ -858,110 +858,31 @@ using namespace std;
 
         bd.print_data_base(stm);
 
-        std::vector<std::string> input;
+        std::stack<std::string> input; // change vector to stack
         sqlite3_stmt* s;
         std::string sql = "SELECT * FROM DECK;";
+        
         if (sqlite3_prepare_v2(db, sql.c_str(), -1, &s, NULL) == SQLITE_OK)
         {
             while (sqlite3_step(s) == SQLITE_ROW)
             {
-                input.push_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))));
+                input.push(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))));
             }
             sqlite3_finalize(s);
         }
-
-        std::cout << "Your deck: " << endl;
         
         // Создаем 5 карт с рандомными фигурами
-        card obj_1(input[0], "test", " test_1"); card obj_2(input[1], "test", " test_1"); card obj_3(input[2], "test", " test_1"); card obj_4(input[3], "test", " test_1"); card obj_5(input[4], "test", " test_1");       
+        card obj_1(input.top(), "test", " test_1"); input.pop();
+        card obj_2(input.top(), "test", " test_1"); input.pop();
+        card obj_3(input.top(), "test", " test_1"); input.pop();
+        card obj_4(input.top(), "test", " test_1"); input.pop();
+        card obj_5(input.top(), "test", " test_1"); input.pop();      
 
         // Кладем их в вектор
-        coloda_white.push_b(obj_1); coloda_white.push_b(obj_2); coloda_white.push_b(obj_3); coloda_white.push_b(obj_4); coloda_white.push_b(obj_5);
+        colodaWhite.push_b(obj_1); colodaWhite.push_b(obj_2); colodaWhite.push_b(obj_3); colodaWhite.push_b(obj_4); colodaWhite.push_b(obj_5);
 
-        // Выводим на экран колоду для пользователя        
-        coloda_white.print();        
 
-        std::cout << endl;
 
-        std::cout << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << endl;
-
-        int t = 2;
-        std::string temp = "";
-
-       while (t != 0) // Две замены карты(белые) 
-        {
-            int choice;
-
-            cin >> choice;
-
-            if (choice == 0)
-            {
-                break;
-            }else 
-            if (choice == 1)
-            {
-                temp = bd.get_random_value(db);
-               
-                obj_1.setFigure(temp);
-
-                coloda_white.CardChange(0, obj_1);
-                
-            }else 
-            if (choice == 2)
-            {
-                temp = bd.get_random_value(db);
-               
-                obj_2.setFigure(temp);
-
-                coloda_white.CardChange(1, obj_2);
-                
-            }else
-            if (choice == 3)
-            {
-              temp = bd.get_random_value(db);
-               
-                obj_3.setFigure(temp);
-
-                coloda_white.CardChange(2, obj_3);
-
-            }else 
-            if (choice == 4)
-            {
-               temp = bd.get_random_value(db);
-               
-                obj_4.setFigure(temp);
-
-                coloda_white.CardChange(3, obj_4);
-
-            }else 
-            if (choice == 5)
-            {
-               temp = bd.get_random_value(db);
-               
-                obj_5.setFigure(temp);
-
-                coloda_white.CardChange(4, obj_5);
-
-            }else 
-            if (choice > 5 || choice < 0 || double(choice))
-            {
-                std::cout << "Incorrect input. Please, try again" << endl;
-                t++;
-            }
-
-            std::cout << "Updated deck " << endl;
-
-            // Выводим на экран измененную колоду для пользователя
- 
-            coloda_white.print();
-
-            std::cout << endl;
-
-            t--;
-        }	
-        
-
-        //Граница
 
         std::cout << std::endl << "Составление колоды для черных:" << std::endl;
 
@@ -973,7 +894,6 @@ using namespace std;
     
         while (true) //Блок для формирования колоды
         {    
-         
             cout << endl;
             
             cin >> choice;
@@ -1027,11 +947,11 @@ using namespace std;
         const char *querrry = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV;";
         sqlite3_prepare_v2(db, querrry, -1, &stmtmt, NULL);
 
-        std::cout << "Deck(main menu)" << std::endl;
+        std::cout << "Deck(main menu)" << std::endl ;
        
         bd.print_data_base(stmtmt); 
 
-        std::cout << "Deck after shuffle:" << std::endl;
+        std::cout << std::endl << "Deck after shuffle:" << std::endl;
 
         bd.blackShuffle(db);
     
@@ -1041,31 +961,124 @@ using namespace std;
 
         bd.print_data_base(stttm);
 
-        std::vector<std::string> inputBlack;
+        std::stack<std::string> inputBlack;
         sqlite3_stmt* sss;
         std::string sssql = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV;";
+        
         if (sqlite3_prepare_v2(db, sssql.c_str(), -1, &sss, NULL) == SQLITE_OK)
         {
             while (sqlite3_step(sss) == SQLITE_ROW)
             {
-                inputBlack.push_back(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))));
+                inputBlack.push(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))));
             }
             sqlite3_finalize(sss);
         }
-
-        std::cout << "Your deck: " << endl;
         
         // Создаем 5 карт с рандомными фигурами
-        card obj_6(inputBlack[0], "test", " test_1"); card obj_7(inputBlack[1], "test", " test_1"); card obj_8(inputBlack[2], "test", " test_1"); card obj_9(inputBlack[3], "test", " test_1"); card obj_10(inputBlack[4], "test", " test_1");       
+        card obj_6(inputBlack.top(), "test", " test_1"); inputBlack.pop();
+        card obj_7(inputBlack.top(), "test", " test_1"); inputBlack.pop();
+        card obj_8(inputBlack.top(), "test", " test_1"); inputBlack.pop();
+        card obj_9(inputBlack.top(), "test", " test_1"); inputBlack.pop();
+        card obj_10(inputBlack.top(), "test", " test_1"); inputBlack.pop();       
 
         // Кладем их в вектор
 
-        coloda_black.push_b(obj_6); coloda_black.push_b(obj_7); coloda_black.push_b(obj_8); coloda_black.push_b(obj_9); coloda_black.push_b(obj_10);
+        colodaBlack.push_b(obj_6); colodaBlack.push_b(obj_7); colodaBlack.push_b(obj_8); colodaBlack.push_b(obj_9); colodaBlack.push_b(obj_10);
+
+        //                                                      Start of Game (decks)
+        //----------------------------------------------------------------------------------------------------------------------------------------------------
 
         // Выводим на экран колоду для пользователя        
-        coloda_black.print();        
+        
+        std::cout << std::endl << "White game deck" << std::endl;
+        
+        colodaWhite.print();        
 
-        std::cout << std::endl << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << std::endl;
+        std::cout << endl;
+
+        std::cout << std::endl << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << endl;
+
+        int t = 2;
+        std::string temp = "";
+
+       while (t != 0) // Две замены карты(белые) 
+        {
+            int choice;
+
+            cin >> choice;
+
+            if (choice == 0)
+            {
+                break;
+            }else 
+            if (choice == 1)
+            {
+                temp = bd.get_random_value(db);
+               
+                obj_1.setFigure(temp);
+
+                colodaWhite.CardChange(0, obj_1);
+                
+            }else 
+            if (choice == 2)
+            {
+                temp = bd.get_random_value(db);
+               
+                obj_2.setFigure(temp);
+
+                colodaWhite.CardChange(1, obj_2);
+                
+            }else
+            if (choice == 3)
+            {
+              temp = bd.get_random_value(db);
+               
+                obj_3.setFigure(temp);
+
+                colodaWhite.CardChange(2, obj_3);
+
+            }else 
+            if (choice == 4)
+            {
+               temp = bd.get_random_value(db);
+               
+                obj_4.setFigure(temp);
+
+                colodaWhite.CardChange(3, obj_4);
+
+            }else 
+            if (choice == 5)
+            {
+               temp = bd.get_random_value(db);
+               
+                obj_5.setFigure(temp);
+
+                colodaWhite.CardChange(4, obj_5);
+
+            }else 
+            if (choice > 5 || choice < 0 || double(choice))
+            {
+                std::cout << "Incorrect input. Please, try again" << endl;
+                t++;
+            }
+
+            std::cout << "Updated deck " << endl;
+
+            // Выводим на экран измененную колоду для пользователя
+ 
+            colodaWhite.print();
+
+            std::cout << endl;
+
+            t--;
+        }	
+        
+        std::cout << std::endl << "Black game deck" << std::endl;
+
+        // Выводим на экран колоду для пользователя        
+        colodaBlack.print();  cout << std::endl;      
+
+        std::cout << std::endl <<  "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << std::endl;
 
         t = 2;
         temp = "";
@@ -1086,7 +1099,7 @@ using namespace std;
                
                 obj_6.setFigure(temp);
 
-                coloda_black.CardChange(0, obj_6);
+                colodaBlack.CardChange(0, obj_6);
                 
             }else 
             if (choice == 2)
@@ -1095,7 +1108,7 @@ using namespace std;
                
                 obj_7.setFigure(temp);
 
-                coloda_black.CardChange(1, obj_7);
+                colodaBlack.CardChange(1, obj_7);
                 
             }else
             if (choice == 3)
@@ -1104,7 +1117,7 @@ using namespace std;
                
                 obj_8.setFigure(temp);
 
-                coloda_black.CardChange(2, obj_8);
+                colodaBlack.CardChange(2, obj_8);
 
             }else 
             if (choice == 4)
@@ -1113,7 +1126,7 @@ using namespace std;
                
                 obj_9.setFigure(temp);
 
-                coloda_black.CardChange(3, obj_9);
+                colodaBlack.CardChange(3, obj_9);
 
             }else 
             if (choice == 5)
@@ -1122,7 +1135,7 @@ using namespace std;
                
                 obj_10.setFigure(temp);
 
-                coloda_black.CardChange(4, obj_10);
+                colodaBlack.CardChange(4, obj_10);
 
             }else 
             if (choice > 5 || choice < 0 || double(choice))
@@ -1135,12 +1148,16 @@ using namespace std;
 
             // Выводим на экран измененную колоду для пользователя
  
-            coloda_black.print();
+            colodaBlack.print();
 
             std::cout << endl;
 
             t--;
         }	
+
+        //                                                      Start of Game (main game)
+        //----------------------------------------------------------------------------------------------------------------------------------------------------
+
 
         Game::position = {"....k.../......../8/8/8/8/......../....K...", 255, true, true, true, true, 1};
         
@@ -1150,50 +1167,55 @@ using namespace std;
             log << position;
         #endif
 
-        int counterOfMoves = 0;
+        int counterOfMoves = 1;
 
         if(playerSide == Pieces::White)
         {
-            int count = 4;
-
             while (true)
             {
-                counterOfMoves++;
-
-                count++;
-                
                 cout << Game::position << endl;
 
                 // Player 1 move
 
                 cout << GREEN << "\nPlayer 1 move:" << END << endl;
 
+                cout << "Test for white vec" << endl;
+
+                // for(int i = 0;i < colodaWhite.getSize();i++)
+                // {
+                //     std::cout << colodaWhite.getFigure(i)
+                // }
+
                 #if LOG_TO_FILE
                     log << GREEN << "\nPlayer 1 move:" << END;
                 #endif
 
-                if(!coloda_white.checkIsEmpty())
+                if(!colodaWhite.checkIsEmpty())
                 {
                     //Старт выставления фигуры на поле
 
                     char choiceOfFigure;
 
+                    bool flag = true;
+
                     string placeOnBoard, typeOfCard;
 
-                    while(true)
+                    while(flag)
                     {
-                        cout << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
+                        cout << std::endl << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
 
                         if(counterOfMoves >= 2 && input.size() != 0)
                         {
-                            std::cout << "Карта. которая должна быть добавлена: " << input[count] << std::endl;
+                            std::cout << "Карта, которая должна быть добавлена: " << input.top() << std::endl;
                             
-                            card temp(input[count], "test", " test_1");
+                            card temp(input.top(), "test", " test_1");
 
-                            coloda_white.addCard(temp); 
+                            colodaWhite.addCard(temp); 
+
+                            input.pop();
                         }
 
-                        coloda_white.print();
+                        colodaWhite.print();
 
                         cout << endl;
 
@@ -1203,18 +1225,17 @@ using namespace std;
 
                         cin >> placeOnBoard; // e4
 
-                        if((int)placeOnBoard[1] < 5)
+                        if((int)placeOnBoard[1] - 48 > 4)
                         {
                             std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
                             continue;
                         }
-
-                        if(coloda_white.checkForCard(choiceOfFigure))
-                        { 
+                        
+                        if(colodaWhite.checkForCard(choiceOfFigure))
+                        {
                             break;
-                        }   
-                        else
-                        { 
+                        }else
+                        {
                             std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
                             continue;
                         }
@@ -1266,11 +1287,11 @@ using namespace std;
                         break;
                     }
 
-                    coloda_white.delete_card(choiceOfFigure);  
+                    colodaWhite.delete_card(choiceOfFigure, input);  
 
                 }
-                //Конец
-                
+
+
                 cout << Game::position;
                 
                 while (!movePlayer(playerSide))
@@ -1299,7 +1320,7 @@ using namespace std;
 
                 std::cout << Game::position << std::endl;
                 
-                if(!coloda_white.checkIsEmpty())
+                if(!colodaWhite.checkIsEmpty())
                 {
                     //Старт выставления фигуры на поле
 
@@ -1311,16 +1332,18 @@ using namespace std;
                     {
                         cout << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
 
-                        if(counterOfMoves >= 2 && inputBlack.size() != 0)
+                        if(counterOfMoves >= 2 &&inputBlack.size() != 0)
                         {
-                            std::cout << "Карта, которая должна быть добавлена: " << inputBlack[count] << std::endl;
+                            std::cout << "Карта, которая должна быть добавлена: " << inputBlack.top() << std::endl;
                             
-                            card temp(inputBlack[count], "test", " test_1");
+                            card temp(inputBlack.top(), "test", " test_1");
 
-                            coloda_black.addCard(temp);  
+                            colodaBlack.addCard(temp);  
+                            
+                            inputBlack.pop();
                         }
 
-                        coloda_black.print();
+                        colodaBlack.print();
 
                         cout << endl;
 
@@ -1330,13 +1353,13 @@ using namespace std;
 
                         cin >> placeOnBoard; // e4
 
-                        if((int)placeOnBoard[1] < 5)
+                        if((int)placeOnBoard[1] - 48 < 5)
                         {
                             std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
                             continue;
                         }
 
-                        if(coloda_black.checkForCard(choiceOfFigure))
+                        if(colodaBlack.checkForCard(choiceOfFigure))
                         { 
                             break;
                         }   
@@ -1404,7 +1427,7 @@ using namespace std;
                     break;
                 }
             
-                count++;
+                counterOfMoves++;
             }
         }
         else

@@ -2443,8 +2443,6 @@ using namespace std;
         }
     }
 
-    
-
     void Game::chooseGameMode()
     {
         // Choose game mode

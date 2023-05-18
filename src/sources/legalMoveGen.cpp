@@ -1,5 +1,6 @@
 #include "legalMoveGen.h"
 #include "MoveSorter.h"
+#include "constants.h"
 
 MoveList LegalMoveGen::generate(const Position& position, uint8_t side, bool onlyCaptures)
 {
@@ -190,20 +191,11 @@ MoveList LegalMoveGen::generateCardMoves(const Position& position, uint8_t side)
 {
     MoveList moves;
 
-    std::map<std::string, bool> used;
-
-    handsdeck deck = position.cards[side];
-    while (!deck.checkIsEmpty()) {
-        std::string figureType = deck.getCard(0);
-
-        if (used[figureType])
-            continue;
-
-        used[figureType] = 1;
-
-        uint8_t attackerType = typeByFigure[figureType];
-
-        LegalMoveGen::generateMovesByCard(position, position.pieces.empty & BitboardRows::SideRows[side], side, attackerType, moves);
+    for (auto [type, count] : position.handsdecks[side])
+    {
+        if (moves.size() > 230) cout << moves.size() << '\n';
+        if (count)
+            LegalMoveGen::generateMovesByCard(position, position.pieces.empty & BitboardRows::SideRows[side], side, type, moves);
     }
 
     return moves;
@@ -212,51 +204,52 @@ MoveList LegalMoveGen::generateCardMoves(const Position& position, uint8_t side)
 MoveList LegalMoveGen::generateMovesRoyal(const Position& position, uint8_t side, bool onlyCaptures)
 {
     MoveList moves;
-
-    handsdeck deck = position.cards[side];
-    std::map<std::string, bool> used;
+    
+    auto deck = position.handsdecks[side];
+    //handsdeck deck = position.cards[side];
+    //std::map<std::string, bool> used;
 
     bool joker = false;
 
-    while (!deck.checkIsEmpty())
+    for (auto [type, count] : deck)
     {
-        std::string figureType = deck.getCard(0);
-        
-        if (used[figureType])
+        if (!count)
             continue;
 
-        used[figureType] = 1;
-
-        if (figureType == "Pawn")
+        switch (type)
         {
+        case Pieces::Pawn:
             LegalMoveGen::generatePawnMoves(position, side, moves, onlyCaptures);
-        }
-        else if (figureType == "Knight")
-        {
+            break;
+        case Pieces::Knight:
             LegalMoveGen::generateKnightMoves(position, side, moves, onlyCaptures);
-        }
-        else if (figureType == "Bishop")
-        {
+            break;
+        case Pieces::Bishop:
             LegalMoveGen::generateBishopMoves(position, side, moves, onlyCaptures);
-        }
-        else if (figureType == "Rook")
-        {
+            break;
+        case Pieces::Rook:
             LegalMoveGen::generateRookMoves(position, side, moves, onlyCaptures);
-        }
-        else if (figureType == "Queen")
-        {
+            break;
+        case Pieces::Queen:
             LegalMoveGen::generateQueenMoves(position, side, moves, onlyCaptures);
-        }
-        else if (figureType == "King")
-        {
+            break;
+        case Pieces::King:
             LegalMoveGen::generateKingMoves(position, side, moves, onlyCaptures);
-        }
-        else
-        {
+            break;
+        case Pieces::Joker:
             joker = true;
             break;
         }
     }
+
+    for (uint8_t i = 0; i < moves.size(); i++)
+        for (uint8_t j = 0; j < 6; j++)
+        {
+            if (moves[i] == Killers::royal[0][side][j] || moves[i] == Killers::royal[1][side][j])
+            {
+                moves[i].type = MoveType::Killer;
+            }
+        }
 
     if (joker)
     {
@@ -266,10 +259,10 @@ MoveList LegalMoveGen::generateMovesRoyal(const Position& position, uint8_t side
 
         if (!onlyCaptures)
         {
-            for (auto figure : figures)
+            for (auto figure : Figures::figures)
             {
                 uint8_t amount = countOnes(position.pieces.pieceBitboards[side][figure]);
-                if (amount < figuresCount[figure])
+                if (amount < Figures::figuresCount[figure])
                     generateMovesByCard(position, position.pieces.empty, side, figure, moves);
             }
         }

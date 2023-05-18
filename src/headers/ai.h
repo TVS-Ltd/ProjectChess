@@ -24,7 +24,6 @@ static int64_t evaluated;
 static int32_t cutOffs;
 static int32_t aspirationWindow = 100;
 
-static int node_count = 0;
 static uint8_t AIside;
 
 class AI
@@ -59,16 +58,15 @@ private:
 
     static tuple<int32_t, Move> aspirationSearchRoyal(const Position& position, uint8_t side, int32_t depth, int32_t evaluation, TranspositionTable& TransposTable);
     
-    static tuple<int32_t, Move> searchRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable);
+    static tuple<int32_t, Move> searchRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, TranspositionTable& TransposTable);
 
-    static tuple<int32_t, Move> searchRootCCG(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable);
+    static tuple<int32_t, Move> searchRootCCG(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, TranspositionTable& TransposTable);
 
-    static tuple<int32_t, Move> searchRootRoyal(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable);
+    static tuple<int32_t, Move> searchRootRoyal(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, TranspositionTable& TransposTable);
 
     template<NodeType node_type>
     static int32_t search(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
-        node_count++;
-        
+
         if (stopSearch)
             return alpha;
 
@@ -84,7 +82,7 @@ private:
 
         for (uint8_t i = 0; i < moves.size(); i++)
         {
-            if (moves[i] == Variables::killers[currentDepth][0] || moves[i] == Variables::killers[currentDepth][1])
+            if (moves[i] == Killers::classic[currentDepth][0] || moves[i] == Killers::classic[currentDepth][1])
             {
                 moves[i].type = MoveType::Killer;
             }
@@ -105,8 +103,6 @@ private:
             }
             return 0;
         }
-
-        // null move pruning with verified search
 
         int32_t score;
 
@@ -159,10 +155,10 @@ private:
         {
 #pragma omp critical
             {
-                if (bestMove.type == MoveType::Quiet && Variables::killers[currentDepth][0] != moves[i])
+                if (bestMove.type == MoveType::Quiet && Killers::classic[currentDepth][0] != moves[i])
                 {
-                    Variables::killers[currentDepth][1] = Variables::killers[currentDepth][0];
-                    Variables::killers[currentDepth][0] = bestMove;
+                    Killers::classic[currentDepth][1] = Killers::classic[currentDepth][0];
+                    Killers::classic[currentDepth][0] = bestMove;
                 }
             }
 
@@ -192,10 +188,10 @@ private:
             {
 #pragma omp critical
                 {
-                    if (moves[i].type == MoveType::Quiet && Variables::killers[currentDepth][0] != moves[i])
+                    if (moves[i].type == MoveType::Quiet && Killers::classic[currentDepth][0] != moves[i])
                     {
-                        Variables::killers[currentDepth][1] = Variables::killers[currentDepth][0];
-                        Variables::killers[currentDepth][0] = moves[i];
+                        Killers::classic[currentDepth][1] = Killers::classic[currentDepth][0];
+                        Killers::classic[currentDepth][0] = moves[i];
                     }
                 }
 
@@ -222,8 +218,6 @@ private:
 
     template<NodeType node_type>
     static int32_t searchCCG(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
-        node_count++;
-
         if (stopSearch)
             return alpha;
 
@@ -236,18 +230,20 @@ private:
             return 0;
 
         MoveList moves = LegalMoveGen::generate(position, side);
+
+        for (uint8_t i = 0; i < moves.size(); i++)
+        {
+            if (moves[i].type != MoveType::LayOutCard && (moves[i] == Killers::classic[currentDepth][0] || moves[i] == Killers::classic[currentDepth][1]))
+            {
+                moves[i].type = MoveType::Killer;
+            }
+        }
+
+        MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
+
         {
             MoveList cardMoves = LegalMoveGen::generateCardMoves(position, side);
 
-            for (uint8_t i = 0; i < moves.size(); i++)
-            {
-                if (moves[i].type != MoveType::LayOutCard && (moves[i] == Variables::killers[currentDepth][0] || moves[i] == Variables::killers[currentDepth][1]))
-                {
-                    moves[i].type = MoveType::Killer;
-                }
-            }
-
-            MoveSorter::quickSort(position.pieces, moves, 0, moves.size() - 1);
             MoveSorter::quickSort(position.pieces, cardMoves, 0, cardMoves.size() - 1);
 
             moves.unite(cardMoves);
@@ -266,8 +262,6 @@ private:
             }
             return 0;
         }
-
-        // null move pruning with verified search
 
         int32_t score;
 
@@ -295,43 +289,50 @@ private:
 
             if (side == AIside)
             {
-                std::vector<card> deck = position.AIdeck;
+                uint8_t minPoints = 10, minType = Pieces::Pawn;
 
-                uint8_t i = 0;
-                while (pointsByFigure[deck[i].getFigure()] < points)
-                    i++;
+                for (auto [type, count] : position.aiDeck)
+                    if (count && Figures::points[type] >= points)
+                    {
+                        minPoints = std::min(minPoints, Figures::points[type]);
+                        minType = type;
+                    }
 
-                position.cards[side].addCard(deck[i]);
-                position.points[side] -= pointsByFigure[deck[i].getFigure()];
-                position.AIdeck.erase(position.AIdeck.begin() + i);
+                position.handsdecks[side][minType]++;
+                position.points[side] -= minPoints;
+                position.aiDeck[minType]--;
             }
             else
             {
-                std::string figureType;
+                uint8_t type, p;
                 if (points >= 50) {
-                    figureType = "Queen";
+                    type = Pieces::Queen;
+                    p = 50;
                 }
                 else if (points >= 30) {
-                    figureType = "Knight";
+                    type = Pieces::Knight;
+                    p = 30;
                 }
                 else if (points >= 25) {
-                    figureType = "Bishop";
+                    type = Pieces::Bishop;
+                    p = 25;
                 }
                 else if (points >= 20) {
-                    figureType = "Rook";
+                    type = Pieces::Rook;
+                    p = 20;
                 }
                 else if (points >= 10) {
-                    figureType = "Pawn";
+                    type = Pieces::Pawn;
+                    p = 10;
                 }
                 else {
                     return ((side == Pieces::White) ? Constants::Infinity::Negative : Constants::Infinity::Positive);
                 }
 
-                position.points[side] -= pointsByFigure[figureType];
-                position.cards[side].addCard(card(figureType, "-", "-"));
+                position.points[side] -= p;
+                position.handsdecks[side][type]++;
             }
             position.cardsNumber[side]--;
-
         }
 
         Position copy = position;
@@ -366,10 +367,10 @@ private:
         {
 #pragma omp critical
             {
-                if (bestMove.type == MoveType::Quiet && Variables::killers[currentDepth][0] != moves[i])
+                if (bestMove.type == MoveType::Quiet && Killers::classic[currentDepth][0] != moves[i])
                 {
-                    Variables::killers[currentDepth][1] = Variables::killers[currentDepth][0];
-                    Variables::killers[currentDepth][0] = bestMove;
+                    Killers::classic[currentDepth][1] = Killers::classic[currentDepth][0];
+                    Killers::classic[currentDepth][0] = bestMove;
                 }
             }
 
@@ -378,12 +379,11 @@ private:
 
             return beta;
         }
-        if (score > alpha) {
+        if (score > alpha)
+        {
             alpha = score;
             scoreType = Entry::Valid;
         }
-
-        std::vector<int32_t> scores(moves.size(), -1);
 
         for (i; i < moves.size(); i = i + 1)
         {
@@ -399,10 +399,10 @@ private:
             {
 #pragma omp critical
                 {
-                    if (moves[i].type == MoveType::Quiet && Variables::killers[currentDepth][0] != moves[i])
+                    if (moves[i].type == MoveType::Quiet && Killers::classic[currentDepth][0] != moves[i])
                     {
-                        Variables::killers[currentDepth][1] = Variables::killers[currentDepth][0];
-                        Variables::killers[currentDepth][0] = moves[i];
+                        Killers::classic[currentDepth][1] = Killers::classic[currentDepth][0];
+                        Killers::classic[currentDepth][0] = moves[i];
                     }
                 }
 
@@ -418,8 +418,6 @@ private:
                 alpha = score;
                 scoreType = Entry::Valid;
             }
-
-            scores[i] = score;
         }
 
         if (bestMove.type != MoveType::LayOutCard && bestMove.type != MoveType::Unknown && !stopSearch)
@@ -429,9 +427,6 @@ private:
     
     template<NodeType node_type>
     static int32_t searchRoyal(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
-
-        node_count++;
-
         if (stopSearch)
             return alpha;
 
@@ -443,13 +438,11 @@ private:
         if (position.fiftyMovesCtr >= 50 or position.repetitionHistory.getRepetionNumber(position.hash) >= 3)
             return 0;
 
-        MoveList moves;// = LegalMoveGen::generateMovesRoyal(position, side);
+        MoveList moves;
 
         Move move, bestMove = Constants::UnknownMove;
 
         bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[side][Pieces::King]), side);
-
-        // null move pruning with verified search
 
         int32_t score;
 
@@ -470,56 +463,32 @@ private:
             }
         }
 
-        // посмотреть, какие карты могут придти (исходя из состава колоды), проверить каждый случай, 
-        // посчитать мат. ожидание и вернуть его
-
-        std::map<std::string, uint8_t> counts;
-
-        auto deck = (side == AIside) ? position.AIdeck : position.playerDeck;
-
-        std::vector<card> new_cards;
-        for (uint8_t i = 0; i < deck.size(); i++)
-        {
-            std::string figure = deck[i].getFigure();
-            if (!counts[figure])
-            {
-                new_cards.push_back(deck[i]);
-            }
-            counts[figure]++;
-        }
+        auto deck = (side == AIside) ? &position.aiDeck : &position.playerDeck;
         
         double sum = 0;
 
-        std::vector<int32_t> scores(new_cards.size(), 0);
-        int32_t N = deck.size();
         uint8_t index = 0;
 
-        int32_t A = alpha, B = beta;
+        int32_t N = 0, A = alpha, B = beta;
+        for (auto t : *deck)
+            N++;
 
-        map<int8_t, int8_t> countsFigures;
-        handsdeck d = position.cards[AIside];
-        while (!d.checkIsEmpty())
-        {
-            countsFigures[typeByFigure[d.getCard(0)]]++;
-        }
-
-        for (auto card : new_cards)
+        for (auto [type, count]: *deck)
         {
             alpha = A, beta = B;
 
-            position.cards[side].addCard(card);
-            countsFigures[typeByFigure[card.getFigure()]]++;
+            position.handsdecks[side][type]++;
+            (*deck)[type]--;
 
             moves = LegalMoveGen::generateMovesRoyal(position, side);
 
             for (uint8_t i = 0; i < moves.size(); i++)
-                if (moves[i] == Variables::killersRoyal[currentDepth][0][moves[i].AttackerType] || moves[i] == Variables::killersRoyal[currentDepth][1][moves[i].AttackerType])
+                if (moves[i] == Killers::royal[currentDepth][0][moves[i].AttackerType] || moves[i] == Killers::royal[currentDepth][1][moves[i].AttackerType])
                     moves[i].type = MoveType::Killer;
 
             Position copy = position;
 
-            uint8_t i = 0;
-            int32_t scoreType;
+            int32_t scoreType = Entry::UBound;
             
             if (moves.size() == 0)
             {
@@ -540,11 +509,9 @@ private:
             }
             else
             {
-                // move from table
                 Entry tt_result = TransposTable.tryToFindBestMove(position.hash);
 
                 uint8_t i = 0;
-                scoreType = Entry::UBound;
 
                 Position copy = position;
 
@@ -552,7 +519,7 @@ private:
                 {
                     bestMove = tt_result.BestMove;
 
-                    if (tt_result.Depth >= depth_left && countsFigures[tt_result.BestMove.AttackerType])
+                    if (tt_result.Depth >= depth_left && position.handsdecks[side][tt_result.BestMove.AttackerType]/*countsFigures[tt_result.BestMove.AttackerType]*/)
                     {
                         if (tt_result.Flag == Entry::Valid)
                             return tt_result.Score;
@@ -573,10 +540,10 @@ private:
                 {
 #pragma omp critical
                     {
-                        if (bestMove.type == MoveType::Quiet && Variables::killersRoyal[currentDepth][0][moves[i].AttackerType] != moves[i])
+                        if (bestMove.type == MoveType::Quiet && Killers::royal[currentDepth][0][moves[i].AttackerType] != moves[i])
                         {
-                            Variables::killersRoyal[currentDepth][1][moves[i].AttackerType] = Variables::killersRoyal[currentDepth][0][moves[i].AttackerType];
-                            Variables::killersRoyal[currentDepth][0][moves[i].AttackerType] = bestMove;
+                            Killers::royal[currentDepth][1][moves[i].AttackerType] = Killers::royal[currentDepth][0][moves[i].AttackerType];
+                            Killers::royal[currentDepth][0][moves[i].AttackerType] = bestMove;
                         }
                     }
 
@@ -589,9 +556,6 @@ private:
                     alpha = score;
                     scoreType = Entry::Valid;
                 }
-
-                //
-
 
                 for (i; i < moves.size(); i = i + 1)
                 {
@@ -607,10 +571,10 @@ private:
                     {
                         alpha = beta;
 
-                        if (moves[i].type == MoveType::Quiet && Variables::killersRoyal[currentDepth][0][moves[i].AttackerType] != moves[i])
+                        if (moves[i].type == MoveType::Quiet && Killers::royal[currentDepth][0][moves[i].AttackerType] != moves[i])
                         {
-                            Variables::killersRoyal[currentDepth][1][moves[i].AttackerType] = Variables::killersRoyal[currentDepth][0][moves[i].AttackerType];
-                            Variables::killersRoyal[currentDepth][0][moves[i].AttackerType] = moves[i];
+                            Killers::royal[currentDepth][1][moves[i].AttackerType] = Killers::royal[currentDepth][0][moves[i].AttackerType];
+                            Killers::royal[currentDepth][0][moves[i].AttackerType] = moves[i];
                         }
 
                         if (moves[i].type != MoveType::Unknown && !stopSearch)
@@ -627,10 +591,10 @@ private:
             if (bestMove.type != MoveType::Unknown && !stopSearch)
                 TransposTable.addEntry({ position.hash, bestMove, depth_left, alpha, scoreType});
 
-            sum += (double)(counts[card.getFigure()] / N) * alpha;
+            sum += (double)(count / N) * alpha;
 
-            position.cards[side].delete_card(card.getFigure()[0]);
-            countsFigures[typeByFigure[card.getFigure()]]--;
+            position.handsdecks[side][type]--;
+            (*deck)[type]++;
         }
 
         return sum;

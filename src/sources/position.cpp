@@ -47,24 +47,11 @@ ostream& operator<<(ostream& ostream, Position position)
 
 void Position::move(Move move)
 {
-    std::string figureType;
-
     if (move.type != MoveType::LayOutCard) {
         this->removePiece(move.From, move.AttackerType, move.AttackerSide);
     }
     else {
-        if (move.AttackerType == Pieces::Pawn)
-            figureType = "Pawn";
-        else if (move.AttackerType == Pieces::Knight)
-            figureType = "Knight";
-        else if (move.AttackerType == Pieces::Bishop)
-            figureType = "Bishop";
-        else if (move.AttackerType == Pieces::Rook)
-            figureType = "Rook";
-        else if (move.AttackerType == Pieces::Queen)
-            figureType = "Queen";
-
-        cards[move.AttackerSide].delete_card(figureType[0]);
+        handsdecks[move.AttackerSide][move.AttackerType]--;
     }
 
     this->addPiece(move.To, move.AttackerType, move.AttackerSide);
@@ -191,29 +178,12 @@ void Position::move(Move move)
 
 void Position::moveRoyal(Move move)
 {
-    std::string figureType;
-
-    if (move.AttackerType == Pieces::Pawn)
-        figureType = "Pawn";
-    else if (move.AttackerType == Pieces::Knight)
-        figureType = "Knight";
-    else if (move.AttackerType == Pieces::Bishop)
-        figureType = "Bishop";
-    else if (move.AttackerType == Pieces::Rook)
-        figureType = "Rook";
-    else if (move.AttackerType == Pieces::Queen)
-        figureType = "Queen";
-    else if (move.AttackerType == Pieces::King)
-        figureType = "King";
-    else
-        figureType = "Joker";
-
-    if (figureType != "Joker")
+    if (move.AttackerType != Pieces::Joker)
     {
         this->removePiece(move.From, move.AttackerType, move.AttackerSide);
     }
 
-    cards[move.AttackerSide].delete_card(figureType[0]);
+    handsdecks[move.AttackerSide][move.AttackerType]--;
 
     this->addPiece(move.To, move.AttackerType, move.AttackerSide);
 

@@ -52,8 +52,6 @@ int32_t MoveSorter::evaluateMove(const Pieces& pieces, Move& move)
     }
 
     if (move.From == 255) {
-        // mobility
-
         if (move.AttackerType == Pieces::Pawn) {
         }
         else if (move.AttackerType == Pieces::Knight) {
@@ -68,8 +66,6 @@ int32_t MoveSorter::evaluateMove(const Pieces& pieces, Move& move)
         else if (move.AttackerType == Pieces::Rook) {
             evaluation += StaticEvaluator::Mobility::Rook * countOnes(PsLegalMoveMaskGen::generateRookMask(pieces, move.To, move.AttackerSide, false));
         }
-
-        // danger for opponent
 
         Pieces copy = pieces;
         setOne(copy.pieceBitboards[move.AttackerSide][move.AttackerType], move.To);

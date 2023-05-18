@@ -32,19 +32,19 @@ AI::AI(const string& openingBookPath)
 {
     this->openingBook = { openingBookPath };
 
-    for (int8_t i = 0; i < Constants::MaximalDepth; i++) {
-        Variables::killers[i][0] = Variables::killers[i][1] = Constants::UnknownMove;
+    for (int8_t i = 0; i < Constants::MaximalDepth; i++)
+    {
+        Killers::classic[i][0] = Killers::classic[i][1] = Constants::UnknownMove;
+
         for (int8_t j = 0; j < 6; j++)
-            Variables::killersRoyal[i][0][j] = Variables::killersRoyal[i][1][j] = Constants::UnknownMove;
+            Killers::royal[i][0][j] = Killers::royal[i][1][j] = Constants::UnknownMove;
     }
 }
+
 Move AI::bestMove(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
 {
-    for (int8_t i = 0; i < Constants::MaximalDepth; i++) {
-        Variables::killers[i][0] = Variables::killers[i][1] = Constants::UnknownMove;
-    }
+    maxMs = 200000;
 
-    node_count = 0;
     std::cout << endl;
 
     std::cout << "Thinking..." << endl;
@@ -88,8 +88,8 @@ Move AI::bestMove(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
 
         bestMoveThread = async(AI::aspirationSearch, position, side, i, bestMoveEvaluation, ref(TransposTable));
 
-        //updateBestMove = true;
-        /*while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
+        updateBestMove = true;
+        while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
         {
             if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs)
             {
@@ -97,21 +97,19 @@ Move AI::bestMove(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
                 break;
             }
             usleep(20000);
-        }*/
-        //if (updateBestMove || i == 1)
+        }
+        if (updateBestMove || i == 1)
         {
             auto score = bestMoveThread.get();
             if (get<1>(score) != Constants::UnknownMove)
                 tie(bestMoveEvaluation, bestMove) = score;
         }
-        /*else
+        else
         {
             stopSearch = true;
             break;
-        }*/
+        }
 
-
-        //cout << (int)bestMove.From << "->" << (int)bestMove.To << '\n';
 #if DEBUG
         cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
         cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
@@ -127,7 +125,10 @@ Move AI::bestMove(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
 
 Move AI::bestMoveCCG(Position position, uint8_t side, int32_t minMs, int32_t maxMs)
 {
-    node_count = 0;
+    AIside = side;
+
+    maxMs = 200000;
+
     std::cout << endl;
 
     std::cout << "Thinking..." << endl;
@@ -152,15 +153,15 @@ Move AI::bestMoveCCG(Position position, uint8_t side, int32_t minMs, int32_t max
     bool updateBestMove;
     AIside = side;
 
-    for (int i = 1; i < 5; i = i + 1)
+    for (int i = 1; i < 6; i = i + 1)
     {
         evaluated = 0;
         cutOffs = 0;
 
         bestMoveThread = async(AI::aspirationSearchCCG, position, side, i, bestMoveEvaluation, ref(TransposTable));
 
-        //updateBestMove = true;
-        /*while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
+        updateBestMove = true;
+        while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
         {
             if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs)
             {
@@ -168,21 +169,20 @@ Move AI::bestMoveCCG(Position position, uint8_t side, int32_t minMs, int32_t max
                 break;
             }
             usleep(20000);
-        }*/
-        //if (updateBestMove || i == 1)
+        }
+
+        if (updateBestMove || i == 1)
         {
             auto score = bestMoveThread.get();
             if (get<1>(score) != Constants::UnknownMove)
                 tie(bestMoveEvaluation, bestMove) = score;
         }
-        /*else
+        else
         {
             stopSearch = true;
             break;
-        }*/
+        }
 
-
-        //cout << (int)bestMove.From << "->" << (int)bestMove.To << '\n';
 #if DEBUG
         cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
         cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
@@ -200,14 +200,8 @@ Move AI::bestMoveRoyal(Position position, uint8_t side, int32_t minMs, int32_t m
 {
     AIside = side;
 
-    handsdeck cur = position.cards[AIside];
-    while (!cur.checkIsEmpty())
-    {
-        std::cout << cur.getCard(0) << ' ';
-    }
-    std::cout << '\n';
+    maxMs = 200000;
 
-    node_count = 0;
     std::cout << endl;
 
     std::cout << "Thinking..." << endl;
@@ -230,19 +224,16 @@ Move AI::bestMoveRoyal(Position position, uint8_t side, int32_t minMs, int32_t m
     TranspositionTable TransposTable;
 
     bool updateBestMove;
-    AIside = side;
 
-    for (int i = 1; i < 4; i = i + 1)
+    for (int i = 1; i < 6; i = i + 1)
     {
-        //std::cout << i << " ::: \n";
-
         evaluated = 0;
         cutOffs = 0;
 
         bestMoveThread = async(AI::aspirationSearchRoyal, position, side, i, bestMoveEvaluation, ref(TransposTable));
 
-        //updateBestMove = true;
-        /*while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
+        updateBestMove = true;
+        while (bestMoveThread.wait_for(chrono::seconds(0)) != future_status::ready)
         {
             if ((nsecs - timeStart) / (int32_t)1e+6 >= maxMs)
             {
@@ -250,41 +241,29 @@ Move AI::bestMoveRoyal(Position position, uint8_t side, int32_t minMs, int32_t m
                 break;
             }
             usleep(20000);
-        }*/
-        //if (updateBestMove || i == 1)
+        }
+        if (updateBestMove || i == 1)
         {
             auto score = bestMoveThread.get();
             if (get<1>(score) != Constants::UnknownMove)
                 tie(bestMoveEvaluation, bestMove) = score;
         }
-        /*else
+        else
         {
             stopSearch = true;
             break;
-        }*/
+        }
 
-
-        //cout << (int)bestMove.From << "->" << (int)bestMove.To << '\n';
 #if DEBUG
         cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
         cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
 #endif
     }
 
-    double duration = nsecs - timeStart;
-
-    timex += duration;
-    countx++;
-
     usleep(max((int64_t)0, (minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3));
 
     cout << "\033[92m" << "Search finished." << "\033[0m" << endl;
 
-
-    if (bestMove == Constants::UnknownMove)
-    {
-        cout << "There isn't any moves\n";
-    }
     return bestMove;
 }
 
@@ -292,13 +271,13 @@ tuple<int32_t, Move> AI::aspirationSearch(const Position& position, uint8_t side
     tuple<int32_t, Move> score;
     int32_t L = evaluation - aspirationWindow, R = evaluation + aspirationWindow;
 
-    score = AI::searchRoot(position, side, L, R, depth, 0, TransposTable);
+    score = AI::searchRoot(position, side, L, R, depth, TransposTable);
 
     if (get<0>(score) <= L)
-        score = AI::searchRoot(position, side, Constants::Infinity::Negative, R, depth, 0, TransposTable);
+        score = AI::searchRoot(position, side, Constants::Infinity::Negative, R, depth, TransposTable);
     else
         if (get<0>(score) >= R)
-            score = AI::searchRoot(position, side, L, Constants::Infinity::Positive, depth, 0, TransposTable);
+            score = AI::searchRoot(position, side, L, Constants::Infinity::Positive, depth, TransposTable);
 
     return score;
 }
@@ -307,13 +286,13 @@ tuple<int32_t, Move> AI::aspirationSearchCCG(const Position& position, uint8_t s
     tuple<int32_t, Move> score;
     int32_t L = evaluation - aspirationWindow, R = evaluation + aspirationWindow;
 
-    score = AI::searchRootCCG(position, side, L, R, depth, 0, TransposTable);
+    score = AI::searchRootCCG(position, side, L, R, depth, TransposTable);
 
     if (get<0>(score) <= L)
-        score = AI::searchRootCCG(position, side, Constants::Infinity::Negative, R, depth, 0, TransposTable);
+        score = AI::searchRootCCG(position, side, Constants::Infinity::Negative, R, depth, TransposTable);
     else
         if (get<0>(score) >= R)
-            score = AI::searchRootCCG(position, side, L, Constants::Infinity::Positive, depth, 0, TransposTable);
+            score = AI::searchRootCCG(position, side, L, Constants::Infinity::Positive, depth, TransposTable);
 
     return score;
 }
@@ -323,23 +302,23 @@ tuple<int32_t, Move> AI::aspirationSearchRoyal(const Position& position, uint8_t
     tuple<int32_t, Move> score;
     int32_t L = evaluation - aspirationWindow, R = evaluation + aspirationWindow;
 
-    score = AI::searchRootRoyal(position, side, L, R, depth, 0, TransposTable);
+    score = AI::searchRootRoyal(position, side, L, R, depth, TransposTable);
 
     if (get<0>(score) <= L)
-        score = AI::searchRootRoyal(position, side, Constants::Infinity::Negative, R, depth, 0, TransposTable);
+        score = AI::searchRootRoyal(position, side, Constants::Infinity::Negative, R, depth, TransposTable);
     else
         if (get<0>(score) >= R)
-            score = AI::searchRootRoyal(position, side, L, Constants::Infinity::Positive, depth, 0, TransposTable);
+            score = AI::searchRootRoyal(position, side, L, Constants::Infinity::Positive, depth, TransposTable);
 
     return score;
 }
 
-tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
+tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, TranspositionTable& TransposTable) {
     MoveList moves = LegalMoveGen::generate(position, side);
 
     for (uint8_t i = 0; i < moves.size(); i++)
     {
-        if (moves[i].type != MoveType::LayOutCard && (moves[i] == Variables::killers[currentDepth][0] || moves[i] == Variables::killers[currentDepth][1]))
+        if (moves[i] == Killers::classic[0][0] || moves[i] == Killers::classic[0][1])
         {
             moves[i].type = MoveType::Killer;
         }
@@ -349,11 +328,10 @@ tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alp
 
     bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[side][Pieces::King]), side);
 
-    int32_t score;
     Position copy;
     Move bestMove = Constants::UnknownMove;
 
-    int32_t sz = moves.size(), new_depth = depth_left - !in_check;
+    int32_t score, sz = moves.size(), new_depth = depth_left - !in_check;
 
 #pragma omp parallel private(copy)
     {
@@ -364,23 +342,23 @@ tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alp
             copy.move(moves[i]);
 
             if (i == 0) {
-                score = -AI::search<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
+                score = -AI::search<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, 1, TransposTable);
             }
             else {
-                score = -AI::search<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, currentDepth + 1, TransposTable);
+                score = -AI::search<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, 1, TransposTable);
 
                 if (score > alpha)
-                    score = -AI::search<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
+                    score = -AI::search<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, 1, TransposTable);
             }
 #pragma omp critical
             {
                 if (score > alpha) {
                     bestMove = moves[i];
 
-                    if (score >= beta && moves[i].type == MoveType::Quiet && Variables::killers[0][0] != moves[i])
+                    if (score >= beta && moves[i].type == MoveType::Quiet && Killers::classic[0][0] != moves[i])
                     {
-                        Variables::killers[0][1] = Variables::killers[0][0];
-                        Variables::killers[0][0] = moves[i];
+                        Killers::classic[0][1] = Killers::classic[0][0];
+                        Killers::classic[0][0] = moves[i];
                     }
 
                     alpha = score;
@@ -391,17 +369,18 @@ tuple<int32_t, Move> AI::searchRoot(Position position, uint8_t side, int32_t alp
 
     if (bestMove == Constants::UnknownMove && moves.size() > 0)
         bestMove = moves[0];
+
     return make_tuple(alpha, bestMove);
 }
 
-tuple<int32_t, Move> AI::searchRootCCG(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable) {
+tuple<int32_t, Move> AI::searchRootCCG(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, TranspositionTable& TransposTable) {
     MoveList moves = LegalMoveGen::generate(position, side);
     {
         MoveList cardMoves = LegalMoveGen::generateCardMoves(position, side);
 
         for (uint8_t i = 0; i < moves.size(); i++)
         {
-            if (moves[i].type != MoveType::LayOutCard && (moves[i] == Variables::killers[currentDepth][0] || moves[i] == Variables::killers[currentDepth][1]))
+            if (moves[i].type != MoveType::LayOutCard && (moves[i] == Killers::classic[0][0] || moves[i] == Killers::classic[0][1]))
             {
                 moves[i].type = MoveType::Killer;
             }
@@ -413,14 +392,12 @@ tuple<int32_t, Move> AI::searchRootCCG(Position position, uint8_t side, int32_t 
         moves.unite(cardMoves);
     }
 
-
     bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[side][Pieces::King]), side);
 
-    int32_t score;
     Position copy;
     Move bestMove = Constants::UnknownMove;
 
-    int32_t sz = moves.size(), new_depth = depth_left - !in_check;
+    int32_t score, sz = moves.size(), new_depth = depth_left - !in_check;
 
 #pragma omp parallel private(copy)
     {
@@ -431,23 +408,23 @@ tuple<int32_t, Move> AI::searchRootCCG(Position position, uint8_t side, int32_t 
             copy.move(moves[i]);
 
             if (i == 0) {
-                score = -AI::searchCCG<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
+                score = -AI::searchCCG<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, 1, TransposTable);
             }
             else {
-                score = -AI::searchCCG<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, currentDepth + 1, TransposTable);
+                score = -AI::searchCCG<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, 1, TransposTable);
 
                 if (score > alpha)
-                    score = -AI::searchCCG<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
+                    score = -AI::searchCCG<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, 1, TransposTable);
             }
 #pragma omp critical
             {
                 if (score > alpha) {
                     bestMove = moves[i];
 
-                    if (moves[i].type != MoveType::LayOutCard && score >= beta && moves[i].type == MoveType::Quiet && Variables::killers[0][0] != moves[i])
+                    if (score >= beta && moves[i].type == MoveType::Quiet && Killers::classic[0][0] != moves[i])
                     {
-                        Variables::killers[0][1] = Variables::killers[0][0];
-                        Variables::killers[0][0] = moves[i];
+                        Killers::classic[0][1] = Killers::classic[0][0];
+                        Killers::classic[0][0] = moves[i];
                     }
 
                     alpha = score;
@@ -458,10 +435,11 @@ tuple<int32_t, Move> AI::searchRootCCG(Position position, uint8_t side, int32_t 
 
     if (bestMove == Constants::UnknownMove)
         bestMove = moves[0];
+
     return make_tuple(alpha, bestMove);
 }
 
-tuple<int32_t, Move> AI::searchRootRoyal(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, int32_t currentDepth, TranspositionTable& TransposTable)
+tuple<int32_t, Move> AI::searchRootRoyal(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t depth_left, TranspositionTable& TransposTable)
 {
     MoveList moves = LegalMoveGen::generateMovesRoyal(position, side);
 
@@ -470,11 +448,10 @@ tuple<int32_t, Move> AI::searchRootRoyal(Position position, uint8_t side, int32_
 
     bool in_check = PsLegalMoveMaskGen::inDanger(position.pieces, bsf(position.pieces.pieceBitboards[side][Pieces::King]), side);
 
-    int32_t score;
     Position copy;
     Move bestMove = Constants::UnknownMove;
 
-    int32_t sz = moves.size(), new_depth = depth_left - !in_check;
+    int32_t score, sz = moves.size(), new_depth = depth_left - !in_check;
 
 #pragma omp parallel private(copy)
     {
@@ -485,23 +462,23 @@ tuple<int32_t, Move> AI::searchRootRoyal(Position position, uint8_t side, int32_
             copy.moveRoyal(moves[i]);
 
             if (i == 0) {
-                score = -AI::searchRoyal<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
+                score = -AI::searchRoyal<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, 1, TransposTable);
             }
             else {
-                score = -AI::searchRoyal<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, currentDepth + 1, TransposTable);
+                score = -AI::searchRoyal<NodeType::NONPV>(copy, Pieces::inverse(side), -alpha - 1, -alpha, new_depth, 1, TransposTable);
 
                 if (score > alpha)
-                    score = -AI::searchRoyal<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, currentDepth + 1, TransposTable);
+                    score = -AI::searchRoyal<NodeType::PV>(copy, Pieces::inverse(side), -beta, -alpha, new_depth, 1, TransposTable);
             }
 #pragma omp critical
             {
                 if (score > alpha) {
                     bestMove = moves[i];
 
-                    if (score >= beta && moves[i].type == MoveType::Quiet && Variables::killersRoyal[0][0][moves[i].AttackerType] != moves[i])
+                    if (score >= beta && moves[i].type == MoveType::Quiet && Killers::royal[0][0][moves[i].AttackerType] != moves[i])
                     {
-                        Variables::killersRoyal[0][1][moves[i].AttackerType] = Variables::killersRoyal[0][0][moves[i].AttackerType];
-                        Variables::killersRoyal[0][0][moves[i].AttackerType] = moves[i];
+                        Killers::royal[0][1][moves[i].AttackerType] = Killers::royal[0][0][moves[i].AttackerType];
+                        Killers::royal[0][0][moves[i].AttackerType] = moves[i];
                     }
 
                     alpha = score;
@@ -512,13 +489,12 @@ tuple<int32_t, Move> AI::searchRootRoyal(Position position, uint8_t side, int32_
 
     if (bestMove == Constants::UnknownMove)
         bestMove = moves[0];
+
     return make_tuple(alpha, bestMove);
 }
 
 int32_t AI::quiescence(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t currentDepth) {
     
-    node_count++;
-
     if (stopSearch)
     {
         return alpha;
@@ -595,7 +571,6 @@ int32_t AI::quiescence(Position position, uint8_t side, int32_t alpha, int32_t b
 
 int32_t AI::quiescenceRoyal(Position position, uint8_t side, int32_t alpha, int32_t beta, int32_t currentDepth)
 {
-    node_count++;
 
     if (stopSearch)
     {
@@ -630,22 +605,9 @@ int32_t AI::quiescenceRoyal(Position position, uint8_t side, int32_t alpha, int3
             alpha = stand_pat;
     }
 
-    MoveList moves;// = LegalMoveGen::generateMovesRoyal(position, side, true);
+    MoveList moves;
 
-    std::map<std::string, uint8_t> counts;
-
-    auto deck = (side == AIside) ? position.AIdeck : position.playerDeck;
-
-    std::vector<card> new_cards;
-    for (uint8_t i = 0; i < deck.size(); i++)
-    {
-        std::string figure = deck[i].getFigure();
-        if (!counts[figure])
-        {
-            new_cards.push_back(deck[i]);
-        }
-        counts[figure]++;
-    }
+    auto deck = (side == AIside) ? &position.aiDeck : &position.playerDeck;
 
     double sum = 0;
 
@@ -653,14 +615,17 @@ int32_t AI::quiescenceRoyal(Position position, uint8_t side, int32_t alpha, int3
 
     int32_t pieceMaterial = StaticEvaluator::pieceMaterial(position.pieces, Pieces::inverse(side));
 
-    int32_t N = deck.size(), A = alpha, B = beta;
+    int32_t N = 0, A = alpha, B = beta;
+    for (auto t : *deck)
+        N++;
 
-    for (auto card : new_cards)
+    for (auto [type, count] : *deck)
     {
         alpha = A, beta = B;
 
-        position.cards[side].addCard(card);
-
+        position.handsdecks[side][type]++;
+        (*deck)[type]--;
+        
         moves = LegalMoveGen::generateMovesRoyal(position, side, true);
 
         if (moves.size() == 0)
@@ -720,9 +685,10 @@ int32_t AI::quiescenceRoyal(Position position, uint8_t side, int32_t alpha, int3
             }
         }
        
-        sum += (double)(counts[card.getFigure()] / N) * alpha;
+        sum += (double)(count / N) * alpha;
 
-        position.cards[side].delete_card(card.getFigure()[0]);
+        position.handsdecks[side][type]--;
+        (*deck)[type]++;
     }
 
     return sum;

@@ -10,15 +10,6 @@
 
 #pragma once
 
-static map<int8_t, std::string>
-figureByPoins
-= { {10, "Pawn"}, {20, "Rook"}, {25, "Bishop"}, {30, "Knight"}, {50, "Queen"} };
-static map<std::string, int8_t>
-pointsByFigure
-= { {"Pawn", 10}, {"Rook", 20}, {"Bishop", 25}, {"Knight", 30}, {"Queen", 50} };
-static map<std::string, uint8_t> typeByFigure
-= { {"Pawn", Pieces::Pawn}, {"Rook", Pieces::Rook}, {"Bishop", Pieces::Bishop}, {"Knight", Pieces::Knight}, {"Queen", Pieces::Queen} };
-
 // —————————————————— Position ——————————————————
 class Position
 {
@@ -26,9 +17,10 @@ public:
     Pieces pieces;
     uint8_t EnPassant;
 
-    handsdeck cards[2];
-    std::vector<card> AIdeck, playerDeck;
-    int8_t points[2]{}, cardsNumber[2]{};
+    int32_t points[2]{}, cardsNumber[2]{};
+
+    std::map<uint8_t, uint8_t> aiDeck, playerDeck;
+    std::map<uint8_t, uint8_t> handsdecks[2];
 
     bool WhiteLongCastling;
     bool WhiteShortCastling;
@@ -72,7 +64,7 @@ public:
 
     void updateFiftyMovesCtr(bool breakEvent);
 
-    void setPoints(int8_t whitePoints, int8_t blackPoints) {
+    void setPoints(int32_t whitePoints, int32_t blackPoints) {
         points[Pieces::White] = whitePoints;
         points[Pieces::Black] = blackPoints;
     }

@@ -36,7 +36,7 @@ void Game::start()
 #endif
 
 #if TEST_CARD_MOVES
-    this->position = { "4k3/8/8/8/8/8/P1Q3R1/1N2K3", 255, true, true, true, true, 1 };
+    this->position = { "4k3/b7/8/8/8/8/P1Q3R1/1N2K3", 255, true, true, true, true, 1 };
 #endif
     cout << "Welcome to the chess engine!" << endl;
 
@@ -422,36 +422,23 @@ void Game::PvE()
 {
     sideChoose();
 
-    position.cards[0].addCard(card("Pawn", "-", "-")); //
-    position.cards[0].addCard(card("Pawn", "-", "-")); //
-    position.cards[0].addCard(card("Pawn", "-", "-")); //
-    position.cards[0].addCard(card("Knight", "-", "-"));
-    position.cards[0].addCard(card("Queen", "-", "-"));
+    //position.handsdecks[1][Pieces::Pawn] = 2;
+    //position.handsdecks[1][Pieces::Knight] = 1;
+    //position.handsdecks[1][Pieces::Bishop] = 1;
+    //position.handsdecks[1][Pieces::Queen] = 1;
 
-    position.cards[1].addCard(card("Pawn", "-", "-"));
-    position.cards[1].addCard(card("Knight", "-", "-"));
-    position.cards[1].addCard(card("Pawn", "-", "-")); 
-    position.cards[1].addCard(card("Queen", "-", "-"));
-    position.cards[1].addCard(card("Bishop", "-", "-"));
+    //{
+    //    position.aiDeck[Pieces::Pawn] = 2;
+    //    position.aiDeck[Pieces::Bishop] = 2;
+    //    position.aiDeck[Pieces::Knight] = 1;
+    //}
 
+    //position.playerDeck[Pieces::Pawn] = 2;
+    //position.playerDeck[Pieces::Bishop] = 4;
+    //position.playerDeck[Pieces::Rook] = 2;
 
-    position.AIdeck.push_back(card("Pawn", "-", "-"));
-    position.AIdeck.push_back(card("Bishop", "-", "-"));
-    position.AIdeck.push_back(card("Pawn", "-", "-"));
-    position.AIdeck.push_back(card("Bishop", "-", "-"));
-    position.AIdeck.push_back(card("Knight", "-", "-"));
-
-    position.playerDeck.push_back(card("Pawn", "-", "-"));
-    position.playerDeck.push_back(card("Bishop", "-", "-"));
-    position.playerDeck.push_back(card("Bishop", "-", "-"));
-    position.playerDeck.push_back(card("Rook", "-", "-"));
-    position.playerDeck.push_back(card("Pawn", "-", "-"));
-    position.playerDeck.push_back(card("Bishop", "-", "-"));
-    position.playerDeck.push_back(card("Bishop", "-", "-"));
-    position.playerDeck.push_back(card("Rook", "-", "-"));
-
-    position.setNumberOfCards(3, 4);
-    position.setPoints(110, 75);
+    //position.setNumberOfCards(8, 5);
+    //position.setPoints(140, 100);
 
 
     if (playerSide == Pieces::White)
@@ -483,9 +470,9 @@ void Game::PvE()
             }
 
             // AI move
-            move = ai.bestMoveRoyal(position, aiSide, 0, 10000);
+            move = ai.bestMove(position, aiSide, 0, 10000);
 
-            position.moveRoyal(move);
+            position.move(move);
 
             // Check if game is finished
             if (this->gameFinished())
@@ -498,6 +485,16 @@ void Game::PvE()
 
                 break;
             }
+
+            //srand(time(NULL));
+            //int r = rand();
+            //if ((rand() % 6) == 0) position.handsdecks[1][Pieces::Pawn]++;//position.cards[1].addCard(card("Pawn", "-", "-"));
+            //else if ((r % 6) == 1) position.handsdecks[1][Pieces::Knight]++;//position.cards[1].addCard(card("Knight", "-", "-"));
+            //else if ((r % 6) == 2) position.handsdecks[1][Pieces::Bishop]++;//position.cards[1].addCard(card("Bishop", "-", "-"));
+            //else if ((r % 6) == 3) position.handsdecks[1][Pieces::Rook]++;//position.cards[1].addCard(card("Rook", "-", "-"));
+            //else position.handsdecks[1][Pieces::Queen]++;//position.cards[1].addCard(card("Queen", "-", "-"));
+
+            for (auto [type, count] : position.handsdecks[1]) std::cout << (int)type << ',' << (int)count << ' '; cout << '\n';
         }
     }
     else

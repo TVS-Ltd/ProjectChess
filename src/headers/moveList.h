@@ -5,7 +5,7 @@
 class MoveList
 {
 private:
-    array<Move, 380> moves{};
+    array<Move, 280> moves{};
     uint8_t Size;
 
 public:

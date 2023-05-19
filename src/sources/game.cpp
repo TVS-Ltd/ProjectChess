@@ -412,8 +412,128 @@ bool Game::movePlayer(uint8_t side) // Returns true if player move is valid
         }
     }
 
-    cout << "\nMove has been made!" << endl;
-    cout << position << endl;
+        cout << "\nMove has been made!" << endl;
+        cout << Game::position << endl;
+
+        return true;
+    }
+
+    bool Game::movePlayerForRoyalChess(uint8_t side, uint8_t playerTypeOfFigure)
+    {
+        this->moves = LegalMoveGen::generate(this->position, side);
+
+        this->playerMove = getMove();
+        bool moveFound = false;
+
+        for (uint8_t i = 0; i < moves.size(); i++)
+        {
+            if (moves[i].From == playerMove.From && moves[i].To == playerMove.To && (moves[i].Flag != Move::Flag::PromoteToKnight && moves[i].Flag != Move::Flag::PromoteToBishop && moves[i].Flag != Move::Flag::PromoteToRook && moves[i].Flag != Move::Flag::PromoteToQueen))
+            {
+                move = moves[i];
+                moveFound = true;
+
+                break;
+            }
+            else if (moves[i].From == playerMove.From && moves[i].To == playerMove.To)
+            {
+                // Choose promotion piece
+                cout << "\nChoose promotion piece: " << endl;
+                cout << "1. Knight" << endl;
+                cout << "2. Bishop" << endl;
+                cout << "3. Rook" << endl;
+                cout << "4. Queen" << endl;
+
+                int promotionPiece = 0;
+                cin >> promotionPiece;
+
+                switch (promotionPiece)
+                {
+                    case 1:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToKnight;
+                        moveFound = true;
+                    break;
+
+                    case 2:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToBishop;
+                        moveFound = true;
+                    break;
+
+                    case 3:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToRook;
+                        moveFound = true;
+                    break;
+
+                    case 4:
+                        move = moves[i];
+                        move.Flag = Move::Flag::PromoteToQueen;
+                        moveFound = true;
+                    break;
+
+                    default:
+                        cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+                        continue;
+                    break;
+                }
+
+                break;
+            }
+        }
+
+        if(playerTypeOfFigure == 69)
+        {
+            return true;
+        }
+
+        if(move.AttackerType != playerTypeOfFigure)
+        {
+            return false;
+        }
+
+        if (!moveFound)
+        {
+            cout << RED << "\n[ERROR] Illegal move!" << END << endl;
+            return false;
+        }
+
+        this->position.move(move);
+
+        if (move.DefenderType != 255)
+        {
+            cout << "\n";
+
+            switch (move.DefenderType)
+            {
+            case 0:
+                cout << YELLOW << "Pawn has been captured!" << END << endl;
+                break;
+
+            case 1:
+                cout << YELLOW << "Knight has been captured!" << END << endl;
+                break;
+
+            case 2:
+                cout << YELLOW << "Bishop has been captured!" << END << endl;
+                break;
+
+            case 3:
+                cout << YELLOW << "Rook has been captured!" << END << endl;
+                break;
+
+            case 4:
+                cout << YELLOW << "Queen has been captured!" << END << endl;
+                break;
+
+            default:
+                cout << RED << "[ERROR] Unknown piece type!" << END << endl;
+                break;
+            }
+        }
+
+        cout << "\nMove has been made!" << endl;
+        cout << Game::position << endl;
 
     return true;
 }
@@ -643,10 +763,1474 @@ void Game::PvP()
     }
 }
 
-void Game::EvE()
-{
-    playerSide = Pieces::White;
-    aiSide = Pieces::Black;
+    void Game::Gwent()// rm -f *.o 
+    {
+        //                                                     Creating a deck of cards
+        //---------------------------------------------------------------------------------------------------------------------------------------------------
+        const char* filename = "/home/danila/CCG/ProjectChess/src/DataBase/DB.db";
+
+        sqlite3 *db;      
+        handsdeck colodaWhite;
+        handsdeck colodaBlack;
+
+        std::cout << "Create your deck:" << endl;
+
+        deck bd;
+        
+        //Реализовать заполнение бд с учетом доступных для игрока очков
+     
+        int point = 250; //рандомное кол-во
+
+        std::cout << "You have a " << point << " points" << endl;
+
+        std::cout << "Choose a figure \n 1.Queen (50 points) \n 2.Rook(20 points) \n 3.Knight(30 points) \n 4.Bishop(25 points) \n 5.Pawn(10 points)";  
+
+        int choice;
+
+        sqlite3_open("/home/danila/CCG/ProjectChess/src/DataBase/DB.db", &db);
+
+        int rc = sqlite3_open("/home/danila/CCG/ProjectChess/src/DataBase/DB.db", &db);
+        
+        if (rc != SQLITE_OK) 
+        {
+            std::cout << "\n" << "Cannot open database: " << sqlite3_errmsg(db) << std::endl;
+        }
+
+        bd.clear_Bd(db);
+
+        std::cout << std::endl << "test for bd clear:" << std::endl;
+
+        if (bd.size_of_BD(db) == 0)
+        {
+            std::cout << "BD is empty " << std::endl;
+        }else
+        {
+            std::cout << "BD is not empty " << std::endl;
+        }
+
+        std::cout << "Составление колоды для белых:" << std::endl;
+
+        while (true) //Блок для формирования колоды
+        {    
+         
+            cout << endl;
+            
+            cin >> choice;
+
+            if((choice == 1 && point >= 50) || (choice == 2 && point >= 20) || (choice == 3 && point >= 30) || (choice == 4 && point >= 25) || (choice == 5 && point >= 10))
+            {
+                switch (choice)
+                {
+                case 1:
+                    bd.appendToBD(filename, "Queen", db);
+                    cout << "Queen has been added" << endl;
+                    point -= 50;
+                    break;
+
+                case 2:
+                    bd.appendToBD(filename, "Rook", db);
+                    cout << "Rook has been added" << endl;
+                    point -= 20;
+                    break;
+
+                case 3:
+                    bd.appendToBD(filename, "Knight", db);
+                    cout << "Knight has been added" << endl;
+                    point -= 30;
+                    break;
+
+                case 4:
+                    bd.appendToBD(filename, "Bishop", db);
+                    cout << "Bishop has been added" << endl;
+                    point -= 25;
+                    break;
+
+                case 5:
+                    bd.appendToBD(filename, "Pawn", db);
+                    cout << "Pawn has been added" << endl;
+                    point -= 10;
+                    break;
+
+                default:
+                    break;
+                }
+            }else
+            {
+                std::cout << "You have't so much points" << endl;
+                break;
+            }
+        }
+        
+        sqlite3_stmt *stmt;
+        const char *query = "SELECT * FROM DECK;";
+        sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
+
+        std::cout << "Deck(main menu)" << std::endl;
+       
+        bd.print_data_base(stmt); 
+
+        std::cout << "Deck after shuffle:" << std::endl;
+
+        bd.shuffle(db);
+    
+        sqlite3_stmt *stm;
+        const char *quer = "SELECT * FROM DECK;";
+        sqlite3_prepare_v2(db, quer, -1, &stm, NULL);
+
+        bd.print_data_base(stm);
+
+        std::stack<std::string> input; // change vector to stack
+        sqlite3_stmt* s;
+        std::string sql = "SELECT * FROM DECK;";
+        
+        if (sqlite3_prepare_v2(db, sql.c_str(), -1, &s, NULL) == SQLITE_OK)
+        {
+            while (sqlite3_step(s) == SQLITE_ROW)
+            {
+                input.push(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))));
+            }
+            sqlite3_finalize(s);
+        }
+        
+        // Создаем 5 карт с рандомными фигурами
+        card obj_1(input.top(), "test", " test_1"); input.pop();
+        card obj_2(input.top(), "test", " test_1"); input.pop();
+        card obj_3(input.top(), "test", " test_1"); input.pop();
+        card obj_4(input.top(), "test", " test_1"); input.pop();
+        card obj_5(input.top(), "test", " test_1"); input.pop();      
+
+        // Кладем их в вектор
+        colodaWhite.push_b(obj_1); colodaWhite.push_b(obj_2); colodaWhite.push_b(obj_3); colodaWhite.push_b(obj_4); colodaWhite.push_b(obj_5);
+
+
+
+
+        std::cout << std::endl << "Составление колоды для черных:" << std::endl;
+
+        point = 250; //рандомное кол-во
+
+        std::cout << "You have a " << point << " points" << endl;
+
+        std::cout << "Choose a figure \n 1.Queen (50 points) \n 2.Rook(20 points) \n 3.Knight(30 points) \n 4.Bishop(25 points) \n 5.Pawn(10 points)";  
+    
+        while (true) //Блок для формирования колоды
+        {    
+            cout << endl;
+            
+            cin >> choice;
+
+            if((choice == 1 && point >= 50) || (choice == 2 && point >= 20) || (choice == 3 && point >= 30) || (choice == 4 && point >= 25) || (choice == 5 && point >= 10))
+            {
+                switch (choice)
+                {
+                case 1:
+                    bd.appendToBlackBD(filename, "Queen", db);
+                    cout << "Queen has been added" << endl;
+                    point -= 50;
+                    break;
+
+                case 2:
+                    bd.appendToBlackBD(filename, "Rook", db);
+                    cout << "Rook has been added" << endl;
+                    point -= 20;
+                    break;
+
+                case 3:
+                    bd.appendToBlackBD(filename, "Knight", db);
+                    cout << "Knight has been added" << endl;
+                    point -= 30;
+                    break;
+
+                case 4:
+                    bd.appendToBlackBD(filename, "Bishop", db);
+                    cout << "Bishop has been added" << endl;
+                    point -= 25;
+                    break;
+
+                case 5:
+                    bd.appendToBlackBD(filename, "Pawn", db);
+                    cout << "Pawn has been added" << endl;
+                    point -= 10;
+                    break;
+
+                default:
+                    continue;
+                    break;
+                }
+            }else
+            {
+                std::cout << "You have't so much points" << endl;
+                break;
+            }
+        }
+        
+        sqlite3_stmt *stmtmt;
+        const char *querrry = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV;";
+        sqlite3_prepare_v2(db, querrry, -1, &stmtmt, NULL);
+
+        std::cout << "Deck(main menu)" << std::endl ;
+       
+        bd.print_data_base(stmtmt); 
+
+        std::cout << std::endl << "Deck after shuffle:" << std::endl;
+
+        bd.blackShuffle(db);
+    
+        sqlite3_stmt *stttm;
+        const char *querrr = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV;";
+        sqlite3_prepare_v2(db, querrr, -1, &stttm, NULL);
+
+        bd.print_data_base(stttm);
+
+        std::stack<std::string> inputBlack;
+        sqlite3_stmt* sss;
+        std::string sssql = "SELECT * FROM BIGBLACKVADIMVLADYMTSEV;";
+        
+        if (sqlite3_prepare_v2(db, sssql.c_str(), -1, &sss, NULL) == SQLITE_OK)
+        {
+            while (sqlite3_step(sss) == SQLITE_ROW)
+            {
+                inputBlack.push(std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0))));
+            }
+            sqlite3_finalize(sss);
+        }
+        
+        // Создаем 5 карт с рандомными фигурами
+        card obj_6(inputBlack.top(), "test", " test_1"); inputBlack.pop();
+        card obj_7(inputBlack.top(), "test", " test_1"); inputBlack.pop();
+        card obj_8(inputBlack.top(), "test", " test_1"); inputBlack.pop();
+        card obj_9(inputBlack.top(), "test", " test_1"); inputBlack.pop();
+        card obj_10(inputBlack.top(), "test", " test_1"); inputBlack.pop();       
+
+        // Кладем их в вектор
+
+        colodaBlack.push_b(obj_6); colodaBlack.push_b(obj_7); colodaBlack.push_b(obj_8); colodaBlack.push_b(obj_9); colodaBlack.push_b(obj_10);
+
+        //                                                      Start of Game (decks)
+        //----------------------------------------------------------------------------------------------------------------------------------------------------
+
+        // Выводим на экран колоду для пользователя        
+        
+        std::cout << std::endl << "White game deck" << std::endl;
+        
+        colodaWhite.print();        
+
+        std::cout << endl;
+
+        std::cout << std::endl << "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << endl;
+
+        int t = 2;
+        std::string temp = "";
+
+       while (t != 0) // Две замены карты(белые) 
+        {
+            int choice;
+
+            cin >> choice;
+
+            if (choice == 0)
+            {
+                break;
+            }else 
+            if (choice == 1)
+            {
+                temp = bd.get_random_value(db);
+               
+                obj_1.setFigure(temp);
+
+                colodaWhite.CardChange(0, obj_1);
+                
+            }else 
+            if (choice == 2)
+            {
+                temp = bd.get_random_value(db);
+               
+                obj_2.setFigure(temp);
+
+                colodaWhite.CardChange(1, obj_2);
+                
+            }else
+            if (choice == 3)
+            {
+              temp = bd.get_random_value(db);
+               
+                obj_3.setFigure(temp);
+
+                colodaWhite.CardChange(2, obj_3);
+
+            }else 
+            if (choice == 4)
+            {
+               temp = bd.get_random_value(db);
+               
+                obj_4.setFigure(temp);
+
+                colodaWhite.CardChange(3, obj_4);
+
+            }else 
+            if (choice == 5)
+            {
+               temp = bd.get_random_value(db);
+               
+                obj_5.setFigure(temp);
+
+                colodaWhite.CardChange(4, obj_5);
+
+            }else 
+            if (choice > 5 || choice < 0 || double(choice))
+            {
+                std::cout << "Incorrect input. Please, try again" << endl;
+                t++;
+            }
+
+            std::cout << "Updated deck " << endl;
+
+            // Выводим на экран измененную колоду для пользователя
+ 
+            colodaWhite.print();
+
+            std::cout << endl;
+
+            t--;
+        }	
+        
+        std::cout << std::endl << "Black game deck" << std::endl;
+
+        // Выводим на экран колоду для пользователя        
+        colodaBlack.print();  cout << std::endl;      
+
+        std::cout << std::endl <<  "You can make two substitutions. Enter the card number (1-5) you want to replace. Enter 0 if you don't want to make substitutions at all." << std::endl;
+
+        t = 2;
+        temp = "";
+
+       while (t != 0) // Две замены карты(черные) 
+        {
+            int choice;
+
+            cin >> choice;
+
+            if (choice == 0)
+            {
+                break;
+            }else 
+            if (choice == 1)
+            {
+                temp = bd.get_random_BlackValue(db);
+               
+                obj_6.setFigure(temp);
+
+                colodaBlack.CardChange(0, obj_6);
+                
+            }else 
+            if (choice == 2)
+            {
+                temp = bd.get_random_BlackValue(db);
+               
+                obj_7.setFigure(temp);
+
+                colodaBlack.CardChange(1, obj_7);
+                
+            }else
+            if (choice == 3)
+            {
+              temp = bd.get_random_BlackValue(db);
+               
+                obj_8.setFigure(temp);
+
+                colodaBlack.CardChange(2, obj_8);
+
+            }else 
+            if (choice == 4)
+            {
+               temp = bd.get_random_BlackValue(db);
+               
+                obj_9.setFigure(temp);
+
+                colodaBlack.CardChange(3, obj_9);
+
+            }else 
+            if (choice == 5)
+            {
+               temp = bd.get_random_BlackValue(db);
+               
+                obj_10.setFigure(temp);
+
+                colodaBlack.CardChange(4, obj_10);
+
+            }else 
+            if (choice > 5 || choice < 0 || double(choice))
+            {
+                std::cout << "Incorrect input. Please, try again" << endl;
+                t++;
+            }
+
+            std::cout << "Updated deck " << endl;
+
+            // Выводим на экран измененную колоду для пользователя
+ 
+            colodaBlack.print();
+
+            std::cout << endl;
+
+            t--;
+        }	
+
+        //                                                      Start of Game (main game)
+        //----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        Game::position = {"....k.../......../8/8/8/8/......../....K...", 255, true, true, true, true, 1};
+        
+        sideChoose();
+
+                #if LOG_TO_FILE
+            log << position;
+        #endif
+
+        int counterOfMoves = 1;
+
+        if(playerSide == Pieces::White)
+        {
+            while (true)
+            {
+                cout << Game::position << endl;
+
+                // Player 1 move
+
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+                cout << "Test for white vec" << endl;
+
+                // for(int i = 0;i < colodaWhite.getSize();i++)
+                // {
+                //     std::cout << colodaWhite.getFigure(i)
+                // }
+
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 1 move:" << END;
+                #endif
+
+                if(!colodaWhite.checkIsEmpty())
+                {
+                    //Старт выставления фигуры на поле
+
+                    char choiceOfFigure;
+
+                    bool flag = true;
+
+                    string placeOnBoard, typeOfCard;
+
+                    while(flag)
+                    {
+                        cout << std::endl << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
+
+                        if(counterOfMoves >= 2 && input.size() != 0)
+                        {
+                            std::cout << "Карта, которая должна быть добавлена: " << input.top() << std::endl;
+                            
+                            card temp(input.top(), "test", " test_1");
+
+                            colodaWhite.addCard(temp); 
+
+                            input.pop();
+                        }
+
+                        colodaWhite.print();
+
+                        cout << endl;
+
+                        cin >> choiceOfFigure;
+
+                        cout << "Enter the position when you want to put a figure(example e2)" << endl;
+
+                        cin >> placeOnBoard; // e4
+
+                        if((int)placeOnBoard[1] - 48 > 4)
+                        {
+                            std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
+                            continue;
+                        }
+                        
+                        if(colodaWhite.checkForCard(choiceOfFigure))
+                        {
+                            break;
+                        }else
+                        {
+                            std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
+                            continue;
+                        }
+                    }
+                    
+                    switch (choiceOfFigure)
+                    {
+                    case 'P':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Pawn, Pieces::White);
+
+                        typeOfCard = "Pawn";
+                        
+                        break;
+
+                    case 'R':
+                        
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Rook, Pieces::White);
+
+                        typeOfCard = "Rook";
+
+                        break;
+                    
+                    case 'N':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Knight, Pieces::White);
+
+                        typeOfCard = "Knight";
+
+                        break;
+
+                    case 'B':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Bishop, Pieces::White);
+
+                        typeOfCard = "Bishop";
+
+                        break;
+
+                    case 'Q':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Queen, Pieces::White);
+
+                        typeOfCard = "Queen";
+
+                        break;
+
+                    default:
+                        break;
+                    }
+
+                    colodaWhite.delete_card(choiceOfFigure, input);  
+
+                }
+
+
+                cout << Game::position;
+                
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 2 move:" << END;
+                #endif
+
+                std::cout << Game::position << std::endl;
+                
+                if(!colodaWhite.checkIsEmpty())
+                {
+                    //Старт выставления фигуры на поле
+
+                    char choiceOfFigure;
+
+                    string placeOnBoard;
+
+                    while(true)
+                    {
+                        cout << "Choice a figure from your deck, which you want to put on the field: (Enter the first letter (ex: R, K, Q))" << endl; 
+
+                        if(counterOfMoves >= 2 &&inputBlack.size() != 0)
+                        {
+                            std::cout << "Карта, которая должна быть добавлена: " << inputBlack.top() << std::endl;
+                            
+                            card temp(inputBlack.top(), "test", " test_1");
+
+                            colodaBlack.addCard(temp);  
+                            
+                            inputBlack.pop();
+                        }
+
+                        colodaBlack.print();
+
+                        cout << endl;
+
+                        cin >> choiceOfFigure;
+
+                        cout << "Enter the position when you want to put a figure(example e2)" << endl;
+
+                        cin >> placeOnBoard; // e4
+
+                        if((int)placeOnBoard[1] - 48 < 5)
+                        {
+                            std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
+                            continue;
+                        }
+
+                        if(colodaBlack.checkForCard(choiceOfFigure))
+                        { 
+                            break;
+                        }   
+                        else
+                        { 
+                            std::cout << RED << "Incorrect input, please try again" << END << std::endl; 
+                            continue;
+                        }
+                    }
+
+                    switch (tolower(choiceOfFigure))
+                    {
+                    case 'p':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Pawn, Pieces::Black);
+                        
+                        break;
+
+                    case 'r':
+    
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Rook, Pieces::Black);
+
+                        break;
+                    
+                    case 'n':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Knight, Pieces::Black);
+
+                        break;
+
+                    case 'b':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Bishop, Pieces::Black);
+
+                        break;
+
+                    case 'q':
+
+                        this->position.addPiece((placeOnBoard[0] - 'a') + (placeOnBoard[1] - '1') * 8, Pieces::Queen, Pieces::Black);
+
+                        break;
+
+                    default:
+                        break;
+                    }
+
+                    std::cout << Game::position << std::endl;        
+                }
+
+                while (!movePlayer(aiSide))
+                {
+                    
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << Game::position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+            
+                counterOfMoves++;
+            }
+        }
+        else
+        {
+            while (true)
+            {
+
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 2 move:" << END;
+                #endif
+
+                while (!movePlayer(aiSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+
+                // Player 1 move
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 1 move:" << END;
+                #endif
+
+                while (!movePlayer(playerSide))
+                {
+                    continue;
+                }
+
+                // Check if game is finished
+                if (this->gameFinished())
+                {
+                    cout << position << endl;
+
+                    #if LOG_TO_FILE
+                        log << position;
+                    #endif
+
+                    break;
+                }
+            }
+        }
+    
+    sqlite3_close(db);
+}   
+
+    void Game::RoyalChess()
+    {
+        Game::position = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
+
+        char choice;
+
+        int counterForJocker = 0;
+    
+        std::stack <uint8_t> whiteDeck;
+        std::stack <uint8_t> blackDeck;
+
+        for(int i = 0;i < 50; i++) //white deck
+        {
+            int ch = rand() % 5 +1;
+            
+            switch (ch)
+            {
+            case 1:
+                
+                whiteDeck.push(Pieces::Pawn);
+
+                break;
+            
+            case 2:
+
+                whiteDeck.push(Pieces::Rook);
+
+                break;
+
+            case 3:
+
+                whiteDeck.push(Pieces::Knight);
+
+                break;
+
+            case 4:
+
+                whiteDeck.push(Pieces::Bishop);
+
+                break;
+
+            case 5:
+
+                whiteDeck.push(Pieces::Queen);
+
+                break;
+
+            case 6:
+
+                if(counterForJocker < 2)
+                {
+                    whiteDeck.push(69);
+                }else
+                {
+                    i--;
+
+                    continue;
+                }
+                
+                break;
+            
+            default:
+                break;
+            }
+
+        }
+
+        counterForJocker = 0;
+
+        for(int i = 0;i < 50; i++) //black deck
+        {
+            int ch = rand() % 5 +1;
+            
+            switch (ch)
+            {
+            case 1:
+                
+                blackDeck.push(Pieces::Pawn);
+
+                break;
+            
+            case 2:
+
+                blackDeck.push(Pieces::Rook);
+
+                break;
+
+            case 3:
+
+                blackDeck.push(Pieces::Knight);
+
+                break;
+
+            case 4:
+
+                blackDeck.push(Pieces::Bishop);
+
+                break;
+
+            case 5:
+
+                blackDeck.push(Pieces::Queen);
+
+                break;
+
+            case 6:
+
+                if(counterForJocker < 2)
+                {
+                    blackDeck.push(69);
+                }else
+                {
+                    i--;
+
+                    continue;
+                }
+                
+                break;
+            
+            default:
+                break;
+            }
+
+        }
+
+        std::vector <uint8_t> handsdeckWhite;
+        std::vector <uint8_t> handsdeckBlack;
+
+        for (int i = 0;i < 5;i++) handsdeckWhite.push_back(i);
+
+        for (int i = 0;i < 5;i++) handsdeckBlack.push_back(i);
+
+        sideChoose();
+
+        cout << position << endl;
+
+        #if LOG_TO_FILE
+            log << position;
+        #endif
+
+        if(playerSide == Pieces::White)
+        {
+            while (true)
+            {
+                
+                // Player 1 move
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 1 move:" << END;
+                #endif
+
+                std::cout << "Your deck: " << endl;
+
+                for (int i = 0;i < 5;i++) // print deck
+                {
+                    switch (handsdeckWhite[i])
+                    {
+                    case Pieces::Pawn:
+                        
+                        cout << "Pawn ";
+
+                        break;
+                    case Pieces::Rook:
+                        
+                        cout << "Rook ";
+
+                        break;
+
+                    case Pieces::King:
+
+                        cout << "King ";
+
+                        break;
+
+                    case Pieces::Queen:
+                       
+                        cout << "Queen ";
+
+                        break;
+
+                    case Pieces::Bishop:
+                        
+                        cout << "Bishop ";
+
+                        break;
+
+                    case Pieces::Knight:
+                        
+                        cout << "Knight ";
+
+                        break;
+
+                    case 69:
+
+                        cout << "Jocker ";
+
+                        break;
+
+                    default:
+                        break;
+                    }
+                }
+                
+                cout << endl;
+                
+                cin >> choice;
+
+                uint8_t temp;
+
+                switch(choice) // user choice
+                {
+                    case 'Q':
+                        
+                        temp = Pieces::Queen;
+
+                        break;
+
+                    case 'K':
+
+                        temp = Pieces::King;
+
+                        break;
+
+                    case 'R':
+
+                        temp = Pieces::Rook;
+
+                        break;
+
+                    case 'N':
+
+                        temp = Pieces::Knight;
+
+                        break;
+
+                    case 'B': 
+
+                        temp = Pieces::Bishop;
+
+                        break;
+
+                    case 'P':
+
+                        temp = Pieces::Pawn;
+
+                        break;
+
+                    case 'J':
+
+                        temp = 69;
+
+                        break;
+                }
+                
+                for (int i = 0; i < 5; i++) // replace cards
+                {
+                    if(temp == handsdeckWhite[i])
+                    {
+                        handsdeckWhite[i] = whiteDeck.top();
+
+                        whiteDeck.pop();
+                    }
+                }
+
+                while (!movePlayerForRoyalChess(playerSide, temp))// check for legal move
+                {                     
+                    cout << RED << "Wrong figure, try again" << END << endl;
+
+                    continue;
+                }
+
+                if(!position.pieces.pieceBitboards[Pieces::Black][Pieces::Queen])
+                {
+                    // Check if game is finished
+                    if (this->gameFinished())
+                    {
+                        cout << position << endl;
+
+                        #if LOG_TO_FILE
+                            log << position;
+                        #endif
+
+                        break;
+                    } 
+                }
+
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 2 move:" << END;
+                #endif
+
+                std::cout << "Your deck: " << endl;
+
+                for (int i = 0;i < 5;i++) // print deck
+                {
+                    switch (handsdeckBlack[i])
+                    {
+                    case Pieces::Pawn:
+                        
+                        cout << "Pawn ";
+
+                        break;
+                    case Pieces::Rook:
+                        
+                        cout << "Rook ";
+
+                        break;
+
+                    case Pieces::King:
+
+                        cout << "King ";
+
+                        break;
+
+                    case Pieces::Queen:
+                       
+                        cout << "Queen ";
+
+                        break;
+
+                    case Pieces::Bishop:
+                        
+                        cout << "Bishop ";
+
+                        break;
+
+                    case Pieces::Knight:
+                        
+                        cout << "Knight ";
+
+                        break;
+
+                    case 69:
+
+                        cout << "Jocker ";
+
+                        break;
+
+                    default:
+                        break;
+                    }
+                }
+
+                cout << endl;
+                
+                cin >> choice;
+
+                switch(choice) // user choice
+                {
+                    case 'Q':
+                        
+                        temp = Pieces::Queen;
+
+                        break;
+
+                    case 'K':
+
+                        temp = Pieces::King;
+
+                        break;
+
+                    case 'R':
+
+                        temp = Pieces::Rook;
+
+                        break;
+
+                    case 'N':
+
+                        temp = Pieces::Knight;
+
+                        break;
+
+                    case 'B': 
+
+                        temp = Pieces::Bishop;
+
+                        break;
+
+                    case 'P':
+
+                        temp = Pieces::Pawn;
+
+                        break;
+
+                    case 'J':
+
+                        temp = 69;
+
+                        break;
+                }
+
+                for (int i = 0; i < 5; i++) // replace cards
+                {
+                    if(temp == handsdeckBlack[i])
+                    {
+                        handsdeckBlack[i] = blackDeck.top();
+
+                        blackDeck.pop();
+                    }
+                }
+
+                while (!movePlayerForRoyalChess(aiSide, temp))// check for legal move
+                {                     
+                    cout << RED << "Wrong figure, try again" << END << endl;
+
+                    continue;
+                }
+                
+                if(!position.pieces.pieceBitboards[Pieces::White][Pieces::Queen])
+                {
+                    // Check if game is finished
+                    if (this->gameFinished())
+                    {
+                        cout << position << endl;
+
+                        #if LOG_TO_FILE
+                            log << position;
+                        #endif
+
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            while (true)
+            {
+                uint8_t temp;
+
+                // Player 2 move
+                cout << YELLOW << "\nPlayer 2 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << YELLOW << "\nPlayer 2 move:" << END;
+                #endif
+
+                std::cout << "Your deck: " << endl;
+
+                for (int i = 0;i < 5;i++) // print deck
+                {
+                    switch (handsdeckBlack[i])
+                    {
+                    case Pieces::Pawn:
+                        
+                        cout << "Pawn ";
+
+                        break;
+                    case Pieces::Rook:
+                        
+                        cout << "Rook ";
+
+                        break;
+
+                    case Pieces::King:
+
+                        cout << "King ";
+
+                        break;
+
+                    case Pieces::Queen:
+                       
+                        cout << "Queen ";
+
+                        break;
+
+                    case Pieces::Bishop:
+                        
+                        cout << "Bishop ";
+
+                        break;
+
+                    case Pieces::Knight:
+                        
+                        cout << "Knight ";
+
+                        break;
+
+                    case 69:
+
+                        cout << "Jocker ";
+
+                        break;
+
+                    default:
+                        break;
+                    }
+                }
+
+                cout << endl;
+                
+                cin >> choice;
+
+                switch(choice) // user choice
+                {
+                    case 'Q':
+                        
+                        temp = Pieces::Queen;
+
+                        break;
+
+                    case 'K':
+
+                        temp = Pieces::King;
+
+                        break;
+
+                    case 'R':
+
+                        temp = Pieces::Rook;
+
+                        break;
+
+                    case 'N':
+
+                        temp = Pieces::Knight;
+
+                        break;
+
+                    case 'B': 
+
+                        temp = Pieces::Bishop;
+
+                        break;
+
+                    case 'P':
+
+                        temp = Pieces::Pawn;
+
+                        break;
+
+                    case 'J':
+
+                        temp = 69;
+
+                        break;
+                }
+
+                for (int i = 0; i < 5; i++) // replace cards
+                {
+                    if(temp == handsdeckBlack[i])
+                    {
+                        handsdeckBlack[i] = blackDeck.top();
+
+                        blackDeck.pop();
+                    }
+                }
+
+                while (!movePlayerForRoyalChess(aiSide, temp))// check for legal move
+                {                     
+                    cout << RED << "Wrong figure, try again" << END << endl;
+
+                    continue;
+                }
+                
+                if(!position.pieces.pieceBitboards[Pieces::White][Pieces::Queen])
+                {
+                    // Check if game is finished
+                    if (this->gameFinished())
+                    {
+                        cout << position << endl;
+
+                        #if LOG_TO_FILE
+                            log << position;
+                        #endif
+
+                        break;
+                    }
+                }
+                
+                // Player 1 move
+                cout << GREEN << "\nPlayer 1 move:" << END << endl;
+
+                #if LOG_TO_FILE
+                    log << GREEN << "\nPlayer 1 move:" << END;
+                #endif
+
+                std::cout << "Your deck: " << endl;
+
+                for (int i = 0;i < 5;i++) // print deck
+                {
+                    switch (handsdeckWhite[i])
+                    {
+                    case Pieces::Pawn:
+                        
+                        cout << "Pawn ";
+
+                        break;
+                    case Pieces::Rook:
+                        
+                        cout << "Rook ";
+
+                        break;
+
+                    case Pieces::King:
+
+                        cout << "King ";
+
+                        break;
+
+                    case Pieces::Queen:
+                       
+                        cout << "Queen ";
+
+                        break;
+
+                    case Pieces::Bishop:
+                        
+                        cout << "Bishop ";
+
+                        break;
+
+                    case Pieces::Knight:
+                        
+                        cout << "Knight ";
+
+                        break;
+
+                    case 69:
+
+                        cout << "Jocker ";
+
+                        break;
+
+                    default:
+                        break;
+                    }
+                }
+                
+                cout << endl;
+                
+                cin >> choice;
+
+                switch(choice) // user choice
+                {
+                    case 'Q':
+                        
+                        temp = Pieces::Queen;
+
+                        break;
+
+                    case 'K':
+
+                        temp = Pieces::King;
+
+                        break;
+
+                    case 'R':
+
+                        temp = Pieces::Rook;
+
+                        break;
+
+                    case 'N':
+
+                        temp = Pieces::Knight;
+
+                        break;
+
+                    case 'B': 
+
+                        temp = Pieces::Bishop;
+
+                        break;
+
+                    case 'P':
+
+                        temp = Pieces::Pawn;
+
+                        break;
+
+                    case 'J':
+
+                        temp = 69;
+
+                        break;
+                }
+                
+                for (int i = 0; i < 5; i++) // replace cards
+                {
+                    if(temp == handsdeckWhite[i])
+                    {
+                        handsdeckWhite[i] = whiteDeck.top();
+
+                        whiteDeck.pop();
+                    }
+                }
+
+                while (!movePlayerForRoyalChess(playerSide, temp))// check for legal move
+                {                     
+                    cout << RED << "Wrong figure, try again" << END << endl;
+
+                    continue;
+                }
+
+                if(!position.pieces.pieceBitboards[Pieces::Black][Pieces::Queen])
+                {
+                    // Check if game is finished
+                    if (this->gameFinished())
+                    {
+                        cout << position << endl;
+
+                        #if LOG_TO_FILE
+                            log << position;
+                        #endif
+
+                        break;
+                    } 
+                }
+            }
+        }        
+
+    }
+
+    void Game::EvE()
+    {
+        playerSide = Pieces::White;
+        aiSide = Pieces::Black;
 
     int step = 0;
     while (true)
@@ -908,17 +2492,19 @@ void Game::chooseLimitedTimeMode()
     }
 }
 
-void Game::chooseGameMode()
-{
-    // Choose game mode
-    cout << "Choose game mode: " << endl;
-    cout << "1. Player vs Player" << endl;
-    cout << "2. Player vs AI" << endl;
-    cout << "3. AI vs AI" << endl;
-    cout << "4. Player vs Player (10 min limit)" << endl;
-
-    int gameMode = 0;
-    cin >> gameMode;
+    void Game::chooseGameMode()
+    {
+        // Choose game mode
+        cout << "Choose game mode: " << endl;
+        cout << "1. Player vs Player" << endl;
+        cout << "2. Player vs AI" << endl;
+        cout << "3. AI vs AI" << endl;
+        cout << "4. Player vs Player (10 min limit)" << endl;
+        cout << "5. Gwent" << endl; // Gwent mode
+        cout << "6. Royal Chess" << endl; // Royal Chess mode
+        cout << "7. Tests" << endl;
+        int gameMode = 0;
+        cin >> gameMode;
 
     switch (gameMode)
     {
@@ -956,6 +2542,21 @@ void Game::chooseGameMode()
         chooseLimitedTimeMode();
         break;
 
+            case 5:
+                #if LOG_TO_FILE
+                    log << "Game mode: Player vs AI";
+                #endif
+
+                Gwent();
+            break;
+
+            case 6:
+                #if LOG_TO_FILE
+                    log << "Game mode: Player vs Player with time";
+                #endif
+
+                RoyalChess();
+            break;
 
     default:
         cout << RED << "\n[ERROR] Illegal game mode!\n" << END << endl;

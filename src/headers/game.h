@@ -1,9 +1,14 @@
 #include "bitboards.h"
-
+#include "handsdeck.h"
+#include "card.h"
 #include "ai.h"
 #include "move.h"
 #include "timer.h"
-
+#include <sqlite3.h>
+#include <iostream>
+#include <cstring>
+#include <regex>
+#include "deck.h"
 #pragma once
 
 #if LINUX
@@ -48,13 +53,8 @@ private:
     */
     bool whiteVictory();
 
-    /**
-     * Checks the black win conditions.
-     *
-     * @return Returns True if Black wins, False otherwise.
-     *
-     * @exception This function does not throw exceptions.
-    */
+    bool whiteRoyalVictory();
+
     bool blackVictory();
 
     /**
@@ -111,6 +111,8 @@ private:
 
     bool movePlayer(uint8_t side);
 
+    bool movePlayerForRoyalChess(uint8_t side, uint8_t playerTypeOfFigure);
+
     void PvE();
 
     void PvP();
@@ -119,9 +121,10 @@ private:
 
     void PvPTime();
 
-    /**
-     * Function for choosing the game mode with time limit using the terminal.
-    */
+    void Gwent();
+    
+    void RoyalChess();
+
     void chooseLimitedTimeMode();
 
     /**

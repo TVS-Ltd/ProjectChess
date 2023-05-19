@@ -45,4 +45,8 @@ public:
     int32_t size() const {
         return deck.size();
     }
+
+    bool checkForCard(char type);
+
+    int getSize();
 };

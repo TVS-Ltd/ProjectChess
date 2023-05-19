@@ -3,14 +3,5 @@ chessEngine.deb
 logAIgame.txt
 .vscode
 .gitignore
-ai.o
-card.o
-deck.o
-entry.o
-game.o
-handsdeck.o
-legalMoveGen.o
-logToFile.o
-moveList.o
-moveSorter.o
-openingBook.o
+chess
+*.o

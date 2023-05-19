@@ -177,18 +177,20 @@ Bitboard PsLegalMoveMaskGen::calculateRay(Pieces pieces, uint8_t p, uint8_t side
     if (bsr)
     {
         blockingSquare = bsrFunc(blockers);
-    } else
+    }
+    else
     {
         blockingSquare = bsf(blockers);
     }
-            
+
 
     Bitboard moves;
 
     if (onlyCaptures)
     {
         moves = 0;
-    } else
+    }
+    else
     {
         moves = SlidersMasks::Masks[p][direction] ^ SlidersMasks::Masks[blockingSquare][direction];
     }
@@ -196,7 +198,8 @@ Bitboard PsLegalMoveMaskGen::calculateRay(Pieces pieces, uint8_t p, uint8_t side
     if (getBit(pieces.sideBitboards[side], blockingSquare))
     {
         setZero(moves, blockingSquare);
-    } else
+    }
+    else
     {
         setOne(moves, blockingSquare);
     }

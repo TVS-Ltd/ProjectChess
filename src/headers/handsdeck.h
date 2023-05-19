@@ -2,51 +2,51 @@
 #include <vector>
 #include <iterator>
 #include <algorithm>
-#include "position.h"
-#include <stack>
+
 #pragma once
-using namespace std;
 
 class handsdeck
 {
-    private:
-        std::string figure;
+private:
+    std::string figure;
 
-        std::vector <card> deck;
-    public:
-        handsdeck();
+    std::vector <card> deck;
+public:
+    handsdeck();
 
-        void setFigure(std::string in);
+    void setFigure(std::string in);
 
-        std::string getFigure();
-        
-        void print();
+    std::string getFigure();
 
-        void push_b(card in)
-        {
-            deck.push_back(in);
-        }
+    void print();
 
-        std::vector <card> *getVector()
-        {
-            return &deck;
-        }
+    void push_b(card in)
+    {
+        deck.push_back(in);
+    }
 
-        void CardChange(int index, card in);
+    std::vector <card>* getVector()
+    {
+        return &deck;
+    }
 
-        std::string getCard(int index);
+    void CardChange(int index, card in);
 
-        void addCard(card in);
+    std::string getCard(int index);
 
-        void appendOnBoard(std::string piece);        
+    void addCard(card in);
 
-        bool checkIsEmpty();
+    void appendOnBoard(std::string piece);
 
-        void delete_card(char card_for_delete, std::stack<std::string>&input);
+    bool checkIsEmpty();
 
-        bool checkForCard(char type);
+    card delete_card(char card_for_delete);
 
-        int getSize();
+    int32_t size() const {
+        return deck.size();
+    }
 
+    bool checkForCard(char type);
+
+    int getSize();
 };
-    

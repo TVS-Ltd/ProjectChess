@@ -4,7 +4,7 @@
 
 namespace PawnShieldMasks
 {
-    static consteval std::array<Bitboard, 64> calculateWhitePawnShieldMasks()
+    static consteval array<Bitboard, 64> calculateWhitePawnShieldMasks()
     {
         array<Bitboard, 64> whitePawnShieldMasks{};
 

@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <vector>
 #include "bitboards.h"
 
 
@@ -7,13 +8,12 @@
 
 using namespace std;
 
-
 // ——————————————————  Pieces  ——————————————————
 class Pieces
 {
 public:
     Pieces();
-    Pieces(const string &shortFen);
+    Pieces(const string& shortFen);
 
     array<array<Bitboard, 6>, 2> pieceBitboards{};
     array<Bitboard, 2> sideBitboards{};
@@ -27,11 +27,12 @@ public:
     static constexpr uint8_t Rook = 3;
     static constexpr uint8_t Queen = 4;
     static constexpr uint8_t King = 5;
+    static constexpr uint8_t Joker = 6;
 
     static constexpr uint8_t White = 0;
     static constexpr uint8_t Black = 1;
 
-    friend ostream &operator<<(ostream &ostream, Pieces pieces);
+    friend ostream& operator<<(ostream& ostream, Pieces pieces);
 
     friend bool operator==(Pieces left, Pieces right);
 

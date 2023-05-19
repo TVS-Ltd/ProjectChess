@@ -1,6 +1,6 @@
 #include "game.h"
 #include "card.h"
-#define TEST_CARD_MOVES 0
+
 using namespace std;
 
 void Game::start()
@@ -422,25 +422,6 @@ void Game::PvE()
 {
     sideChoose();
 
-    //position.handsdecks[1][Pieces::Pawn] = 2;
-    //position.handsdecks[1][Pieces::Knight] = 1;
-    //position.handsdecks[1][Pieces::Bishop] = 1;
-    //position.handsdecks[1][Pieces::Queen] = 1;
-
-    //{
-    //    position.aiDeck[Pieces::Pawn] = 2;
-    //    position.aiDeck[Pieces::Bishop] = 2;
-    //    position.aiDeck[Pieces::Knight] = 1;
-    //}
-
-    //position.playerDeck[Pieces::Pawn] = 2;
-    //position.playerDeck[Pieces::Bishop] = 4;
-    //position.playerDeck[Pieces::Rook] = 2;
-
-    //position.setNumberOfCards(8, 5);
-    //position.setPoints(140, 100);
-
-
     if (playerSide == Pieces::White)
     {
         while (true)
@@ -486,15 +467,6 @@ void Game::PvE()
                 break;
             }
 
-            //srand(time(NULL));
-            //int r = rand();
-            //if ((rand() % 6) == 0) position.handsdecks[1][Pieces::Pawn]++;//position.cards[1].addCard(card("Pawn", "-", "-"));
-            //else if ((r % 6) == 1) position.handsdecks[1][Pieces::Knight]++;//position.cards[1].addCard(card("Knight", "-", "-"));
-            //else if ((r % 6) == 2) position.handsdecks[1][Pieces::Bishop]++;//position.cards[1].addCard(card("Bishop", "-", "-"));
-            //else if ((r % 6) == 3) position.handsdecks[1][Pieces::Rook]++;//position.cards[1].addCard(card("Rook", "-", "-"));
-            //else position.handsdecks[1][Pieces::Queen]++;//position.cards[1].addCard(card("Queen", "-", "-"));
-
-            for (auto [type, count] : position.handsdecks[1]) std::cout << (int)type << ',' << (int)count << ' '; cout << '\n';
         }
     }
     else

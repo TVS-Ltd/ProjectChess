@@ -206,9 +206,6 @@ MoveList LegalMoveGen::generateMovesRoyal(const Position& position, uint8_t side
     MoveList moves;
     
     auto deck = position.handsdecks[side];
-    //handsdeck deck = position.cards[side];
-    //std::map<std::string, bool> used;
-
     bool joker = false;
 
     for (auto [type, count] : deck)

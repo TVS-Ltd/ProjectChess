@@ -1,18 +1,11 @@
 #include "ai.h"
 #include <omp.h>
 
+#ifdef _WIN32
+
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
-
-#define nsecs std::chrono::high_resolution_clock::now().time_since_epoch().count()
-
-using namespace std;
-
-
-double timex = 0;
-int64_t countx = 0;
-
 
 void usleep(__int64 usec)
 {
@@ -26,6 +19,11 @@ void usleep(__int64 usec)
     WaitForSingleObject(timer, INFINITE);
     CloseHandle(timer);
 }
+#endif
+
+#define nsecs std::chrono::high_resolution_clock::now().time_since_epoch().count()
+
+using namespace std;
 
 AI::AI() = default;
 AI::AI(const string& openingBookPath)

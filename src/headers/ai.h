@@ -1,6 +1,5 @@
 #include <future>
 #include <cmath>
-//#include <unistd.h>
 #include <chrono>
 #include "position.h"
 #include "moveList.h"
@@ -9,6 +8,12 @@
 #include "openingBook.h"
 #include "moveSorter.h"
 #include "constants.h"
+
+#ifdef unix
+
+#include <unistd.h>
+
+#endif
 
 #pragma once
 

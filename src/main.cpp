@@ -6,7 +6,7 @@
 #define TEST_CASTLING false
 #define TEST_EN_PASSANT false
 #define TEST_THREEE_POS_RULE false
-#define TEST_CARD_MOVES true
+#define TEST_CARD_MOVES false
 #define YESNO_MENU false
 #define LOG_TO_FILE false
 #define LINUX false

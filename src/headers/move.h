@@ -2,11 +2,19 @@
 
 #pragma once
 
+enum class MoveType {
+    Killer,
+    Capture,
+    Quiet,
+    LayOutCard,
+    Unknown
+};
+
 class Move
 {
 public:
     Move();
-    Move(uint8_t from, uint8_t to, uint8_t attackerType, uint8_t attackerSide, uint8_t defenderType, uint8_t defenderSide, uint8_t flag = 0);
+    Move(uint8_t from, uint8_t to, uint8_t attackerType, uint8_t attackerSide, uint8_t defenderType, uint8_t defenderSide, MoveType type, uint8_t flag = 0);
 
     friend bool operator==(Move left, Move right);
 
@@ -20,6 +28,8 @@ public:
     uint8_t DefenderSide;
 
     uint8_t Flag;
+
+    MoveType type;
 
     struct Flag
     {

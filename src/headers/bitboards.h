@@ -7,27 +7,62 @@
 using namespace std;
 
 // ——————————————————  Bitboards  ——————————————————
+
+/**
+ * Type for storing board in the form of bitboards.
+*/
 typedef uint64_t Bitboard;
 
-// Set a bit in a bitboard to 1
-static constexpr void setOne(Bitboard &bitBoard, uint8_t square)
+/**
+ * Set a bit in a bitboard to 1.
+ *
+ * @param bitBoard Reference to the bitboard you wanna change.
+ * @param square Bitboard's square to set to 1.
+ *
+ * @exception This function does not throw exceptions.
+*/
+static constexpr void setOne(Bitboard& bitBoard, uint8_t square)
 {
     bitBoard = bitBoard | (1ull << square);
 }
 
-// Set a bit in a bitboard to 0
-static constexpr void setZero(Bitboard &bitBoard, uint8_t square)
+/**
+ * Set a bit in a bitboard to 0.
+ *
+ * @param bitBoard Reference to the bitboard you wanna change.
+ * @param square Bitboard's square to set to 0.
+ *
+ * @exception This function does not throw exceptions.
+*/
+static constexpr void setZero(Bitboard& bitBoard, uint8_t square)
 {
     bitBoard = bitBoard & (~(1ull << square));
 }
 
-// Get the value of a bit in a bitboard
+/**
+ * Get the value of a bit in a bitboard.
+ *
+ * @param bitBoard Bitboard you wanna get info about.
+ * @param square Bitboard's square you wanna get value for.
+ *
+ * @return Value (0/1) of the requested square.
+ *
+ * @exception This function does not throw exceptions.
+*/
 static constexpr bool getBit(Bitboard bitBoard, uint8_t square)
 {
     return (bitBoard & (1ull << square));
 }
 
-// Count the number of 1s in a bitboard
+/**
+ * Count the amount of ones in a bitboard.
+ *
+ * @param bitBoard Bitboard you wanna get info about.
+ *
+ * @return Amount of squares with value 1.
+ *
+ * @exception This function does not throw exceptions.
+*/
 static constexpr uint8_t countOnes(Bitboard bitBoard)
 {
     return popcount(bitBoard);
@@ -42,7 +77,7 @@ static constexpr array<uint8_t, 64> BitScanTable = {
     46, 55, 26, 59, 40, 36, 15, 53,
     34, 51, 20, 43, 31, 22, 10, 45,
     25, 39, 14, 33, 19, 30, 9, 24,
-    13, 18, 8, 12, 7, 6, 5, 63};
+    13, 18, 8, 12, 7, 6, 5, 63 };
 
 static constexpr uint8_t bsf(Bitboard bitBoard)
 {
@@ -79,7 +114,31 @@ namespace BitboardRows
         return rows;
     }
 
+    static consteval array<Bitboard, 2> calculateSideRows()
+    {
+        array<Bitboard, 2> rows{};
+
+        for (uint8_t y = 0; y < 4; y++)
+        {
+            for (uint8_t x = 0; x < 8; x++)
+            {
+                setOne(rows[0], y * 8 + x);
+            }
+        }
+
+        for (uint8_t y = 4; y < 8; y++)
+        {
+            for (uint8_t x = 0; x < 8; x++)
+            {
+                setOne(rows[1], y * 8 + x);
+            }
+        }
+
+        return rows;
+    }
+
     static constexpr array<Bitboard, 8> Rows = calculateRows();
+    static constexpr array<Bitboard, 2> SideRows = calculateSideRows();
 
     static consteval array<Bitboard, 8> calculateInversionRows()
     {

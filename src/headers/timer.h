@@ -1,11 +1,11 @@
 #include <chrono>
 
 // —————————————————— Timer ——————————————————
-class Timer 
+class Timer
 {
 public:
 
-    
+
     std::chrono::steady_clock::time_point startTime = {};
     std::chrono::steady_clock::duration elapsedTime = {};
 

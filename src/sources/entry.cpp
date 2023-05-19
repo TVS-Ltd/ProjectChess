@@ -1,14 +1,22 @@
 #include "entry.h"
 
-    Entry::Entry() = default;
-    Entry::Entry(ZobristHash hash, int32_t depth, uint8_t bestMoveIndex)
-    {
-        this->Hash = hash;
-        this->Depth = depth;
-        this->BestMoveIndex = bestMoveIndex;
-    }
+Entry::Entry()
+    : Depth(-1) {}
 
-    bool operator<(Entry left, Entry right)
-    {
-        return (left.Hash < right.Hash);
-    }
+Entry::Entry(ZobristHash hash, Move move, int32_t depth, int32_t score, int32_t flag)
+    : Hash(hash)
+    , BestMove(move)
+    , Depth(depth)
+    , Score(score)
+    , Flag(flag)
+{}
+
+bool operator==(Entry left, Entry right)
+{
+    return (left.Hash == right.Hash);
+}
+
+bool operator<(Entry left, Entry right)
+{
+    return (left.Hash < right.Hash);
+}

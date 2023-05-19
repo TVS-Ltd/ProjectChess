@@ -7,14 +7,16 @@
 
 class card
 {
-    private:
-        std::string figure;
-        std::string icon;
-        std::string piece;
-    public:
+private:
+    std::string figure;
+    std::string icon;
+    std::string piece;
+public:
+    card() = default;
+
     // Constructor
     card(std::string fig, std::string icn, std::string pie);
-    
+
     // Getters and setters
     std::string getFigure();
     void setFigure(std::string fig);
@@ -24,6 +26,14 @@ class card
 
     std::string getPiece();
     void setPiece(std::string pie);
+
+    bool operator <(const card& card) {
+        return (figure.size() < card.figure.size() || figure.size() == card.figure.size() && figure < card.figure) && card.figure != "Queen";
+    }
+
+    bool operator <=(const card& card) {
+        return ((figure.size() < card.figure.size() && card.figure != "Queen") || figure.size() == card.figure.size() && figure <= card.figure);
+    }
 
 };
 

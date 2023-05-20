@@ -1,6 +1,7 @@
 #include <future>
 #include <cmath>
 #include <chrono>
+
 #include "position.h"
 #include "moveList.h"
 #include "transpositionTable.h"
@@ -9,7 +10,7 @@
 #include "moveSorter.h"
 #include "constants.h"
 
-#ifdef unix
+#ifdef __unix__
 
 #include <unistd.h>
 
@@ -557,7 +558,9 @@ private:
 
                     return beta;
                 }
-                if (score > alpha) {
+                
+                if (score > alpha) 
+                {
                     alpha = score;
                     scoreType = Entry::Valid;
                 }

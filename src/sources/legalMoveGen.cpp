@@ -1,5 +1,5 @@
 #include "legalMoveGen.h"
-#include "MoveSorter.h"
+#include "moveSorter.h"
 #include "constants.h"
 
 MoveList LegalMoveGen::generate(const Position& position, uint8_t side, bool onlyCaptures)

@@ -3,6 +3,7 @@
 
 #include <sqlite3.h>
 #include <string>
+
 #pragma once
 
 class deck

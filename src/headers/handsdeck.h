@@ -1,7 +1,10 @@
 #include "card.h"
+
 #include <vector>
 #include <iterator>
 #include <algorithm>
+#include <stack>
+#include <iostream>
 
 #pragma once
 
@@ -40,7 +43,7 @@ public:
 
     bool checkIsEmpty();
 
-    card delete_card(char card_for_delete);
+    void delete_card(char card_for_delete, std::stack<std::string>& input);
 
     int32_t size() const {
         return deck.size();

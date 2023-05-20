@@ -27,11 +27,13 @@ public:
     std::string getPiece();
     void setPiece(std::string pie);
 
-    bool operator <(const card& card) {
+    bool operator <(const card& card) 
+    {
         return (figure.size() < card.figure.size() || figure.size() == card.figure.size() && figure < card.figure) && card.figure != "Queen";
     }
 
-    bool operator <=(const card& card) {
+    bool operator <=(const card& card) 
+    {
         return ((figure.size() < card.figure.size() && card.figure != "Queen") || figure.size() == card.figure.size() && figure <= card.figure);
     }
 

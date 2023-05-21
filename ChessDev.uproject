@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{6D0ABEA4-9F16-4B31-B578-2B0C8D13F14D}",
+	"EngineAssociation": "6D0ABEA4-9F16-4B31-B578-2B0C8D13F14D",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -40,6 +40,10 @@
 		{
 			"Name": "SocketSubsystemEOS",
 			"Enabled": true
+		},
+		{
+			"Name": "AdvancedSessions",
+			"Enabled": false
 		}
 	],
 	"TargetPlatforms": [

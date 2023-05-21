@@ -3,19 +3,19 @@
 
 #include "Entry.h"
 
-Entry::Entry() = default;
-Entry::Entry(ZobristHash hash, int32_t depth, uint8_t bestMoveIndex)
+Entry::Entry() : Depth(-1) {}
+
+Entry::Entry(ZobristHash hash, ChessMove move, int32_t depth, int32_t score, int32_t flag) : Hash(hash), BestMove(move), Depth(depth), Score(score), Flag(flag) {}
+
+bool operator==(Entry left, Entry right)
 {
-    this->Hash = hash;
-    this->Depth = depth;
-    this->BestMoveIndex = bestMoveIndex;
+    return (left.Hash == right.Hash);
 }
 
 bool operator<(Entry left, Entry right)
 {
     return (left.Hash < right.Hash);
 }
-
 Entry::~Entry()
 {
 }

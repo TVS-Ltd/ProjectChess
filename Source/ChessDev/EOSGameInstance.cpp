@@ -42,10 +42,10 @@ void UEOSGameInstance::LoginWithEOS_Return(int32 LocalUserNum, bool wasSuccessfu
     {
         UE_LOG(LogTemp, Error, TEXT("Login failed, Reason: %S"), *Error);
 
-        if(GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Login failed, Reason: %S"), *Error);
-		}
+        // if(GEngine)
+		// {
+		// 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Login failed, Reason: %S"), *Error);
+		// }
     }
 }
 

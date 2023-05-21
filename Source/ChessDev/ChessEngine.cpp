@@ -281,3 +281,75 @@ bool AChessEngine::makeMove(FIntPoint from, FIntPoint to, uint8 side, uint8 prom
 	return true;
 }
 
+void AChessEngine::makeAIMove(FIntPoint& from, FIntPoint& to, uint8& promotionPiece)
+{
+	this->move = ai.bestMove(boardPosition, 1, 0, 1000);
+
+	this->boardPosition.move(move);
+
+	if (move.DefenderType != 255)
+	{
+		switch (move.DefenderType)
+		{
+		case 0:
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Pawn has been captured!"));
+			}
+
+			break;
+
+		case 1:
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Knight has been captured!"));
+			}
+
+			break;
+
+		case 2:
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Bishop has been captured!"));
+			}
+
+			break;
+
+		case 3:
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Rook has been captured!"));
+			}
+
+			break;
+
+		case 4:
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Queen has been captured!"));
+			}
+
+			break;
+
+		default:
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("[ERROR] Unknown piece type!"));
+			}
+
+			break;
+		}
+	}
+
+	from = FIntPoint(move.From / 8, move.From % 8);
+	to = FIntPoint(move.To / 8, move.To % 8);
+
+	if (move.Flag > 6)
+	{
+		promotionPiece = int8(move.Flag % 6);
+	} else
+	{
+		promotionPiece = int8(0);
+	}
+}
+

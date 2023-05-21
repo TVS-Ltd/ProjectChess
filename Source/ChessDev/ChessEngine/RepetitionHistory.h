@@ -15,7 +15,7 @@ public:
 	RepetitionHistory();
 	~RepetitionHistory();
 
-    void addBoardPosition(ZobristHash hash);
+    void addPosition(ZobristHash hash);
 
     void clear();
 

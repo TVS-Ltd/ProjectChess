@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <chrono>
+
 #include "CoreMinimal.h"
 
 /**

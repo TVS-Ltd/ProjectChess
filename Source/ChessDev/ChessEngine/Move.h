@@ -5,6 +5,14 @@
 #include "CoreMinimal.h"
 #include "bitboards.h"
 
+enum class MoveType {
+    Killer,
+    Capture,
+    Quiet,
+    LayOutCard,
+    Unknown
+};
+
 /**
  * 
  */
@@ -14,7 +22,7 @@ public:
 	ChessMove();
 	~ChessMove();
 
-	ChessMove(uint8_t from, uint8_t to, uint8_t attackerType, uint8_t attackerSide, uint8_t defenderType, uint8_t defenderSide, uint8_t flag = 0);
+	ChessMove(uint8_t from, uint8_t to, uint8_t attackerType, uint8_t attackerSide, uint8_t defenderType, uint8_t defenderSide, MoveType type, uint8_t flag = 0);
 
     bool operator==(ChessMove other);
 
@@ -28,6 +36,8 @@ public:
     uint8_t DefenderSide;
 
     uint8_t Flag;
+
+    MoveType type;
 
     struct Flag
     {

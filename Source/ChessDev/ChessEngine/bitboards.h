@@ -114,7 +114,31 @@ namespace BitboardRows
         return rows;
     }
 
+    static consteval array<Bitboard, 2> calculateSideRows()
+    {
+        array<Bitboard, 2> rows{};
+
+        for (uint8_t y = 0; y < 4; y++)
+        {
+            for (uint8_t x = 0; x < 8; x++)
+            {
+                setOne(rows[0], y * 8 + x);
+            }
+        }
+
+        for (uint8_t y = 4; y < 8; y++)
+        {
+            for (uint8_t x = 0; x < 8; x++)
+            {
+                setOne(rows[1], y * 8 + x);
+            }
+        }
+
+        return rows;
+    }
+
     static constexpr array<Bitboard, 8> Rows = calculateRows();
+    static constexpr array<Bitboard, 2> SideRows = calculateSideRows();
 
     static consteval array<Bitboard, 8> calculateInversionRows()
     {

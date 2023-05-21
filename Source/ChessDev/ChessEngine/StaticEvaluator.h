@@ -16,19 +16,9 @@ class CHESSDEV_API StaticEvaluator
 {
 public:
     static int32_t evaluate(Pieces pieces, bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, bool whiteCastlingHappened, bool blackCastlingHappened, bool showDebugInfo = false);
+    static int32_t pieceMaterial(Pieces pieces, uint8_t side);
 
-private:
-    static int32_t material(Pieces pieces);
-
-    static int32_t mobility(Pieces pieces);
-    static int32_t pawnStructureDoublePawn(Pieces pieces);
-    static int32_t pawnStructureConnectedPawn(Pieces pieces);
-    static int32_t pawnStructurePawnPromotion(Pieces pieces);
-    static int32_t kingSafetyCrashedCastling(bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, bool whiteCastlingHappened, bool blackCastlingHappened);
-    static int32_t kingSafetyPawnShield(Pieces pieces, bool whiteCastlingHappened, bool blackCastlingHappened);
-
-    static int32_t twoBishops(Pieces pieces);
-    static int32_t endgame(Pieces pieces, bool whiteLeading);
+    static constexpr int32_t Materials[6] = { 100, 305, 333, 563, 950, 1300 };
 
     struct Material
     {
@@ -37,6 +27,7 @@ private:
         static constexpr int32_t Bishop = 333;
         static constexpr int32_t Rook = 563;
         static constexpr int32_t Queen = 950;
+        static constexpr int32_t EndgameMat = 1300;
     };
 
     struct Mobility
@@ -46,6 +37,21 @@ private:
         static constexpr int32_t Rook = 3;
         static constexpr int32_t Queen = 3;
     };
+
+private:
+    static int32_t material(Pieces pieces);
+    static int32_t mobility(Pieces pieces);
+
+    static int32_t pawnStructureDoublePawn(Pieces pieces);
+    static int32_t pawnStructureConnectedPawn(Pieces pieces);
+    static int32_t pawnStructurePawnPromotion(Pieces pieces);
+    
+    static int32_t kingSafetyCrashedCastling(bool whiteLongCastling, bool whiteShortCastling, bool blackLongCastling, bool blackShortCastling, bool whiteCastlingHappened, bool blackCastlingHappened);
+    static int32_t kingSafetyPawnShield(Pieces pieces, bool whiteCastlingHappened, bool blackCastlingHappened);
+
+    static int32_t twoBishops(Pieces pieces);
+    static int32_t endgame(Pieces pieces, bool whiteLeading);
+
 
     struct PawnStructure
     {

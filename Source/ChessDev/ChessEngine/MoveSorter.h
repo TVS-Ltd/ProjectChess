@@ -13,10 +13,10 @@
 class CHESSDEV_API MoveSorter
 {
 public:
-    static MoveList quickSort(Pieces pieces, MoveList moves, int start, int end);
+    static void quickSort(const Pieces& pieces, MoveList& moves, int start, int end);
 
 private:
-    static int32_t evaluateMove(Pieces pieces, class ChessMove move);
+    static int32_t evaluateMove(const Pieces& pieces, ChessMove& move);
 
-    static size_t partition(Pieces pieces, MoveList moves, int start, int end);
+    static size_t partition(const Pieces& pieces, MoveList& moves, int start, int end);
 };

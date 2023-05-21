@@ -4,14 +4,16 @@
 #include "OpeningBook.h"
 
 OpeningBook::OpeningBook() = default;
-OpeningBook::OpeningBook(const string &path)
+OpeningBook::~OpeningBook() {}
+
+OpeningBook::OpeningBook(std::string path)
 {
+    path = std::string(TCHAR_TO_UTF8(*FPaths::GetProjectFilePath())) + path;
     ifstream file(path);
 
     if (!file.is_open())
     {
         cout << "Could not find the opening book." << endl;
-        exit(255);
     }
 
     string game;
@@ -31,7 +33,7 @@ OpeningBook::OpeningBook(const string &path)
         gameThread = stringstream(game);
         this->moves.resize(this->moves.size() + 1);
 
-        buff = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
+        buff = { "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1 };
 
         while (gameThread >> stringMove && gameThread.good())
         {
@@ -65,16 +67,16 @@ OpeningBook::OpeningBook(const string &path)
     file.close();
 }
 
-tuple<class ChessMove, int32_t> OpeningBook::tryToFindMove(const BoardPosition &position)
+tuple<ChessMove, int32_t> OpeningBook::tryToFindMove(const BoardPosition& position)
 {
     BoardPosition buff;
 
-    vector<class ChessMove> possibleMoves;
+    std::vector<ChessMove> possibleMoves;
     bool moveExist;
 
     for (int32_t game = 0; game < (int)this->moves.size(); game++)
     {
-        buff = {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1};
+        buff = { "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 255, true, true, true, true, 1 };
 
         if (buff.pieces == position.pieces)
         {
@@ -119,12 +121,8 @@ tuple<class ChessMove, int32_t> OpeningBook::tryToFindMove(const BoardPosition &
 
     if (possibleMoves.empty())
     {
-        return std::make_tuple(ChessMove(), 0);
+        return make_tuple(ChessMove(), 0);
     }
 
-    return std::make_tuple(possibleMoves[time(nullptr) % possibleMoves.size()], possibleMoves.size());
-}
-
-OpeningBook::~OpeningBook()
-{
+    return make_tuple(possibleMoves[time(nullptr) % possibleMoves.size()], possibleMoves.size());
 }

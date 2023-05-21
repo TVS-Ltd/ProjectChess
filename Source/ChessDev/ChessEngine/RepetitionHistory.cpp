@@ -7,7 +7,7 @@ using namespace std;
 
 RepetitionHistory::RepetitionHistory() = default;
 
-void RepetitionHistory::addBoardPosition(ZobristHash hash)
+void RepetitionHistory::addPosition(ZobristHash hash)
 {
     this->hashes.push_back(hash);
 }

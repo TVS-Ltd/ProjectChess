@@ -6,7 +6,7 @@
 using namespace std;
 
 ChessMove::ChessMove() = default;
-ChessMove::ChessMove(uint8_t from, uint8_t to, uint8_t attackerType, uint8_t attackerSide, uint8_t defenderType, uint8_t defenderSide, uint8_t flag)
+ChessMove::ChessMove(uint8_t from, uint8_t to, uint8_t attackerType, uint8_t attackerSide, uint8_t defenderType, uint8_t defenderSide, MoveType type, uint8_t flag)
 {
     this->From = from;
     this->To = to;
@@ -18,6 +18,7 @@ ChessMove::ChessMove(uint8_t from, uint8_t to, uint8_t attackerType, uint8_t att
     this->DefenderSide = defenderSide;
 
     this->Flag = flag;
+    this->type = type;
 }
 
 bool ChessMove::operator==(ChessMove other)

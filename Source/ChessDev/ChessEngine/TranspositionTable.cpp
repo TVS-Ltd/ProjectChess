@@ -5,28 +5,40 @@
 
 TranspositionTable::TranspositionTable() = default;
 
+TranspositionTable::~TranspositionTable() {}
+
 void TranspositionTable::addEntry(Entry entry)
 {
-    auto hashCopy = this->Set.find(entry);
-
-    if (hashCopy == this->Set.end() || hashCopy->Depth < entry.Depth)
+#pragma omp critical
     {
-        this->Set.insert(entry);
+        auto hashCopy = this->Set.find(entry);
+
+        if (hashCopy == this->Set.end())
+        {
+            this->Set.insert(entry);
+        }
+        else
+            if (hashCopy->Depth < entry.Depth)
+            {
+                this->Set.erase(hashCopy);
+                this->Set.insert(entry);
+            }
     }
 }
 
-uint8_t TranspositionTable::tryToFindBestMoveIndex(ZobristHash hash)
+Entry TranspositionTable::tryToFindBestMove(ZobristHash hash)
 {
-    auto entry = this->Set.find({hash, 0, 0});
-
-    if (entry == this->Set.end())
+    std::unordered_set<Entry, HashFunction>::iterator entry;
+#pragma omp critical
     {
-        return 255;
+        entry = this->Set.find({ hash, ChessMove(), 0, 0, 0 });
     }
-
-    return entry->BestMoveIndex;
+    return ((entry == this->Set.end()) ? Entry() : *entry);
 }
 
-TranspositionTable::~TranspositionTable()
+int32_t TranspositionTable::size()
 {
+    return Set.size();
 }
+
+

@@ -54,6 +54,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ChessEngine")
 	bool makeMove(FIntPoint from, FIntPoint to, uint8 side, uint8 promotionPiece);
 
+	UFUNCTION(BlueprintCallable, Category = "ChessEngine")
+	void makeAIMove(FIntPoint& from, FIntPoint& to, uint8& promotionPiece);
+
 protected:
 	bool whiteVictory() const;
 
@@ -80,6 +83,8 @@ protected:
 	 * @brief The board position.
 	*/
 	BoardPosition boardPosition;
+
+	AI ai = { "/OpeningBook.txt" };
 
 	MoveList moves;
 

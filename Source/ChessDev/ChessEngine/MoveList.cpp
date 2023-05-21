@@ -8,17 +8,19 @@ MoveList::MoveList()
     this->Size = 0;
 }
 
-class ChessMove &MoveList::operator[](uint8_t index)
+MoveList::~MoveList() {}
+
+ChessMove& MoveList::operator[](uint8_t index)
 {
     return this->moves[index];
 }
 
-class ChessMove MoveList::operator[](uint8_t index) const
+ChessMove MoveList::operator[](uint8_t index) const
 {
     return this->moves[index];
 }
 
-void MoveList::push_back(class ChessMove move)
+void MoveList::push_back(ChessMove move)
 {
     this->moves[this->Size] = move;
     this->Size = this->Size + 1;
@@ -29,6 +31,21 @@ void MoveList::push_back(class ChessMove move)
     return this->Size;
 }
 
-MoveList::~MoveList()
+void MoveList::unite(MoveList other)
 {
+    uint8_t otherSize = min((uint8_t)8, other.size());
+
+    for (uint8_t i = 0; i < this->Size; i++) 
+    {
+        this->moves[i + otherSize] = this->moves[i];
+    }
+
+    for (uint8_t i = 0; i < otherSize; i++) 
+    {
+        this->moves[i] = other[i];
+    }
+
+    this->Size += otherSize;
 }
+
+

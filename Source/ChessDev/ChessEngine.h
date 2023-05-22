@@ -57,6 +57,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ChessEngine")
 	void makeAIMove(FIntPoint& from, FIntPoint& to, uint8& promotionPiece);
 
+	UFUNCTION(BlueprintCallable, Category = "ChessEngine")
+	bool makeCCGMove(FIntPoint from, FIntPoint to, uint8 side, uint8 promotionPiece, uint8 pieceToSpawn);
+
 protected:
 	bool whiteVictory() const;
 

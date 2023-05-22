@@ -46,10 +46,6 @@ ChessMove AI::bestMove(BoardPosition position, uint8_t side, int32_t minMs, int3
 {
     // maxMs = 200000;
 
-    std::cout << endl;
-
-    std::cout << "Thinking..." << endl;
-
     bool debug = false;
 
 #if DEBUG
@@ -61,10 +57,6 @@ ChessMove AI::bestMove(BoardPosition position, uint8_t side, int32_t minMs, int3
 
     std::tuple<ChessMove, int32_t> openingBookResult = this->openingBook.tryToFindMove(position);
 
-#if DEBUG
-    cout << "\033[103m" << "Number of available moves in the opening book: " << get<1>(openingBookResult) << "." << "\033[0m" << endl;
-#endif
-
     if (get<1>(openingBookResult))
     {
         #ifdef __unix__
@@ -75,8 +67,6 @@ ChessMove AI::bestMove(BoardPosition position, uint8_t side, int32_t minMs, int3
 
         return get<0>(openingBookResult);
     }
-
-    std::cout << "\033[93m" << "Search started." << "\033[0m" << endl;
 
     int32_t bestMoveEvaluation = 0;
     ChessMove bestMove;
@@ -114,16 +104,9 @@ ChessMove AI::bestMove(BoardPosition position, uint8_t side, int32_t minMs, int3
             stopSearch = true;
             break;
         }
-
-#if DEBUG
-        cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
-        cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
-#endif
     }
 
     usleep(max((int64_t)0, int64_t((minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3)));
-
-    cout << "\033[92m" << "Search finished." << "\033[0m" << endl;
 
     return bestMove;
 }
@@ -134,10 +117,6 @@ ChessMove AI::bestMoveCCG(BoardPosition position, uint8_t side, int32_t minMs, i
 
     // maxMs = 20000;
 
-    std::cout << endl;
-
-    std::cout << "Thinking..." << endl;
-
     bool debug = false;
 
 #if DEBUG
@@ -146,8 +125,6 @@ ChessMove AI::bestMoveCCG(BoardPosition position, uint8_t side, int32_t minMs, i
 
     int64_t timeStart = nsecs;
     stopSearch = false;
-
-    std::cout << "\033[93m" << "Search started." << "\033[0m" << endl;
 
     int32_t bestMoveEvaluation = 0;
     ChessMove bestMove;
@@ -187,16 +164,9 @@ ChessMove AI::bestMoveCCG(BoardPosition position, uint8_t side, int32_t minMs, i
             stopSearch = true;
             break;
         }
-
-#if DEBUG
-        cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
-        cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
-#endif
     }
 
     usleep(max((int64_t)0, int64_t((minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3)));
-
-    cout << "\033[92m" << "Search finished." << "\033[0m" << endl;
 
     return bestMove;
 }
@@ -207,10 +177,6 @@ ChessMove AI::bestMoveRoyal(BoardPosition position, uint8_t side, int32_t minMs,
 
     // maxMs = 200000;
 
-    std::cout << endl;
-
-    std::cout << "Thinking..." << endl;
-
     bool debug = false;
 
 #if DEBUG
@@ -219,8 +185,6 @@ ChessMove AI::bestMoveRoyal(BoardPosition position, uint8_t side, int32_t minMs,
 
     int64_t timeStart = nsecs;
     stopSearch = false;
-
-    std::cout << "\033[93m" << "Search started." << "\033[0m" << endl;
 
     int32_t bestMoveEvaluation = 0;
     ChessMove bestMove = Constants::UnknownMove;
@@ -258,16 +222,9 @@ ChessMove AI::bestMoveRoyal(BoardPosition position, uint8_t side, int32_t minMs,
             stopSearch = true;
             break;
         }
-
-#if DEBUG
-        cout << "Depth: " << i << "\nEval: " << bestMoveEvaluation << '\n';
-        cout << "Base depth: " << setw(4) << i << "." << setw(21) << " Maximal depth: " << setw(4) << maxDepth << "." << setw(18) << " Evaluation: " << setw(6) << (float)bestMoveEvaluation / 100.0f << " pawns." << setw(34) << " Evaluated (this iteration): " << setw(10) << evaluated << "." << setw(51) << "Transposition table cutoffs (this iteration): " << setw(10) << cutOffs << "." << setw(25) << "Time (full search): " << setw(10) << (nsecs - timeStart) / (int32_t)1e+6 << " ms." << endl;
-#endif
     }
 
     usleep(max((int64_t)0, int64_t((minMs - (nsecs - timeStart) / (int64_t)1e+6) * (int64_t)1e+3)));
-
-    cout << "\033[92m" << "Search finished." << "\033[0m" << endl;
 
     return bestMove;
 }

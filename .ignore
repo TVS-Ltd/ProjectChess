@@ -1,8 +1,9 @@
-/Content
-/Saved
-/.vscode
 /.git
+/.vscode
+/Content
+/DerivedDataCache
 /Intermediate
-/Plugins/AdvancedSessions/Intermediate
+/Platforms
+/Saved
 /Plugins/EOSIntegrationKit/Content
 /Plugins/EOSIntegrationKit/Intermediate

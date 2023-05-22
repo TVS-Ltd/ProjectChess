@@ -224,8 +224,6 @@ bool AChessEngine::makeMove(FIntPoint from, FIntPoint to, uint8 side, uint8 prom
 
 	if (move.DefenderType != 255)
 	{
-		cout << "\n";
-
 		switch (move.DefenderType)
 		{
 		case 0:
@@ -353,3 +351,39 @@ void AChessEngine::makeAIMove(FIntPoint& from, FIntPoint& to, uint8& promotionPi
 	}
 }
 
+bool AChessEngine::makeCCGMove(FIntPoint from, FIntPoint to, uint8 side, uint8 promotionPiece, uint8 pieceToSpawn)
+{
+	if (pieceToSpawn != 0)
+	{
+		switch (pieceToSpawn)
+		{
+		case 1:
+			this->boardPosition.addPiece(to.Y + to.X * 8, Pieces::Pawn, side);
+			break;
+
+		case 2:
+			this->boardPosition.addPiece(to.Y + to.X * 8, Pieces::Knight, side);
+			break;
+
+		case 3:
+			this->boardPosition.addPiece(to.Y + to.X * 8, Pieces::Bishop, side);
+			break;
+
+		case 4:
+			this->boardPosition.addPiece(to.Y + to.X * 8, Pieces::Rook, side);
+			break;
+
+		case 5:
+			this->boardPosition.addPiece(to.Y + to.X * 8, Pieces::Queen, side);
+			break;
+		
+		default:
+			return false;
+			break;
+		}
+
+		return true;
+	}
+
+	return this->makeMove(from, to, side, promotionPiece);
+}

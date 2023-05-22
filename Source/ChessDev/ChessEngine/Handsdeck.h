@@ -17,7 +17,7 @@ class CHESSDEV_API Handsdeck
 private:
     std::string figure;
 
-    std::vector <card> deck;
+    std::vector<card> deck;
 public:
     Handsdeck();
 

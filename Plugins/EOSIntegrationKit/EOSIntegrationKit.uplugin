@@ -8,7 +8,7 @@
 	"CreatedBy": "Betide Studio",
 	"CreatedByURL": "https://betide.studio",
 	"DocsURL": "https://betide-studio.gitbook.io/eos-integration-kit/",
-	"EngineVersion" : "5.1.0",
+	"EngineVersion" : "5.2.0",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/dba0aa05bdd144e69405653a387ad63e",
 	"SupportURL": "https://discord.gg/2BtvDbmbEK",
 	"CanContainContent": true,

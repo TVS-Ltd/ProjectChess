@@ -499,7 +499,6 @@ MoveList LegalMoveGen::generateCardMoves(const BoardPosition& position, uint8_t 
 
     for (auto [type, count] : position.handsdecks[side])
     {
-        if (moves.size() > 230) cout << moves.size() << '\n';
         if (count)
             LegalMoveGen::generateMovesByCard(position, position.pieces.empty & BitboardRows::SideRows[side], side, type, moves);
     }

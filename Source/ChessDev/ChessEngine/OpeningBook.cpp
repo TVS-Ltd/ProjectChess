@@ -13,7 +13,8 @@ OpeningBook::OpeningBook(std::string path)
 
     if (!file.is_open())
     {
-        cout << "Could not find the opening book." << endl;
+        // Could not find the opening book.
+        UE_LOG(LogTemp, Error, TEXT("[ERROR] Failed to load Opening Book"));
     }
 
     string game;
@@ -58,7 +59,7 @@ OpeningBook::OpeningBook(std::string path)
 
             if (!MoveFound)
             {
-                cout << "Error in the opening book." << endl;
+                // cout << "Error in the opening book." << endl;
                 exit(255);
             }
         }

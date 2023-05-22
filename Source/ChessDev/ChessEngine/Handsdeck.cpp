@@ -16,7 +16,7 @@ void Handsdeck::print()
 {
     for (size_t i = 0; i < deck.size(); i++)
     {
-        std::cout << deck[i].getFigure() << ' ';
+        // std::cout << deck[i].getFigure() << ' ';
     } 
 }
     

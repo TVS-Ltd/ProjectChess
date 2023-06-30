@@ -10,7 +10,7 @@
 		</p>
 </div>
 
-# WELCOME TO TERMINAL BASED :chess_pawn:C++ CHESS ENGINE
+# WELCOME TO :chess_pawn:C++ CHESS ENGINE
 
 ### GAME MODES
 - Player vs AI
